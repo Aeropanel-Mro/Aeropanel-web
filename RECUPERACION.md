@@ -114,3 +114,10 @@ Copie y pegue esto en una conversación nueva con Claude (adjunte el zip del res
 
 ---
 Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
+
+## 11. Si olvida su llave de propietario
+
+- Al activar la llave, la página muestra **una sola vez** un *código de recuperación* (30 letras/números). Descárguelo o imprímalo y guárdelo fuera de la página.
+- ¿Olvidó la llave? En la tarjeta de la llave pulse **«¿Olvidó su llave?»**, escriba el código y una llave nueva. Recibirá un código **nuevo** (el anterior deja de servir). Todo sigue visible igual que antes.
+- ¿Perdió también el código? En el mismo lugar abra **«También perdí el código» → Crear llave nueva**. Los proyectos de sus invitados se vuelven a proteger con la llave nueva cuando cada invitado los abre; la contraseña de invitados de esos proyectos aparecerá como «—» hasta que el creador la cambie.
+- Si activó la llave antes de existir esta opción, al desbloquearla verá **«Crear código ahora»**.
