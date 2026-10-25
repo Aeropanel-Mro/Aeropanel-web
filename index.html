@@ -186,6 +186,8 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .ac3d-cap{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);max-width:calc(100% - 24px);background:rgba(5,10,20,.86);color:#fff;border:1px solid rgba(255,212,0,.6);border-radius:10px;padding:8px 14px;font-size:14px;z-index:4;pointer-events:none;text-align:center}
 .ac3d-cap b{color:#FFD400}
 .ac3tour.on{background:#FFD400!important;color:#0B1426!important}
+.auth-card .tbl-wrap td{white-space:normal;vertical-align:top}
+.auth-card .tbl-wrap td .btn{margin:2px 0}
 /* ---------- AeroPlanner brand ---------- */
 .apw{font-family:var(--f-body);font-weight:400!important;letter-spacing:.01em!important;text-transform:none!important}
 .apw span{font-weight:800!important;font-size:inherit!important;letter-spacing:inherit!important;text-transform:none!important;color:inherit!important;display:inline!important;margin:0!important}
@@ -1122,7 +1124,7 @@ async function wcGet(k){ try{ const d=await wcDb(); return await new Promise(r=>
 async function wcPut(k,v){ try{ const d=await wcDb(); d.transaction("a","readwrite").objectStore("a").put(v,k); }catch{} }
 function webRules(owner,ownerUid){ owner=String(owner||"").toLowerCase().replace(/'/g,""); ownerUid=String(ownerUid||"-").replace(/'/g,"");
   return `rules_version = '2';
-// AeroPanel Planner — reglas de seguridad (pegue esto en Firestore → Reglas → Publicar)
+// AeroPlanner — reglas de seguridad v2 (pegue esto en Firestore → Reglas → Publicar)
 service cloud.firestore {
   match /databases/{database}/documents {
     function signed()   { return request.auth != null; }
@@ -1133,6 +1135,7 @@ service cloud.firestore {
     function aclOf()    { return get(/databases/$(database)/documents/acl/$(mail())).data; }
     function member()   { return isOwner() || (inAcl() && (verified() || aclOf().get('uid', '') == request.auth.uid)); }
     function editor()   { return isOwner() || (member() && aclOf().role == 'editor'); }
+    function creatorOf(pid) { return get(/databases/$(database)/documents/projects/$(pid)).data.get('createdByUid', ''); }
     // personas autorizadas: solo el propietario las agrega, aprueba o quita; cada quien ve su propio permiso
     match /acl/{email} {
       allow read: if isOwner() || (signed() && email == mail());
@@ -1147,12 +1150,23 @@ service cloud.firestore {
     // proyectos (cifrados): los autorizados leen; solo el propietario crea, renombra o borra
     match /projects/{pid} {
       allow read: if member();
-      allow create, delete: if isOwner();
-      allow update: if isOwner() || (editor() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rev','updatedAt','updatedBy']));
+      // las personas autorizadas también crean proyectos: quedan a su nombre y con la llave del propietario (esc)
+      allow create: if isOwner() || (member() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.get('esc', '') != '');
+      allow delete: if isOwner();
+      allow update: if isOwner() || (editor() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rev','updatedAt','updatedBy']))
+                    || (member() && resource.data.get('createdByUid', '') == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rev','updatedAt','updatedBy','wraps','esc']));
       match /{rest=**} {
         allow read: if member();
-        allow write: if editor();
+        allow write: if editor() || (member() && creatorOf(pid) == request.auth.uid);
       }
+    }
+    // llave del propietario: pública para cifrar (la leen los autorizados); la privada (cifrada) solo el propietario
+    match /config/escrow { allow read: if member(); allow write: if isOwner(); }
+    match /config/escrowPriv { allow read, write: if isOwner(); }
+    // una sesión por persona: cada quien escribe la suya; el propietario las ve y puede cerrarlas
+    match /sessions/{uid} {
+      allow read: if isOwner() || (signed() && uid == request.auth.uid);
+      allow write: if isOwner() || (signed() && uid == request.auth.uid);
     }
   }
 }
@@ -1398,6 +1412,7 @@ const FM = (() => {
     if(!name) throw new Error("Escriba su nombre para el historial.");
     const say=t=>{ if(box) box.innerHTML=`<div class="auth-note">${E(t)}</div>`; };
     const m=await fsGet(`projects/${pid}`); if(!m) throw new Error("El proyecto ya no existe en el servidor.");
+    if(!WB.owner&&!(await sessCheck())) throw new Error("Sesión cerrada.");
     say("Verificando contraseña…"); const wraps=JSON.parse(m.data.wraps||"[]"); let secret=keys?unb64(keys.k):null, wrole=keys?keys.r:null;
     for(const w of keys?[]:wraps){ if(w.kind) continue; try{ secret=new Uint8Array(await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(w.iv)},await kek(pw,unb64(w.salt)),unb64(w.ct))); wrole=w.role; break; }catch{} }
     if(!secret) throw new Error("Contraseña del proyecto incorrecta. Pídasela al propietario.");
@@ -1408,7 +1423,8 @@ const FM = (() => {
     for(const a of al){ say(`Descargando documentos… ${++i}/${al.length}`); assets.push([a.id, await webGetAsset(pid,a)]); }
     S.db._load(entries); S.assets._load(assets);
     Object.assign(W,{pid,rev:m.data.rev||0,assets:new Set(assets.map(a=>a[0])),wrapsDirty:false});
-    st.web=true; st.role=(WB.owner||WB.role==="editor")?"ADMIN":"INSPECTOR"; st.name=name; st.label=m.data.registration||"Proyecto";
+    const mine=!WB.owner&&!!WB.uid&&m.data.createdByUid===WB.uid; W.creator=mine; W.esc=m.data.esc||""; W.pwKnown=pw&&!keys?(wrole==="ADMIN"?{admin:pw}:{guest:pw}):{};
+    st.web=true; st.role=(WB.owner||WB.role==="editor"||mine)?"ADMIN":"INSPECTOR"; st.name=name; st.label=m.data.registration||"Proyecto";
     S.me={id:"u:"+WB.email,name}; S.fileRole=st.role; try{ localStorage.setItem("ap.web.name",name); }catch{}
     S.pendingAudit=[["WEB_OPENED",`${WB.email} · ${WB.owner?"PROPIETARIO":WB.role==="editor"?"EDITOR":"CONSULTA"} · rev ${W.rev}${keys?" · reanudado":""}`]];
     resumeSave({pid,name,k:b64(secret),r:wrole});
@@ -1429,11 +1445,11 @@ const FM = (() => {
     for(let tries=0;;tries++){
       const m=await fsGet(`projects/${pid}`); if(!m) throw new Error("El propietario eliminó este proyecto del servidor."); const rev=(m.data.rev||0)+1;
       const writes=[...recW.map(([rid,d])=>fsW(`projects/${pid}/rec/${rid}`,{...d,rev})),...aMeta.map(([id,d])=>fsW(`projects/${pid}/assets/${id}`,{...d,rev}))];
-      const up={rev,updatedAt:nowIso(),updatedBy:st.name}; const mask=["rev","updatedAt","updatedBy"]; if(W.wrapsDirty&&WB.owner){ up.wraps=JSON.stringify(st.wraps); mask.push("wraps"); }
+      const up={rev,updatedAt:nowIso(),updatedBy:st.name}; const mask=["rev","updatedAt","updatedBy"]; if(W.wrapsDirty&&(WB.owner||W.creator)){ up.wraps=JSON.stringify(st.wraps); mask.push("wraps"); if(W.creator&&W.esc){ up.esc=W.esc; mask.push("esc"); } }
       try{ while(writes.length>400) await fsCommit(writes.splice(0,400)); await fsCommit([...writes,fsW(`projects/${pid}`,up,{mask,pre:{updateTime:m.updateTime}})]);
         if((m.data.rev||0)===W.rev) W.rev=rev; break; }
       catch(e){ if(tries<6&&/FAILED_PRECONDITION|ABORTED|HTTP_409/.test(e.code||"")){ await sleep(300+Math.random()*700); continue; } throw e; } }
-    for(const [k,s] of ch) W.sent.set(k,s); for(const k of del) W.sent.delete(k); for(const [id] of aMeta) W.assets.add(id); if(WB.owner) W.wrapsDirty=false;
+    for(const [k,s] of ch) W.sent.set(k,s); for(const k of del) W.sent.delete(k); for(const [id] of aMeta) W.assets.add(id); if(WB.owner||W.creator) W.wrapsDirty=false;
   }
   async function webPull(){ if(!st.web||W.busy) return;
     try{ const m=await fsGet(`projects/${W.pid}`); if(!m){ lock("El propietario eliminó este proyecto del servidor."); return; }
@@ -1446,11 +1462,71 @@ const FM = (() => {
         if((sets.length||dels.length||na)&&m.data.updatedBy&&m.data.updatedBy!==st.name) toast(`Actualizado con los cambios de ${m.data.updatedBy}.`,4000); }
       setSync(st.dirty?"pend":"ok"); }
     catch(e){ console.warn("pull",e); setSync("err",e); if(e.code==="NOAUTH"||e.code==="INVALID_REFRESH_TOKEN"||e.code==="USER_NOT_FOUND") lock("Su sesión terminó; entre de nuevo."); else if(e.code==="PERMISSION_DENIED") lock("Su acceso a este servidor fue retirado por el propietario."); } }
-  async function webTick(){ if(document.hidden||navigator.onLine===false) return; const now=Date.now(); if(W.nextTry&&now<W.nextTry) return; 
+  async function webTick(){ if(document.hidden||navigator.onLine===false) return; if((++SESS.n)%3===0&&!(await sessCheck())) return; const now=Date.now(); if(W.nextTry&&now<W.nextTry) return; 
     try{ if(st.dirty&&st.role==="ADMIN") await webPush(); await webPull(); }catch(e){ console.warn("tick",e); }
     if(W.state==="err"){ W.fails=(W.fails||0)+1; W.nextTry=now+Math.min(120000,10000*Math.pow(2,W.fails-1)); } else { W.fails=0; W.nextTry=0; } }
   function webStart(){ if(!st.web||W.poll) return; W.poll=setInterval(webTick,10000); addEventListener("visibilitychange",()=>{ if(!document.hidden) webTick(); }); addEventListener("online",()=>{ W.nextTry=0; W.fails=0; webTick(); }); }
 
+  /* ---- owner key (escrow): projects created by invitees carry their passwords and data key encrypted for the owner ----
+     RSA-OAEP 3072 key pair made in the owner's browser; the private key is stored encrypted with the owner's key password
+     (PBKDF2 600 000 + AES-GCM). Nothing readable is stored on the server. */
+  const ESC={pub:null,priv:null};
+  const escKdf=async(pw,salt)=>crypto.subtle.deriveKey({name:"PBKDF2",hash:"SHA-256",salt,iterations:600000},await crypto.subtle.importKey("raw",te.encode(pw.normalize("NFC")),"PBKDF2",false,["deriveKey"]),{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+  async function escLoadPub(){ if(ESC.pub) return ESC.pub; let d=null; try{ d=await fsGet("config/escrow"); }catch{ return null; } if(!d?.data?.pub) return null;
+    ESC.pub=await crypto.subtle.importKey("jwk",JSON.parse(d.data.pub),{name:"RSA-OAEP",hash:"SHA-256"},false,["encrypt"]); return ESC.pub; }
+  async function escSeal(payload){ const pub=await escLoadPub(); if(!pub) return null; const K=rnd(32), iv=rnd(12);
+    const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},await crypto.subtle.importKey("raw",K,"AES-GCM",false,["encrypt"]),te.encode(JSON.stringify(payload)));
+    const ek=await crypto.subtle.encrypt({name:"RSA-OAEP"},pub,K); return JSON.stringify({v:1,ek:b64(ek),iv:b64(iv),ct:b64(ct),by:WB.email||"",at:nowIso()}); }
+  async function escSetup(pw){ const w=strength(pw); if(w) throw new Error("Llave de propietario: "+w);
+    const kp=await crypto.subtle.generateKey({name:"RSA-OAEP",modulusLength:3072,publicExponent:new Uint8Array([1,0,1]),hash:"SHA-256"},true,["encrypt","decrypt"]);
+    const pubJ=await crypto.subtle.exportKey("jwk",kp.publicKey), pk8=await crypto.subtle.exportKey("pkcs8",kp.privateKey); const salt=rnd(16), iv=rnd(12);
+    const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},await escKdf(pw,salt),pk8);
+    await fsCommit([fsW("config/escrowPriv",{salt:b64(salt),iv:b64(iv),ct:b64(ct),at:nowIso()}),fsW("config/escrow",{pub:JSON.stringify(pubJ),at:nowIso(),by:WB.email||""})]);
+    ESC.pub=null; ESC.priv=kp.privateKey; }
+  async function escUnlock(pw){ const d=await fsGet("config/escrowPriv"); if(!d) throw new Error("Todavía no activa su llave de propietario.");
+    let pk8; try{ pk8=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(d.data.iv)},await escKdf(pw,unb64(d.data.salt)),unb64(d.data.ct)); }catch{ throw new Error("Llave de propietario incorrecta."); }
+    ESC.priv=await crypto.subtle.importKey("pkcs8",pk8,{name:"RSA-OAEP",hash:"SHA-256"},false,["decrypt"]); }
+  async function escOpen(escStr){ if(!ESC.priv) throw new Error("Desbloquee primero su llave de propietario."); const e=JSON.parse(escStr);
+    const K=await crypto.subtle.decrypt({name:"RSA-OAEP"},ESC.priv,unb64(e.ek)); const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(e.iv)},await crypto.subtle.importKey("raw",K,"AES-GCM",false,["decrypt"]),unb64(e.ct));
+    return JSON.parse(td.decode(pt)); }
+  /* ---- one session per invited e-mail: logging in somewhere else closes the previous session ---- */
+  const SESS={sid:null,n:0};
+  async function sessClaim(){ if(WB.owner||!WB.uid) return; let sid=null; try{ sid=sessionStorage.getItem("ap.sid"); }catch{}
+    try{ const d=await fsGet(`sessions/${WB.uid}`); if(sid&&d?.data?.sid===sid){ SESS.sid=sid; return; } }catch(e){ console.warn("sesiones (reglas)",e.code||e); if(e.code==="PERMISSION_DENIED") return; }
+    sid=b64(rnd(12)); try{ await fsCommit([fsW(`sessions/${WB.uid}`,{sid,email:WB.email||"",ua:String(navigator.userAgent||"").slice(0,160),at:nowIso()})]); SESS.sid=sid; try{ sessionStorage.setItem("ap.sid",sid); }catch{} }catch(e){ console.warn("sesión",e.code||e); } }
+  async function sessCheck(){ if(!SESS.sid||WB.owner) return true; let d=null; try{ d=await fsGet(`sessions/${WB.uid}`); }catch{ return true; }
+    if(d&&d.data.sid!==SESS.sid){ const why=d.data.sid==="revocada"?"El propietario cerró su sesión.":"Su cuenta se abrió en otro dispositivo o navegador y esta sesión se cerró. Cada correo autorizado solo puede tener una sesión abierta.";
+      SESS.sid=null; try{ sessionStorage.removeItem("ap.sid"); }catch{} wbSignOut(); await lock(why); return false; } return true; }
+  /* ---- owner cards: invitees' projects, active sessions, security rules ---- */
+  function ownerCards(){ return card(`<div id="esc_card"><h2>Proyectos de mis invitados</h2><p class="small muted">Las personas que usted autorizó pueden crear proyectos. Con su <b>llave de propietario</b> ve sus contraseñas y los abre.</p><div id="esc_box" class="small muted">Cargando…</div><div class="auth-msg"></div></div>`)
+      +card(`<div><h2>Sesiones activas</h2><p class="small muted">Cada correo autorizado solo puede tener <b>una</b> sesión: si entra desde otro lugar, la anterior se cierra sola. Así nadie puede prestar su acceso.</p><div id="sess_box" class="small muted">Cargando…</div></div>`)
+      +card(`<div><h2>Reglas de seguridad del servidor</h2><div id="rules_box" class="small muted">Revisando…</div></div>`); }
+  async function ownerLoad(list,nameOf){
+    const box=$("#esc_box"), msg=$("#esc_card .auth-msg"); if(!box) return; const say=(t,bad)=>{ if(msg) msg.innerHTML=t?`<div class="${bad?"auth-err":"auth-note"}">${E(t)}</div>`:""; };
+    // rules version: v2 lets the owner read config/escrowPriv (absent → null); old rules deny it
+    let rulesOld=false; try{ await fsGet("config/escrowPriv"); }catch(e){ rulesOld=e.code==="PERMISSION_DENIED"; }
+    const rb=$("#rules_box"); if(rb){ const txt=webRules(WB.cfg.owner||WB.email,WB.cfg.ownerUid||WB.uid);
+      rb.innerHTML=`${rulesOld?`<div class="auth-err" style="margin-bottom:8px"><b>Falta publicar las reglas nuevas.</b> Sin ellas sus invitados no pueden crear proyectos y no se aplica «una sesión por persona».</div>`:`<div class="auth-note" style="margin-bottom:8px">Reglas v2 activas.</div>`}
+        <p>1) Copie las reglas · 2) Ábralas en Firebase (Firestore → Reglas) · 3) Pegue y pulse <b>Publicar</b>.</p><textarea id="rules_txt" readonly rows="6" class="mono" style="width:100%;font-size:11px">${E(txt)}</textarea>
+        <div class="row" style="gap:8px;margin-top:6px"><button class="btn sm" type="button" id="rules_copy">Copiar reglas</button><a class="btn sm ghost" target="_blank" rel="noopener" href="https://console.firebase.google.com/project/${encodeURIComponent(WB.cfg.projectId)}/firestore/rules">Abrir Firebase</a><button class="btn sm ghost" type="button" id="rules_re">Volver a revisar</button></div>`;
+      $("#rules_copy")?.addEventListener("click",async()=>{ const t=$("#rules_txt"); try{ await navigator.clipboard.writeText(t.value); toast("Reglas copiadas."); }catch{ t.select(); document.execCommand("copy"); toast("Reglas copiadas."); } });
+      $("#rules_re")?.addEventListener("click",()=>ownerLoad(list,nameOf)); }
+    // sessions
+    const sb=$("#sess_box"); if(sb){ try{ const ss=await fsList("sessions"); sb.innerHTML=ss.length?`<div class="tbl-wrap"><table><tbody>${ss.map(x=>`<tr><td>${E(x.data.email||x.id)}</td><td class="small">${x.data.sid==="revocada"?"cerrada por usted":E(new Date(x.data.at).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"}))}<br><span class="muted">${E(/iPhone|iPad/.test(x.data.ua)?"iPhone/iPad":/Android/.test(x.data.ua)?"Android":/Windows/.test(x.data.ua)?"Windows":/Mac/.test(x.data.ua)?"Mac":"Navegador")}</span></td><td>${x.data.sid==="revocada"?"":`<button class="btn sm ghost" type="button" data-sessrv="${E(x.id)}" data-sessem="${E(x.data.email||"")}">Cerrar sesión</button>`}</td></tr>`).join("")}</tbody></table></div>`:"Nadie más ha entrado todavía.";
+        sb.querySelectorAll("[data-sessrv]").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await fsCommit([fsW(`sessions/${b.dataset.sessrv}`,{sid:"revocada",email:b.dataset.sessem,at:nowIso(),ua:""})]); toast("Sesión cerrada: se cerrará en su dispositivo en unos segundos."); ownerLoad(list,nameOf); }catch(e){ toast(e.message); b.disabled=false; } })); }
+      catch(e){ sb.innerHTML=rulesOld?"Disponible cuando publique las reglas nuevas.":E(e.message); } }
+    // escrow: setup / unlock / list
+    let hasKey=false; try{ hasKey=!!(await fsGet("config/escrow")); }catch{}
+    if(!hasKey){ box.innerHTML=`<p>Active su llave una sola vez. Elija una contraseña <b>solo para usted</b> (mín. 12); si la pierde no se puede recuperar.</p><div class="field"><label for="esc_p1">Nueva llave de propietario</label><input id="esc_p1" type="password" autocomplete="new-password" minlength="12"></div><div class="field"><label for="esc_p2">Repita</label><input id="esc_p2" type="password" autocomplete="new-password" minlength="12"></div><button class="btn pri" type="button" id="esc_go">Activar llave</button>`;
+      $("#esc_go").addEventListener("click",async ev=>{ const b=ev.target; b.disabled=true; say("Creando llave…"); try{ if($("#esc_p1").value!==$("#esc_p2").value) throw new Error("Las llaves no coinciden."); await escSetup($("#esc_p1").value); say("Llave activada. Sus invitados ya pueden crear proyectos."); ownerLoad(list,nameOf); }catch(e){ say(e.code==="PERMISSION_DENIED"?"Publique primero las reglas nuevas (abajo).":e.message,true); b.disabled=false; } }); return; }
+    const theirs=list.filter(p=>p.esc&&p.createdByEmail&&p.createdByEmail!==WB.email);
+    if(!ESC.priv){ box.innerHTML=`${theirs.length?`<p>${theirs.length} proyecto(s) creados por sus invitados.</p>`:"<p>Sus invitados todavía no han creado proyectos.</p>"}<div class="field"><label for="esc_pw">Llave de propietario</label><input id="esc_pw" type="password" autocomplete="off"></div><button class="btn" type="button" id="esc_un">Desbloquear</button>`;
+      $("#esc_un").addEventListener("click",async ev=>{ const b=ev.target; b.disabled=true; try{ await escUnlock($("#esc_pw").value); say(""); ownerLoad(list,nameOf); }catch(e){ say(e.message,true); b.disabled=false; } }); return; }
+    box.innerHTML=theirs.length?`<div class="tbl-wrap"><table><tbody>${theirs.map(p=>`<tr><td><b>${E(p.registration||"—")}</b> · ${E(p.name||"")}<br><span class="muted">${E(p.createdByEmail)} · ${E(p.createdAt?new Date(p.createdAt).toLocaleDateString("es-MX"):"")}</span><div class="mono" data-escpw="${E(p.pid)}" style="margin:4px 0"></div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px"><button class="btn sm ghost" type="button" data-escshow="${E(p.pid)}">Ver contraseñas</button><button class="btn sm" type="button" data-escopen="${E(p.pid)}">Abrir</button></div></td></tr>`).join("")}</tbody></table></div>`:"<p>Sus invitados todavía no han creado proyectos.</p>";
+    box.querySelectorAll("[data-escshow]").forEach(b=>b.addEventListener("click",async()=>{ const p=theirs.find(x=>x.pid===b.dataset.escshow); const out=box.querySelector(`[data-escpw="${CSS.escape(p.pid)}"]`);
+      try{ const k=await escOpen(p.esc); out.innerHTML=`Administrador: <b>${E(k.admin||"—")}</b><br>Invitados: <b>${E(k.guest||"—")}</b>`; audit&&0; }catch(e){ out.textContent=e.message; } }));
+    box.querySelectorAll("[data-escopen]").forEach(b=>b.addEventListener("click",async()=>{ const p=theirs.find(x=>x.pid===b.dataset.escopen); b.disabled=true;
+      try{ const k=await escOpen(p.esc); const nm=(nameOf&&nameOf())||"Propietario"; await webOpen(p.pid,null,nm,msg,{k:k.k,r:"ADMIN"}); W.homeResolve&&W.homeResolve(); }catch(e){ say(e.message,true); b.disabled=false; } })); }
   /* ---- WEB screens ---- */
   const webFoot=`<p class="auth-foot">Solo pueden entrar las personas cuyo correo autorizó el propietario. Los proyectos están cifrados: además necesita la contraseña del proyecto, que solo el propietario proporciona.</p>`;
   function webLoginScreen(msg){
@@ -1499,6 +1575,7 @@ const FM = (() => {
     if(!WB.verified&&!WB.owner&&!WB.role) return webInfoScreen("Confirme su correo",`<p>Le enviamos un correo a <b>${E(WB.email)}</b>. Abra el enlace que contiene (revise también «spam» y «promociones») y después pulse «Ya lo confirmé».</p>
       <p class="small muted">¿No le llega? Pulse <b>«Pedir aprobación»</b> y avise al propietario: él confirmará su cuenta desde «Personas autorizadas».</p>`,{verify:true});
     if(!WB.owner&&!WB.role) return webInfoScreen("Correo no autorizado",`<p>El correo <b>${E(WB.email)}</b> todavía no está autorizado. Pida al propietario que lo agregue en «Personas autorizadas» y vuelva a intentar.</p>`);
+    if(!WB.owner) await sessClaim();
     const rs=await resumeLoad(); if(rs?.pid){ $("#auth").innerHTML=`<div class="start">${hero()}<div class="auth-note" role="status">Abriendo ${E(rs.pid)}…</div></div>`;
       try{ await webOpen(rs.pid,null,rs.name,null,rs); return; }catch(e){ resumeClear(); msg=e.message; } }
     return webHome(msg);
@@ -1510,12 +1587,12 @@ const FM = (() => {
     $("#auth").innerHTML=`<div class="start">${hero()}${msg?`<div class="auth-note" role="status">${E(msg)}</div>`:""}
       <p class="small muted" style="margin:0 0 12px">Sesión: <b>${E(WB.email)}</b> · ${roleTx} · <button class="btn ghost sm" type="button" id="w_out">Cerrar sesión</button></p><div class="start-grid">
       ${card(`<form id="f_wopen"><h2>Proyectos</h2>${err?`<div class="auth-err">${E(err)}</div>`:list.length?`
-        <div class="field"><label for="w_pid">Proyecto</label><select id="w_pid">${list.map(p=>`<option value="${E(p.pid)}">${E(p.registration||"—")} · ${E(p.name||"")} · ${E(p.updatedAt?new Date(p.updatedAt).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"}):"")}${p.updatedBy?" · "+E(p.updatedBy):""}</option>`).join("")}</select></div>
+        <div class="field"><label for="w_pid">Proyecto</label><select id="w_pid">${list.map(p=>`<option value="${E(p.pid)}">${E(p.registration||"—")} · ${E(p.name||"")}${WB.owner&&p.createdByEmail&&p.createdByEmail!==WB.email?" · creado por "+E(p.createdByEmail):""} · ${E(p.updatedAt?new Date(p.updatedAt).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"}):"")}${p.updatedBy?" · "+E(p.updatedBy):""}</option>`).join("")}</select></div>
         <div class="field"><label for="w_pw">Contraseña del proyecto</label><input id="w_pw" type="password" autocomplete="off" required></div>
         <div class="field"><label for="w_name">Su nombre (para el historial)</label><input id="w_name" required value="${E(nm)}"></div>
         <div class="auth-msg"></div><div class="row"><button class="btn pri" type="submit">Abrir</button>${WB.owner?`<button class="btn ghost sm" type="button" id="w_del">Eliminar del servidor</button>`:""}</div>`
         :`<p class="empty">${WB.owner?"Aún no hay proyectos: cree el primero.":"Todavía no hay proyectos publicados."}</p>`}</form>`)}
-      ${WB.owner?card(`<form id="f_wnew"><h2>Nuevo proyecto</h2>
+      ${(WB.owner||WB.role)?card(`<form id="f_wnew"><h2>Nuevo proyecto</h2>
         <div class="field"><label for="wn_name">Nombre</label><input id="wn_name" required placeholder="C-check XA-ABC"></div>
         <div class="field"><label for="wn_type">Tipo de aeronave</label><input id="wn_type" value="ERJ 190-100"></div>
         <div class="field"><label for="wn_reg">Matrícula</label><input id="wn_reg" required></div><div class="field"><label for="wn_msn">MSN</label><input id="wn_msn"></div>
@@ -1523,10 +1600,10 @@ const FM = (() => {
         <div class="field"><label for="wn_pw1">Contraseña de administrador (solo usted, mín. 12)</label><input id="wn_pw1" type="password" autocomplete="new-password" required minlength="12"></div>
         <div class="field"><label for="wn_pw2">Repita</label><input id="wn_pw2" type="password" autocomplete="new-password" required minlength="12"></div>
         <div class="field"><label for="wn_pw3">Contraseña para sus invitados (usted se la da, mín. 12)</label><input id="wn_pw3" type="password" autocomplete="new-password" required minlength="12"></div>
-        <div class="auth-msg"></div><button class="btn pri" type="submit">Crear proyecto</button></form>`)+card(aclHtml()):""}
+        <div class="auth-msg"></div><button class="btn pri" type="submit">Crear proyecto</button>${WB.owner?"":`<p class="small muted" style="margin:8px 0 0">El propietario podrá ver las contraseñas de los proyectos que usted cree. No es posible compartir ni descargar los proyectos.</p>`}</form>`):""}${WB.owner?card(aclHtml())+ownerCards():""}
       </div>${webFoot}</div>`;
-    if(WB.owner) aclLoad();
-    return new Promise(resolve=>{
+    if(WB.owner){ aclLoad(); ownerLoad(list,()=>$("#w_name")?.value.trim()||nm); }
+    return new Promise(resolve=>{ W.homeResolve=resolve;
       $("#w_out").addEventListener("click",()=>{ wbSignOut(); webScreen().then(resolve); });
       guardOn("f_wopen", async(f)=>{ await webOpen($("#w_pid").value,$("#w_pw").value,$("#w_name").value.trim(),f.querySelector(".auth-msg")); }, resolve);
       $("#w_del")?.addEventListener("click", async ev=>{ const b=ev.target; if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="Pulse otra vez: se borra para todos"; return; }
@@ -1536,8 +1613,10 @@ const FM = (() => {
         const w3=strength(p3); if(w3) throw new Error("Contraseña de invitados: "+w3); if(p3===p1) throw new Error("La contraseña de invitados debe ser distinta a la suya.");
         st.name=v("wn_user"); st.dkRaw=rnd(32); st.mkRaw=rnd(32); st.dk=await aesKey(st.dkRaw); st.fileId=crypto.randomUUID(); st.role="ADMIN";
         st.wraps=[await wrap("ADMIN",p1,concat(st.dkRaw,st.mkRaw)), await wrap("INSPECTOR",p3,st.dkRaw)];
+        const esc=await escSeal({admin:p1,guest:p3,k:b64(concat(st.dkRaw,st.mkRaw)),name:v("wn_name"),reg:v("wn_reg").toUpperCase()});
+        if(!WB.owner&&!esc) throw new Error("El propietario todavía no activa su «llave de propietario». Pídale que la active en su pantalla de inicio; después podrá crear proyectos.");
         const pid=(v("wn_reg")||"AC").replace(/[^A-Za-z0-9-]/g,"").slice(0,30)+"-"+uid(); const reg=v("wn_reg").toUpperCase();
-        await fsCommit([fsW(`projects/${pid}`,{name:v("wn_name"),registration:reg,aircraftType:v("wn_type"),msn:v("wn_msn"),fileId:st.fileId,wraps:JSON.stringify(st.wraps),rev:0,createdAt:nowIso(),updatedAt:nowIso(),updatedBy:st.name},{pre:{exists:false}})]);
+        await fsCommit([fsW(`projects/${pid}`,{name:v("wn_name"),registration:reg,aircraftType:v("wn_type"),msn:v("wn_msn"),fileId:st.fileId,wraps:JSON.stringify(st.wraps),rev:0,createdAt:nowIso(),updatedAt:nowIso(),updatedBy:st.name,createdByUid:WB.uid||"",createdByEmail:WB.email||"",esc:esc||""},{pre:{exists:false}})]); W.creator=!WB.owner; W.pwKnown={admin:p1,guest:p3}; W.esc=esc||"";
         S.me={id:"u:"+WB.email,name:st.name}; S.fileRole="ADMIN"; try{ localStorage.setItem("ap.web.name",st.name); }catch{}
         await S.db.doc(`projects/${pid}`).set({name:v("wn_name"),aircraftType:v("wn_type"),registration:reg,msn:v("wn_msn"),customer:"",event:"",date:new Date().toISOString().slice(0,10),description:"",status:"IN PROGRESS",createdBy:S.me.id,createdAt:nowIso(),members:{[S.me.id]:"ADMIN"},patterns:{}});
         Object.assign(W,{pid,rev:0,sent:new Map(),rids:new Map(),assets:new Set(),wrapsDirty:false}); st.web=true; st.label=reg; st.importDirty=true; S.route="documents"; resumeSave({pid,name:st.name,k:b64(concat(st.dkRaw,st.mkRaw)),r:"ADMIN"});
@@ -1773,7 +1852,7 @@ const FM = (() => {
     const w=strength(pw); if(w) throw new Error(w);
     const other=st.wraps.filter(x=>x.role!==role || x.kind==="owner");
     st.wraps=[...other, await wrap(role, pw, role==="ADMIN"?concat(st.dkRaw, st.mkRaw):st.dkRaw)];
-    if(st.web) W.wrapsDirty=true; markDirty();
+    if(st.web){ W.wrapsDirty=true; if(W.creator){ W.pwKnown={...(W.pwKnown||{}),[role==="ADMIN"?"admin":"guest"]:pw}; try{ const e=await escSeal({...W.pwKnown,k:b64(concat(st.dkRaw,st.mkRaw||new Uint8Array(32)))}); if(e) W.esc=e; }catch{} } } markDirty();
   }
   function removeInspector(){ st.wraps=st.wraps.filter(x=>x.role!=="INSPECTOR"); if(st.web) W.wrapsDirty=true; markDirty(); }
 
@@ -5100,7 +5179,7 @@ document.addEventListener("click", async e=>{
     case "photos": try{ await generatePhotos(); toast(`${S.photos?.length||0} foto(s) generadas.`); }catch(err){ toast("Error al generar fotos: "+err.message); } break;
     case "photoszip": try{ await downloadPhotosZip(); }catch(err){ toast("Error: "+err.message); } break;
     case "annot": try{ const r=await makeAnnotatedFigures(); await offerFile(r.name,r.bytes); audit("ANNOTATED_FIGURES_EXPORTED",r.name); }catch(err){ toast(err.message); } break;
-    case "json": { const run=S.runs.find(r=>r.id===S.runId); const json=JSON.stringify({project:stripId(proj()),run,relations:S.rel.map(r=>({...r,effectiveStatus:eff(r)})),physicalPanels:physicalOf(S.rel).map(({rels,...x})=>x),verifications:S.verifs},null,2); await offerFile("analysis_summary.json",new TextEncoder().encode(json)); audit("SUMMARY_EXPORTED","analysis_summary.json"); break; }
+    case "json": { if(WB.on&&!WB.owner){ toast("Solo el propietario puede exportar los datos del proyecto."); break; } const run=S.runs.find(r=>r.id===S.runId); const json=JSON.stringify({project:stripId(proj()),run,relations:S.rel.map(r=>({...r,effectiveStatus:eff(r)})),physicalPanels:physicalOf(S.rel).map(({rels,...x})=>x),verifications:S.verifs},null,2); await offerFile("analysis_summary.json",new TextEncoder().encode(json)); audit("SUMMARY_EXPORTED","analysis_summary.json"); break; }
     case "loadaudit": { await flushAudit(); if(S.api?.auditList){ S.auditRows=await S.api.auditList(S.pid); await resolveNames(S.auditRows.map(a=>a.uid)); render(); break; } const s=await S.db.collection(`projects/${S.pid}/audit`).get(); S.auditRows=s.docs.flatMap(x=>x.data().entries||[]).concat(S.auditBuf).sort((a,b)=>b.at.localeCompare(a.at)); await resolveNames(S.auditRows.map(a=>a.uid)); render(); break; }
     case "resetpat": await S.db.doc(`projects/${S.pid}`).update({patterns:{}}); audit("PATTERNS_RESET",""); toast("Patrones restaurados."); break;
   }
