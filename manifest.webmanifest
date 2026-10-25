@@ -1,11 +1,11 @@
 {
- "name": "AeroPanel Planner",
- "short_name": "AeroPanel",
+ "name": "AeroPlanner · MRO",
+ "short_name": "AeroPlanner",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "background_color": "#05080d",
- "theme_color": "#05080d",
+ "background_color": "#0B2251",
+ "theme_color": "#0B2251",
  "icons": [
   {
    "src": "icon-192.png",

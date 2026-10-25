@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; manifest-src 'self'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob: 'self'; font-src data: blob:; connect-src data: blob: https://identitytoolkit.googleapis.com/v1/ https://securetoken.googleapis.com/v1/token https://firestore.googleapis.com/v1/projects/aeropanelmro/; worker-src blob: 'self'; media-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
-<title>AeroPanel Planner</title>
+<title>AeroPlanner · MRO</title>
 <style>
 :root{
   --bg:#EDF0F4; --surface:#FFFFFF; --surface-2:#F5F7FA; --ink:#0F1B2D; --ink-2:#4A5A70; --ink-3:#7A889B;
@@ -181,6 +181,62 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .auth-card label.row{flex-wrap:nowrap;align-items:flex-start}
 .auth-foot{font-size:12px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:10px;margin:0}
 .qr{display:flex;justify-content:center;background:#fff;padding:8px;border-radius:6px}
+
+
+/* ---------- AeroPlanner brand ---------- */
+.apw{font-family:var(--f-body);font-weight:400!important;letter-spacing:.01em!important;text-transform:none!important}
+.apw span{font-weight:800!important;font-size:inherit!important;letter-spacing:inherit!important;text-transform:none!important;color:inherit!important;display:inline!important;margin:0!important}
+.aplogo{flex:none;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}
+.brand b.apw{font-size:21px;color:#fff}
+.brand>div>span{letter-spacing:.1em;font-size:10px;white-space:nowrap}
+.hero .hbrand b.apw{font-size:28px;color:#fff}
+/* ---------- sign-in (split layout) ---------- */
+#auth:has(> .lp){padding:0;align-items:stretch;justify-content:stretch}
+.lp{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(400px,.92fr);min-height:100vh;min-height:100dvh;width:100%}
+.lp-brand{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:28px;padding:44px 52px;color:#E6EDF7;
+  background:radial-gradient(110% 80% at 15% 0%,#1C4A9A 0%,#0B2251 45%,#060F26 100%)}
+.lp-brand::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(170,195,230,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(170,195,230,.07) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(180deg,#000 30%,transparent 95%);pointer-events:none}
+.lp-brand>*{position:relative}
+.lp-logo{display:flex;align-items:center;gap:14px}
+.lp-logo b{display:block;font-size:26px;line-height:1.1;color:#fff}
+.lp-logo small{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#D9A441;margin-top:3px}
+.lp-copy{max-width:540px}
+.lp-copy h1{font-family:var(--f-body);font-size:clamp(28px,3.1vw,42px);line-height:1.12;font-weight:750;letter-spacing:-.01em;color:#fff;margin:0}
+.lp-copy h1 em{font-style:normal;color:#9CC2FF}
+.lp-copy p{font-size:16px;line-height:1.6;color:#B9C8DD;margin:16px 0 0;max-width:46ch}
+.lp-feat{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:14px}
+.lp-feat li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;line-height:1.5;color:#C7D4E6}
+.lp-feat li b{color:#fff;font-weight:650}
+.lp-feat svg{flex:none;width:20px;height:20px;color:#D9A441;margin-top:1px}
+.lp-plane{position:absolute!important;right:-70px;bottom:40px;width:min(560px,62%);opacity:.32;pointer-events:none}
+.lp-legal{font-size:12px;color:#7F92AE;letter-spacing:.02em}
+.lp-main{display:flex;align-items:center;justify-content:center;padding:40px 24px;background:radial-gradient(70% 55% at 50% 42%,rgba(42,107,209,.12),transparent 70%),var(--bg)}
+.lp-go{background:linear-gradient(180deg,#2F72DA,#1D4FA8)!important;color:#fff!important;border:1px solid #2F72DA!important;text-transform:none!important;letter-spacing:.02em!important;font-weight:700!important;border-radius:10px!important;box-shadow:0 6px 18px rgba(31,91,184,.35)}
+.lp-go:hover{filter:brightness(1.08)}
+.lp-card{width:min(420px,100%);display:flex;flex-direction:column;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:32px 30px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+.lp-card form{display:flex;flex-direction:column;gap:14px}
+.lp-card h2{font-family:var(--f-body);font-size:24px;font-weight:750;letter-spacing:-.01em;margin:0;text-transform:none}
+.lp-sub{margin:-6px 0 2px;color:var(--ink-2);font-size:14.5px;line-height:1.5}
+.lp-card .field input{min-height:46px;font-size:16px;border-radius:10px}
+.lp-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line-2)}
+.lp-tabs button{font:inherit;font-size:14px;font-weight:650;border:0;border-radius:9px;padding:9px 10px;background:transparent;color:var(--ink-2);cursor:pointer;letter-spacing:.01em;text-transform:none}
+.lp-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.lp-go{width:100%;justify-content:center;min-height:48px;font-size:15px}
+.lp-link{align-self:center;background:none;border:0;color:var(--accent);font:inherit;font-size:14px;cursor:pointer;padding:4px;text-decoration:underline;text-underline-offset:3px}
+.lp-foot{display:flex;gap:10px;align-items:flex-start;margin:4px 0 0;padding-top:16px;border-top:1px solid var(--line-2);font-size:12.5px;line-height:1.5;color:var(--ink-3)}
+.lp-foot svg{flex:none;width:18px;height:18px;margin-top:1px}
+.lp-mlogo{display:none;align-items:center;gap:10px}
+.lp-mlogo b{font-size:22px;color:var(--ink)}
+@media (max-width:900px){
+  .lp{grid-template-columns:1fr}
+  .lp-brand{padding:26px 20px 30px;gap:14px}
+  .lp-copy h1{font-size:23px}
+  .lp-logo b{font-size:22px}
+  .lp-copy p,.lp-feat,.lp-plane,.lp-legal{display:none}
+  .lp-main{align-items:flex-start;padding:20px 16px 40px;margin-top:-18px;background:transparent}
+  .lp-card{padding:24px 20px;border-radius:16px}
+  .lp{background:var(--bg)}
+}
 
 /* ---------- start screen (file mode) ---------- */
 #auth{align-items:flex-start}
@@ -614,15 +670,15 @@ tr.click:hover td{background:rgba(63,212,255,.05)}
   <nav class="bottomnav" id="bnav" aria-label="Navegación móvil"></nav>
   <aside class="side" aria-label="Navegación">
     <div class="brand">
-      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="4" fill="none" stroke="#FFD400" stroke-width="2"/><path d="M17 5 L19.5 14 L29 18 L29 20.5 L19.5 18.5 L18.8 25 L22 27.5 L22 29 L17 28 L12 29 L12 27.5 L15.2 25 L14.5 18.5 L5 20.5 L5 18 L14.5 14 Z" fill="#DCE4EE"/></svg>
-      <div><b>AEROPANEL</b><span>Planner</span></div>
+      <svg class="aplogo" width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="apg36" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A6BD1"/><stop offset="1" stop-color="#0B2251"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="15" fill="url(#apg36)"/><rect x="3.5" y="3.5" width="57" height="57" rx="13.5" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/><path d="M32 10.5 L52.5 51.5 H43.6 L32 27.2 L20.4 51.5 H11.5 Z" fill="#fff"/><path d="M15.5 42.5 C25 37.5 37 35 50.5 36.2" stroke="#D9A441" stroke-width="4.2" fill="none" stroke-linecap="round"/><circle cx="50.8" cy="36.2" r="3.1" fill="#D9A441"/></svg>
+      <div><b class="apw"><span>Aero</span>Planner</b><span>Planeación MRO</span></div>
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="foot" id="sidefoot">Herramienta de apoyo documental.<br>No sustituye AMM / IPC / SRM.</div>
   </aside>
   <div class="main">
     <header class="top">
-      <div class="proj" id="topproj"><b>AEROPANEL PLANNER</b><span>Sin proyecto activo</span></div>
+      <div class="proj" id="topproj"><b>AeroPlanner</b><span>Sin proyecto activo</span></div>
       <label class="search" for="q"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2"/></svg><input id="q" type="search" placeholder="Buscar 192AL, ZONE 100, CARD 007…" autocomplete="off"></label>
       <div class="who" id="who"></div>
     </header>
@@ -856,6 +912,7 @@ function pdfLib(){ if(window.PDFLib) return Promise.resolve(window.PDFLib); PDFL
 let DEMO_P=null; const demoData=()=>window.__DEMO?Promise.resolve(window.__DEMO):(DEMO_P=DEMO_P||libText("demo-data").then(t=>JSON.parse(t)));
 let AP_OWNER=(()=>{ try{ const e=document.getElementById("ap-owner"); return e?JSON.parse(e.textContent):null; }catch{ return null; } })();
 /* published online (claude.ai viewer): the page runs inside the viewer frame, downloads go through the viewer */
+const AP_LOGO=(w=40)=>`<svg class="aplogo" width="${w}" height="${w}" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="apg${w}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2A6BD1"/><stop offset="1" stop-color="#0B2251"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="15" fill="url(#apg${w})"/><rect x="3.5" y="3.5" width="57" height="57" rx="13.5" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/><path d="M32 10.5 L52.5 51.5 H43.6 L32 27.2 L20.4 51.5 H11.5 Z" fill="#fff"/><path d="M15.5 42.5 C25 37.5 37 35 50.5 36.2" stroke="#D9A441" stroke-width="4.2" fill="none" stroke-linecap="round"/><circle cx="50.8" cy="36.2" r="3.1" fill="#D9A441"/></svg>`;
 const AP_HOSTED=!!window.claude;
 const AP_DEV=!AP_HOSTED && (location.hostname==="localhost"||location.hostname==="127.0.0.1");
 
@@ -1355,17 +1412,33 @@ const FM = (() => {
   /* ---- WEB screens ---- */
   const webFoot=`<p class="auth-foot">Solo pueden entrar las personas cuyo correo autorizó el propietario. Los proyectos están cifrados: además necesita la contraseña del proyecto, que solo el propietario proporciona.</p>`;
   function webLoginScreen(msg){
-    $("#auth").innerHTML=`<div class="start">${hero()}${msg?`<div class="auth-note" role="status">${E(msg)}</div>`:""}<div class="start-grid">
-      ${card(`<form id="f_wlog"><h2>Entrar</h2><p class="small muted">Use el correo que autorizó el propietario.</p>
-        <div class="field"><label for="wl_em">Correo</label><input id="wl_em" type="email" autocomplete="username" required value="${E(WB.email||"")}"></div>
-        <div class="field"><label for="wl_pw">Contraseña de acceso (la suya)</label><input id="wl_pw" type="password" autocomplete="current-password" required></div>
-        <div class="auth-msg"></div><div class="row"><button class="btn pri" type="submit">Entrar</button><button class="btn ghost sm" type="button" id="wl_reset">Olvidé mi contraseña</button></div></form>`)}
-      ${card(`<form id="f_wreg"><h2>Primera vez: crear cuenta</h2><p class="small muted">Cree su acceso con <b>el mismo correo</b> que autorizó el propietario. Le llegará un correo para confirmarlo.</p>
-        <div class="field"><label for="wr_em">Correo</label><input id="wr_em" type="email" autocomplete="username" required></div>
-        <div class="field"><label for="wr_pw">Contraseña de acceso (mín. 8)</label><input id="wr_pw" type="password" autocomplete="new-password" minlength="8" required></div>
-        <div class="field"><label for="wr_pw2">Repita</label><input id="wr_pw2" type="password" autocomplete="new-password" minlength="8" required></div>
-        <div class="auth-msg"></div><button class="btn" type="submit">Crear cuenta</button></form>`)}
-      </div>${webFoot}</div>`;
+    const ok=`<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6 10.4l2.6 2.5L14 7.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    $("#auth").innerHTML=`<div class="lp">
+      <section class="lp-brand">
+        <div class="lp-logo">${AP_LOGO(48)}<div><b class="apw"><span>Aero</span>Planner</b><small>MRO · Planeación de accesos</small></div></div>
+        <div class="lp-copy"><h1>Planificación de remoción de <em>Access Panels</em></h1>
+          <p>Tarjetas de inspección, figuras AMM y zonas ATA en un solo lugar: plan por día, avión 3D por zonas y reporte final con la imagen de cada acceso.</p>
+          <ul class="lp-feat"><li>${ok}<span><b>Acceso por invitación.</b> Solo entran los correos que autoriza el propietario.</span></li><li>${ok}<span><b>Proyectos cifrados AES-256.</b> Cada proyecto pide además su propia contraseña.</span></li><li>${ok}<span><b>En cualquier dispositivo.</b> Computadora, tableta o celular, sin instalar nada.</span></li></ul></div>
+        <div class="lp-plane" aria-hidden="true">${aircraftSVG({},{blueprint:true,view:"plan"})}</div>
+        <small class="lp-legal">Herramienta de apoyo documental · No sustituye AMM / IPC / SRM</small>
+      </section>
+      <section class="lp-main"><div class="lp-card">
+        <div class="lp-mlogo">${AP_LOGO(40)}<b class="apw"><span>Aero</span>Planner</b></div>
+        ${msg?`<div class="auth-note" role="status">${E(msg)}</div>`:""}
+        <div class="lp-tabs" role="tablist" aria-label="Acceso"><button type="button" role="tab" id="lpt_log" aria-selected="true" aria-controls="f_wlog">Entrar</button><button type="button" role="tab" id="lpt_reg" aria-selected="false" aria-controls="f_wreg">Crear cuenta</button></div>
+        <form id="f_wlog" role="tabpanel" aria-labelledby="lpt_log"><h2>Bienvenido</h2><p class="lp-sub">Entre con el correo que autorizó el propietario.</p>
+          <div class="field"><label for="wl_em">Correo</label><input id="wl_em" type="email" autocomplete="username" required value="${E(WB.email||"")}" placeholder="nombre@empresa.com"></div>
+          <div class="field"><label for="wl_pw">Contraseña</label><input id="wl_pw" type="password" autocomplete="current-password" required></div>
+          <div class="auth-msg"></div><button class="btn pri lp-go" type="submit">Entrar</button><button class="lp-link" type="button" id="wl_reset">¿Olvidó su contraseña?</button></form>
+        <form id="f_wreg" role="tabpanel" aria-labelledby="lpt_reg" hidden><h2>Primera vez</h2><p class="lp-sub">Cree su acceso con <b>el mismo correo</b> que autorizó el propietario. Le llegará un correo para confirmarlo.</p>
+          <div class="field"><label for="wr_em">Correo</label><input id="wr_em" type="email" autocomplete="username" required placeholder="nombre@empresa.com"></div>
+          <div class="field"><label for="wr_pw">Contraseña (mín. 8)</label><input id="wr_pw" type="password" autocomplete="new-password" minlength="8" required></div>
+          <div class="field"><label for="wr_pw2">Repita la contraseña</label><input id="wr_pw2" type="password" autocomplete="new-password" minlength="8" required></div>
+          <div class="auth-msg"></div><button class="btn pri lp-go" type="submit">Crear cuenta</button></form>
+        <p class="lp-foot"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 016 0V9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Solo entran los correos autorizados por el propietario. Para abrir un proyecto necesita además la contraseña que él le proporcione.</p>
+      </div></section></div>`;
+    const tab=k=>{ for(const [t,f] of [["lpt_log","f_wlog"],["lpt_reg","f_wreg"]]){ const on=t===k; $("#"+t).setAttribute("aria-selected",on); $("#"+f).hidden=!on; } $(k==="lpt_log"?"#wl_em":"#wr_em")?.focus(); };
+    $("#lpt_log").addEventListener("click",()=>tab("lpt_log")); $("#lpt_reg").addEventListener("click",()=>tab("lpt_reg"));
     return new Promise(resolve=>{
       guardOn("f_wlog", async()=>{ await wbSignIn($("#wl_em").value.trim(),$("#wl_pw").value); }, ()=>webScreen().then(resolve));
       guardOn("f_wreg", async()=>{ if($("#wr_pw").value!==$("#wr_pw2").value) throw new Error("Las contraseñas no coinciden."); await wbSignUp($("#wr_em").value.trim(),$("#wr_pw").value); }, ()=>webScreen().then(resolve));
@@ -1441,7 +1514,7 @@ const FM = (() => {
   function strength(pw){ if(pw.length<12) return "Mínimo 12 caracteres."; if(/^(.)\1+$/.test(pw)) return "Demasiado simple."; return ""; }
   function card(inner){ return `<section class="auth-card">${inner}</section>`; }
   const hero=()=>`<div class="hero"><div class="hplane" aria-hidden="true">${aircraftSVG({},{blueprint:true,view:"plan"})}</div>
-        <div class="hbrand"><svg width="38" height="38" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="4" fill="none" stroke="#FFD400" stroke-width="2"/><path d="M17 5 L19.5 14 L29 18 L29 20.5 L19.5 18.5 L18.8 25 L22 27.5 L22 29 L17 28 L12 29 L12 27.5 L15.2 25 L14.5 18.5 L5 20.5 L5 18 L14.5 14 Z" fill="#DCE4EE"/></svg><div><b>AEROPANEL</b><span>${WB.on?"Planner · servidor propio · cifrado":"Planner · archivo cifrado · sin conexión"}</span></div></div>
+        <div class="hbrand">${AP_LOGO(44)}<div><b class="apw"><span>Aero</span>Planner</b><span>${WB.on?"MRO · servidor propio · cifrado":"MRO · archivo cifrado · sin conexión"}</span></div></div>
         <h1>Planificación de remoción de Access Panels</h1>
         <div class="htags"><span>Embraer 190 · zonas ATA 100–800</span><span>Tarjeta ↔ figura ↔ zona</span><span>${WB.on?"AES-256 · servidor propio":"AES-256 · sin internet"}</span>${AP_OWNER||st.owner||WB.on?`<span>Acceso solo por invitación</span>`:""}</div></div>`;
   const guardOn=(id, fn, done) => $("#"+id)?.addEventListener("submit", async ev=>{ ev.preventDefault(); const f=ev.target, b=f.querySelector("button[type=submit]"), box=f.querySelector(".auth-msg"); b.disabled=true; box.innerHTML=`<div class="auth-note">Procesando…</div>`;
@@ -3796,7 +3869,7 @@ function aircraftCard(sel=null, compact=false){
    Zones ATA 100–800 are separate meshes (touch / click a zone to filter); accesses to remove are markers placed from the
    zone number (approximate — the exact panel is always the drawing). */
 const AC3D=(()=>{
-  let T=null, R=null, scene, cam, root, zoneMesh={}, markerGroup, labelGroup, decalGroup, ground, raf=0, needs=true, host=null, ro=null, tip=null;
+  let apronMat=null, T=null, R=null, scene, cam, root, zoneMesh={}, markerGroup, labelGroup, decalGroup, ground, raf=0, needs=true, host=null, ro=null, tip=null;
   const st={theta:-0.62, phi:1.12, dist:50, target:[18.5,-0.2,0], anim:null};
   const LEN=36.2, RY=1.67, RZ=1.50;
   let TP=null; const loadThree=()=>{ if(window.THREE) return Promise.resolve(window.THREE); TP=TP||libText("three-src").then(t=>{ injectClassic(t); if(!window.THREE) throw new Error("No se pudo iniciar el motor 3D"); return window.THREE; }); return TP; };
@@ -3842,46 +3915,67 @@ const AC3D=(()=>{
   const ENG=side=>({x:10.9,y:-2.25,z:side*4.95});
   /* ---- painted skins (canvas textures): panel seams, windows, windshield, livery, control surfaces ---- */
   function canvasTex(w,h,draw){ const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d"); draw(g,w,h); const t=new T.CanvasTexture(c); t.flipY=false; t.colorSpace=T.SRGBColorSpace; t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); return t; }
+  /* AeroPlanner house livery (original design, no airline branding): white body, satin-grey belly, a navy sweep that rises
+     from the wing root to the tail, with a gold pinstripe and a blue trailing band. */
+  const LIV={navy:"#0B2251",navy2:"#13306E",blue:"#1F5BB8",gold:"#D9A441",belly:"#D4DAE1",white:"#F7F9FB"};
+  const lerpN=(a,b,t)=>a+(b-a)*t, smooth=t=>{ t=Math.max(0,Math.min(1,t)); return t*t*(3-2*t); };
+  const sweepX=th=>{ const h=(1+Math.cos(th))/2; return lerpN(18.6,27.6,Math.pow(smooth(h),0.85)); };   // navy starts aft of this station
   function fuselageTex(reg){ return canvasTex(4096,1024,(g,W,H)=>{
-    const X=x=>x/LEN*W, V=th=>((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI)/(2*Math.PI)*H;
-    // base: white upper, light grey belly
-    const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,"#f7f9fb"); gr.addColorStop(0.36,"#f2f5f8"); gr.addColorStop(0.43,"#d9dee4"); gr.addColorStop(0.57,"#d9dee4"); gr.addColorStop(0.64,"#f2f5f8"); gr.addColorStop(1,"#f7f9fb"); g.fillStyle=gr; g.fillRect(0,0,W,H);
-    // Navy and red livery: white fuselage, deep navy lower/rear band and red accent stripe (own AeroPlanner name; no airline branding).
-    // Painted into the offline canvas texture (no external assets or scripts).
-    const NAVY="#071B4C", RED="#D7193F", XB=th=>22.7+1.35*Math.cos(th);
-    for(let py=0;py<H;py++){ const th=py/H*2*Math.PI; g.fillStyle=NAVY; g.fillRect(X(XB(th)),py,W-X(XB(th)),1); }
-    for(let py=0;py<H;py++){ const th=py/H*2*Math.PI, xb=XB(th); g.fillStyle=RED; g.fillRect(X(xb-0.23),py,X(xb+0.02)-X(xb-0.23),1); }
-    // skin seams: frames every ~0.53 m (light), stronger every 4; stringer joints
-    g.strokeStyle="rgba(90,104,120,.22)"; g.lineWidth=1.2; for(let x=4.6,i=0;x<31;x+=0.53,i++){ g.globalAlpha=i%4===0?1:0.45; g.beginPath(); g.moveTo(X(x),0); g.lineTo(X(x),H); g.stroke(); } g.globalAlpha=1;
-    for(const th of [0.62,1.42,2.35,2*Math.PI-0.62,2*Math.PI-1.42,2*Math.PI-2.35]){ g.beginPath(); g.moveTo(X(3),V(th)); g.lineTo(X(31.5),V(th)); g.stroke(); }
-    // rivet dots along the strong frames
-    g.fillStyle="rgba(80,92,108,.35)"; for(let x=4.6;x<31;x+=2.12) for(let v=0;v<H;v+=9) g.fillRect(X(x)-3,v,1.6,1.6);
-    // cabin windows (rounded), skipping doors and over-wing exits
-    const win=(x,th,w=0.23,h=0.33)=>{ const cx=X(x), cy=V(th), ww=w/LEN*W, hh=h/(2*Math.PI*1.6)*H; g.fillStyle="#0e1b2b"; g.beginPath(); g.roundRect(cx-ww/2,cy-hh/2,ww,hh,ww*0.45); g.fill(); g.strokeStyle="rgba(120,135,150,.8)"; g.lineWidth=1.5; g.stroke();
-      g.fillStyle="rgba(140,180,230,.35)"; g.beginPath(); g.roundRect(cx-ww/2+2,cy-hh/2+2,ww*0.4,hh*0.45,3); g.fill(); };
-    for(const sd of [1,-1]) for(let x=5.6;x<29.2;x+=0.53){ if((x>3.4&&x<4.8)||(x>15.2&&x<16.05)||(x>28.8)) continue; const th=sd>0?1.12:2*Math.PI-1.12; win(x,th); }
-    // door outlines (paint) + over-wing exits outline
-    const box=(x0,x1,t0,t1,col="rgba(70,82,96,.9)")=>{ const a=V(t0), b=V(t1); g.strokeStyle=col; g.lineWidth=2.4; g.beginPath(); g.roundRect(X(x0),Math.min(a,b),X(x1)-X(x0),Math.abs(b-a),10); g.stroke(); };
-    // windshield & cockpit side windows (nose top)
-    g.fillStyle="#0b1622"; const ws=(x0,x1,t0,t1,t2,t3)=>{ g.beginPath(); g.moveTo(X(x0),V(t0)); g.lineTo(X(x1),V(t1)); g.lineTo(X(x1),V(t2)); g.lineTo(X(x0),V(t3)); g.closePath(); g.fill(); g.strokeStyle="#5d6b7a"; g.lineWidth=2; g.stroke(); };
+    const X=x=>x/LEN*W, V=th=>((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI)/(2*Math.PI)*H, TH=py=>py/H*2*Math.PI;
+    // base paint: white, satin-grey belly with a soft transition (row by row so it follows the cylinder)
+    for(let py=0;py<H;py++){ const c=Math.cos(TH(py)); const k=smooth((-c-0.42)/0.18); g.fillStyle=k<=0?LIV.white:`rgb(${Math.round(lerpN(247,212,k))},${Math.round(lerpN(249,218,k))},${Math.round(lerpN(251,225,k))})`; g.fillRect(0,py,W,1); }
+    // navy sweep + blue band + gold pinstripe, drawn per row along the curved boundary
+    for(let py=0;py<H;py++){ const th=TH(py), xb=sweepX(th);
+      const gr=g.createLinearGradient(X(xb),0,W,0); gr.addColorStop(0,LIV.navy2); gr.addColorStop(0.45,LIV.navy); gr.addColorStop(1,"#081A3F"); g.fillStyle=gr; g.fillRect(X(xb),py,W-X(xb),1);
+      g.fillStyle=LIV.blue; g.fillRect(X(xb-0.62),py,X(xb-0.24)-X(xb-0.62),1);
+      g.fillStyle=LIV.gold; g.fillRect(X(xb-0.16),py,X(xb-0.06)-X(xb-0.16),1); }
+    // skin: frames (~0.53 m), lap joints, stringer seams, rivet rows; very light so the paint reads clean
+    g.lineWidth=1.1; for(let x=4.6,i=0;x<31.2;x+=0.53,i++){ g.strokeStyle=i%4===0?"rgba(70,84,100,.20)":"rgba(70,84,100,.08)"; g.beginPath(); g.moveTo(X(x),0); g.lineTo(X(x),H); g.stroke(); }
+    for(const th of [0.58,1.42,2.36,2*Math.PI-0.58,2*Math.PI-1.42,2*Math.PI-2.36]){ g.strokeStyle="rgba(70,84,100,.16)"; g.beginPath(); g.moveTo(X(3),V(th)); g.lineTo(X(31.5),V(th)); g.stroke(); g.strokeStyle="rgba(255,255,255,.35)"; g.beginPath(); g.moveTo(X(3),V(th)+1.5); g.lineTo(X(31.5),V(th)+1.5); g.stroke(); }
+    g.fillStyle="rgba(70,82,98,.22)"; for(let x=4.6;x<31;x+=2.12) for(let v=0;v<H;v+=7) g.fillRect(X(x)-2.5,v,1.3,1.3);
+    for(const th of [0.58,1.42,2.36,2*Math.PI-0.58,2*Math.PI-1.42,2*Math.PI-2.36]) for(let x=3.2;x<31.4;x+=0.11) g.fillRect(X(x),V(th)-3,1.2,1.2);
+    // cabin windows: recessed frame, tinted glass with a sky reflection, thin seal
+    const win=(x,th,w=0.25,h=0.36)=>{ const cx=X(x), cy=V(th), ww=w/LEN*W, hh=h/(2*Math.PI*1.6)*H;
+      g.fillStyle="rgba(120,132,146,.55)"; g.beginPath(); g.roundRect(cx-ww/2-3,cy-hh/2-3,ww+6,hh+6,ww*0.55); g.fill();
+      const gl=g.createLinearGradient(0,cy-hh/2,0,cy+hh/2); gl.addColorStop(0,"#3c5674"); gl.addColorStop(0.45,"#13202f"); gl.addColorStop(1,"#0a121b"); g.fillStyle=gl; g.beginPath(); g.roundRect(cx-ww/2,cy-hh/2,ww,hh,ww*0.48); g.fill();
+      g.fillStyle="rgba(190,215,240,.38)"; g.beginPath(); g.roundRect(cx-ww/2+2,cy-hh/2+2,ww*0.42,hh*0.32,4); g.fill(); g.strokeStyle="rgba(30,40,52,.7)"; g.lineWidth=1.2; g.beginPath(); g.roundRect(cx-ww/2,cy-hh/2,ww,hh,ww*0.48); g.stroke(); };
+    for(const sd of [1,-1]) for(let x=5.6;x<29.2;x+=0.53){ if((x>15.2&&x<16.05)||(x>28.8)) continue; win(x,sd>0?1.12:2*Math.PI-1.12); }
+    // windshield & cockpit side windows: dark tinted glass with sky reflection and black frames
+    const ws=(x0,x1,t0,t1,t2,t3)=>{ g.beginPath(); g.moveTo(X(x0),V(t0)); g.lineTo(X(x1),V(t1)); g.lineTo(X(x1),V(t2)); g.lineTo(X(x0),V(t3)); g.closePath();
+      const gr=g.createLinearGradient(X(x0),V(t0),X(x1),V(t2)); gr.addColorStop(0,"#45627f"); gr.addColorStop(0.5,"#101a26"); gr.addColorStop(1,"#1d2c3c"); g.fillStyle=gr; g.fill(); g.strokeStyle="#1b2129"; g.lineWidth=5; g.stroke(); };
     for(const sd of [1,-1]){ const T_=t=>sd>0?t:2*Math.PI-t; ws(1.62,2.42,T_(0.04),T_(0.05),T_(0.84),T_(0.74)); ws(2.48,3.12,T_(0.86),T_(0.9),T_(1.3),T_(1.26)); ws(3.18,3.62,T_(0.94),T_(0.96),T_(1.3),T_(1.28)); }
-    // radome seam + nose
-    g.strokeStyle="rgba(80,92,108,.6)"; g.lineWidth=2; g.beginPath(); g.moveTo(X(1.2),0); g.lineTo(X(1.2),H); g.stroke(); g.fillStyle="#e1e5ea"; g.fillRect(0,0,X(1.2),H);
-    // titles: AeroPlanner emblem + name (forward fuselage, below the windows)
-    { const fs=Math.round(H*0.072); g.font=`900 ${fs}px "Arial Black", Arial, sans-serif`; const txt="AEROPLANNER"; const tw=g.measureText(txt).width, ic=fs*1.25, gap=fs*0.35, total=ic+gap+tw;
-      const draw=()=>{ apEmblem(g,ic/2,0,ic,"#071B4C","#D7193F","#071B4C"); g.fillStyle="#071B4C"; g.textBaseline="middle"; g.fillText(txt,ic+gap,fs*0.04); };
-      const x0=X(5.4); g.save(); g.translate(x0,V(1.47)); draw(); g.restore(); g.save(); g.translate(x0+total,V(2*Math.PI-1.47)); g.rotate(Math.PI); draw(); g.restore(); }
-    // registration on rear fuselage (reads correctly from each side)
-    g.font=`bold ${Math.round(H*0.055)}px Arial, sans-serif`; g.fillStyle="#ffffff"; g.textBaseline="middle";
-    const regTx=String(reg||"").toUpperCase().slice(0,10); if(regTx){ g.save(); g.translate(X(24.6),V(1.38)); g.fillText(regTx,0,0); g.restore(); g.save(); g.translate(X(28.5),V(2*Math.PI-1.38)); g.rotate(Math.PI); g.fillText(regTx,0,0); g.restore(); }
-    // tail cone APU area slightly darker
-    g.fillStyle="rgba(120,130,140,.18)"; g.fillRect(X(34.4),0,W-X(34.4),H); }); }
-  /* original AeroPlanner emblem: rounded square frame with an upward aircraft and an access-panel square (not any airline's mark) */
-  function apEmblem(g,cx,cy,size,frame,accent,plane="#0a0c52"){ const s=size/34; g.save(); g.translate(cx-17*s,cy-17*s); g.scale(s,s);
-    g.lineWidth=2.4; g.strokeStyle=frame; g.beginPath(); g.roundRect(2,2,30,30,6); g.stroke(); g.fillStyle=accent; g.fillRect(21.5,21.5,7,7);
-    g.fillStyle=plane; g.beginPath(); g.moveTo(17,5); g.lineTo(18.9,13.6); g.lineTo(27,17.2); g.lineTo(27,19.4); g.lineTo(18.9,17.6); g.lineTo(18.4,23.4); g.lineTo(20.9,25.4); g.lineTo(20.9,26.8); g.lineTo(17,25.9); g.lineTo(13.1,26.8); g.lineTo(13.1,25.4); g.lineTo(15.6,23.4); g.lineTo(15.1,17.6); g.lineTo(7,19.4); g.lineTo(7,17.2); g.lineTo(15.1,13.6); g.closePath(); g.fill(); g.restore(); }
+    // radome: slightly warmer grey, seam, lightning diverter strips
+    g.fillStyle="#E4E8ED"; g.fillRect(0,0,X(1.2),H); g.strokeStyle="rgba(70,82,98,.55)"; g.lineWidth=2; g.beginPath(); g.moveTo(X(1.2),0); g.lineTo(X(1.2),H); g.stroke();
+    g.strokeStyle="rgba(120,130,142,.5)"; g.lineWidth=1.4; for(let k=0;k<8;k++){ const v=k/8*H; g.beginPath(); g.moveTo(0,v); g.lineTo(X(1.15),v+(k%2?6:-6)); g.stroke(); }
+    // static ports, AoA vanes base, drain masts (small details that make the nose read real)
+    for(const sd of [1,-1]){ const T_=t=>sd>0?t:2*Math.PI-t; g.fillStyle="#9aa4ae"; g.beginPath(); g.arc(X(4.9),V(T_(1.62)),5,0,7); g.fill(); g.strokeStyle="#55606c"; g.lineWidth=1.2; g.stroke();
+      g.fillStyle="rgba(200,40,40,.85)"; g.fillRect(X(4.75),V(T_(1.62))-11,X(5.05)-X(4.75),3); }
+    // titles: AeroPlanner wordmark with the emblem, above the window line, both sides
+    { const fs=Math.round(H*0.084); const big=`800 ${fs}px "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif`, light=`400 ${fs}px "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif`;
+      g.font=big; const w1=g.measureText("Aero").width; g.font=light; const w2=g.measureText("Planner").width; const ic=fs*1.18, gap=fs*0.32, total=ic+gap+w1+w2;
+      const draw=()=>{ apEmblem(g,ic/2,0,ic,LIV.navy,LIV.gold,"#ffffff",true); g.textBaseline="middle"; g.fillStyle=LIV.navy; g.font=big; g.fillText("Aero",ic+gap,fs*0.05); g.fillStyle=LIV.navy2; g.font=light; g.fillText("Planner",ic+gap+w1,fs*0.05); };
+      const x0=X(5.6); g.save(); g.translate(x0,V(0.84)); draw(); g.restore(); g.save(); g.translate(x0+total,V(2*Math.PI-0.84)); g.rotate(Math.PI); draw(); g.restore(); }
+    // registration on the rear fuselage (white on the navy sweep) and small one under the cockpit
+    const regTx=String(reg||"").toUpperCase().slice(0,10);
+    if(regTx){ g.font=`700 ${Math.round(H*0.056)}px "Segoe UI",Roboto,Arial,sans-serif`; g.fillStyle="#ffffff"; g.textBaseline="middle";
+      const rw=g.measureText(regTx).width; g.save(); g.translate(X(25.3),V(1.36)); g.fillText(regTx,0,0); g.restore(); g.save(); g.translate(X(25.3)+rw,V(2*Math.PI-1.36)); g.rotate(Math.PI); g.fillText(regTx,0,0); g.restore();
+      g.font=`600 ${Math.round(H*0.02)}px Arial,sans-serif`; g.fillStyle=LIV.navy; g.save(); g.translate(X(3.75),V(1.55)); g.fillText(regTx,0,0); g.restore(); g.save(); g.translate(X(4.5),V(2*Math.PI-1.55)); g.rotate(Math.PI); g.fillText(regTx,0,0); g.restore(); }
+    // service stencils: external power, water, emergency exit hinge marks
+    g.font=`700 ${Math.round(H*0.012)}px Arial,sans-serif`; g.fillStyle="rgba(40,50,62,.75)"; g.textBaseline="middle";
+    for(const [x,th,t] of [[6.6,2.0,"EXT PWR"],[26.2,2.05,"POTABLE WATER"],[9.2,2.55,"NO PUSH"],[23.8,2.6,"NO PUSH"]]){ g.save(); g.translate(X(x),V(th)); g.fillText(t,0,0); g.restore(); }
+    // weathering: soft exhaust/APU staining on the tail cone and a faint belly grime gradient
+    { const gr=g.createLinearGradient(X(33),0,W,0); gr.addColorStop(0,"rgba(30,30,32,0)"); gr.addColorStop(1,"rgba(30,30,32,.28)"); g.fillStyle=gr; g.fillRect(X(33),0,W-X(33),H); }
+    for(let py=0;py<H;py++){ const c=Math.cos(TH(py)); if(c>-0.75) continue; g.fillStyle=`rgba(60,58,52,${(-c-0.75)*0.16})`; g.fillRect(X(4),py,X(30)-X(4),1); } }); }
+  /* AeroPlanner emblem (original): rounded tile, a swept "A" shaped like an aircraft seen from above, and a gold flight-path
+     stroke as the crossbar. tile=true paints the tile (fill = frame colour); otherwise only the glyph is drawn in "frame" colour. */
+  function apEmblem(g,cx,cy,size,frame,accent,plane="#ffffff",tile=true){ const s=size/64; g.save(); g.translate(cx-32*s,cy-32*s); g.scale(s,s);
+    if(tile){ g.fillStyle=frame; g.beginPath(); g.roundRect(2,2,60,60,15); g.fill(); g.strokeStyle="rgba(255,255,255,.18)"; g.lineWidth=1.5; g.beginPath(); g.roundRect(3.5,3.5,57,57,13.5); g.stroke(); }
+    g.fillStyle=tile?plane:frame; g.beginPath(); g.moveTo(32,10.5); g.lineTo(52.5,51.5); g.lineTo(43.6,51.5); g.lineTo(32,27.2); g.lineTo(20.4,51.5); g.lineTo(11.5,51.5); g.closePath(); g.fill();
+    g.strokeStyle=accent; g.lineWidth=4.2; g.lineCap="round"; g.beginPath(); g.moveTo(15.5,42.5); g.bezierCurveTo(25,37.5,37,35,50.5,36.2); g.stroke();
+    g.fillStyle=accent; g.beginPath(); g.arc(50.8,36.2,3.1,0,7); g.fill(); g.restore(); }
   function surfaceTex(kind){ return canvasTex(1024,1024,(g,W,H)=>{
-    g.fillStyle=kind==="fin"?"#071B4C":"#eef1f4"; g.fillRect(0,0,W,H); if(kind==="wing"){ g.fillStyle="#e2e6eb"; g.fillRect(W/2,0,W/2,H); }
+    if(kind==="fin"){ const gr=g.createLinearGradient(0,H,0,0); gr.addColorStop(0,LIV.navy); gr.addColorStop(0.65,LIV.navy2); gr.addColorStop(1,LIV.blue); g.fillStyle=gr; g.fillRect(0,0,W,H); }
+    else { g.fillStyle="#eef1f4"; g.fillRect(0,0,W,H); if(kind==="wing"){ const gr=g.createLinearGradient(W/2,0,W,0); gr.addColorStop(0,"#dde2e8"); gr.addColorStop(1,"#cfd5dc"); g.fillStyle=gr; g.fillRect(W/2,0,W/2,H); } }
     const U=(xc,upper)=>upper?(0.5*(1-xc))*W:(0.5+0.5*xc)*W, Y=s=>s*H;
     const line=(xc,s0,s1,upper,col="rgba(60,72,86,.75)",lw=3)=>{ g.strokeStyle=col; g.lineWidth=lw; g.beginPath(); g.moveTo(U(xc,upper),Y(s0)); g.lineTo(U(xc,upper),Y(s1)); g.stroke(); };
     const span=(s,x0,x1,upper,col="rgba(60,72,86,.75)",lw=3)=>{ g.strokeStyle=col; g.lineWidth=lw; g.beginPath(); g.moveTo(U(x0,upper),Y(s)); g.lineTo(U(x1,upper),Y(s)); g.stroke(); };
@@ -3895,12 +3989,19 @@ const AC3D=(()=>{
       g.fillStyle="rgba(70,80,92,.25)"; g.fillRect(U(0.55,true),Y(0.02),U(0.25,true)-U(0.55,true),Y(0.16)); g.fillStyle="rgba(200,40,40,.7)"; g.font="bold 22px Arial"; g.fillText("NO STEP",U(0.7,true),Y(0.12)); }
     if(kind==="ht"){ for(const up of [true,false]){ line(0.70,0.02,0.96,up); line(0.1,0.02,0.96,up,"rgba(60,72,86,.35)",2); span(0.5,0.7,1,up,"rgba(60,72,86,.5)",2); } }
     if(kind==="fin"){ for(const up of [true,false]){ line(0.68,0.04,0.96,up,"rgba(200,210,235,.35)"); span(0.5,0.68,1,up,"rgba(200,210,235,.25)",2);
-        // tail emblem (white on navy) with red accent; canvas y grows toward the fin root, so draw it upside down to read upright
-        const cx=U(0.4,up), cy=Y(0.5); g.save(); g.translate(cx,cy); g.scale(1,-1); apEmblem(g,0,0,H*0.36,"#ffffff","#D7193F","#ffffff"); g.restore(); } }
-    if(kind==="winglet"){ g.fillStyle="#071B4C"; g.fillRect(0,H*0.22,W,H*0.78); g.fillStyle="#D7193F"; g.fillRect(0,H*0.82,W,H*0.08); }
+        // tail: large white glyph (no tile) with the gold flight path; canvas y grows toward the fin root, so draw it upside down
+        const cx=U(0.42,up), cy=Y(0.52); g.save(); g.translate(cx,cy); g.scale(1,-1); apEmblem(g,0,0,H*0.42,"#ffffff",LIV.gold,"#ffffff",false); g.restore();
+        g.fillStyle=LIV.gold; g.fillRect(U(0.05,up)<U(0.95,up)?U(0.05,up):U(0.95,up),Y(0.965),Math.abs(U(0.95,up)-U(0.05,up)),H*0.012); } }
+    if(kind==="winglet"){ const gr=g.createLinearGradient(0,H*0.2,0,H); gr.addColorStop(0,LIV.navy2); gr.addColorStop(1,LIV.navy); g.fillStyle=gr; g.fillRect(0,H*0.2,W,H*0.8); g.fillStyle=LIV.gold; g.fillRect(0,H*0.86,W,H*0.035); g.fillStyle=LIV.blue; g.fillRect(0,H*0.2,W,H*0.05);
+      for(const up of [true,false]){ const cx=U(0.45,up), cy=Y(0.58); g.save(); g.translate(cx,cy); g.scale(1,-1); apEmblem(g,0,0,H*0.3,"#ffffff",LIV.gold,"#ffffff",false); g.restore(); } }
 }); }
-  let NTX=null; function nacelleTex(){ return NTX||(NTX=canvasTex(512,512,(g,W,H)=>{ g.fillStyle="#f4f6f8"; g.fillRect(0,0,W,H); g.fillStyle="#071B4C"; g.fillRect(0,H*0.74,W,H*0.26); g.fillStyle="#D7193F"; g.fillRect(0,H*0.69,W,H*0.035); })); }
-  function doorTex(kind){ const nv=/N$/.test(kind); kind=kind.replace(/N$/,""); return canvasTex(256,256,(g,W,H)=>{ g.fillStyle=nv?"#0a0c52":"#f2f5f8"; g.fillRect(0,0,W,H); g.strokeStyle=nv?"#3a4a8a":"#4a5868"; g.lineWidth=7; g.beginPath(); g.roundRect(8,8,W-16,H-16,26); g.stroke();
+  let NTX=null; function nacelleTex(){ return NTX||(NTX=canvasTex(1024,512,(g,W,H)=>{ g.fillStyle="#F3F5F8"; g.fillRect(0,0,W,H);
+    // lathe uv: u = around, v = along the nacelle (0 inlet → 1 nozzle). Navy aft cowl with gold ring, latch / reverser seams, emblem.
+    const gr=g.createLinearGradient(0,H*0.62,0,H); gr.addColorStop(0,LIV.navy2); gr.addColorStop(1,LIV.navy); g.fillStyle=gr; g.fillRect(0,H*0.64,W,H*0.36); g.fillStyle=LIV.gold; g.fillRect(0,H*0.615,W,H*0.018);
+    g.strokeStyle="rgba(60,72,86,.45)"; g.lineWidth=2; for(const v of [0.07,0.34,0.5]){ g.beginPath(); g.moveTo(0,H*v); g.lineTo(W,H*v); g.stroke(); } for(const u of [0.25,0.75]){ g.beginPath(); g.moveTo(W*u,H*0.07); g.lineTo(W*u,H*0.6); g.stroke(); }
+    g.fillStyle="rgba(60,72,86,.5)"; for(const u of [0.12,0.38,0.62,0.88]) g.fillRect(W*u-10,H*0.47,20,6);
+    for(const u of [0.25,0.75]){ g.save(); g.translate(W*u,H*0.21); g.rotate(-Math.PI/2); apEmblem(g,0,0,H*0.16,LIV.navy,LIV.gold,"#ffffff",true); g.restore(); } })); }
+  function doorTex(kind){ const nv=/N$/.test(kind); kind=kind.replace(/N$/,""); return canvasTex(256,256,(g,W,H)=>{ g.fillStyle=nv?LIV.navy:"#f2f5f8"; g.fillRect(0,0,W,H); g.strokeStyle=nv?"#3d5a9a":"#5a6878"; g.lineWidth=7; g.beginPath(); g.roundRect(8,8,W-16,H-16,26); g.stroke();
     if(kind==="exit"){ g.fillStyle="#0e1b2b"; g.beginPath(); g.roundRect(W*0.34,H*0.3,W*0.32,H*0.32,22); g.fill(); g.fillStyle="#d6202e"; g.fillRect(W*0.2,H*0.72,W*0.6,H*0.07); g.fillStyle="#fff"; g.font="bold 26px Arial"; g.textAlign="center"; g.fillText("EXIT",W/2,H*0.88); return; }
     if(kind!=="cargo"){ g.fillStyle="#0e1b2b"; g.beginPath(); g.roundRect(W*0.36,H*0.2,W*0.28,H*0.22,14); g.fill(); } g.fillStyle="#4a5868"; g.fillRect(W*0.62,H*0.55,W*0.2,H*0.06); }); }
   /* ---- interiors: cockpit, passenger cabin and forward electronics bay (walk-through, first person) ---- */
@@ -3957,8 +4058,13 @@ const AC3D=(()=>{
   function build(){
     scene=new T.Scene(); root=new T.Group(); scene.add(root);
     // soft sky environment for metallic reflections
-    try{ const es=new T.Scene(); const sg=new T.SphereGeometry(50,32,16); const col=[]; const pa=sg.getAttribute("position"); for(let i=0;i<pa.count;i++){ const y=pa.getY(i)/50; const c=new T.Color().lerpColors(new T.Color(0x6e7a88),new T.Color(0xcfe3ff),(y+1)/2); col.push(c.r,c.g,c.b); }
-      sg.setAttribute("color",new T.Float32BufferAttribute(col,3)); es.add(new T.Mesh(sg,new T.MeshBasicMaterial({vertexColors:true,side:T.BackSide}))); const pm=new T.PMREMGenerator(R); scene.environment=pm.fromScene(es,0.04).texture; pm.dispose(); }catch(e){ console.warn("env",e); }
+    try{ const es=new T.Scene(); const sg=new T.SphereGeometry(50,64,32); const col=[]; const pa=sg.getAttribute("position");
+      const sky=new T.Color(0x6f9fd8), hor=new T.Color(0xdfe7ef), gnd=new T.Color(0x4b5058), gnd2=new T.Color(0x2c3036);
+      for(let i=0;i<pa.count;i++){ const y=pa.getY(i)/50; const c=y>=0?hor.clone().lerp(sky,Math.pow(y,0.55)):hor.clone().lerp(y>-0.25?gnd:gnd2,Math.min(1,-y*4)); col.push(c.r,c.g,c.b); }
+      sg.setAttribute("color",new T.Float32BufferAttribute(col,3)); es.add(new T.Mesh(sg,new T.MeshBasicMaterial({vertexColors:true,side:T.BackSide})));
+      const sun=new T.Mesh(new T.SphereGeometry(3.2,16,8),new T.MeshBasicMaterial({color:0xffffff})); sun.position.set(14,34,22); es.add(sun);
+      for(const [x,z] of [[-30,10],[25,-30],[-10,-35]]){ const sb=new T.Mesh(new T.PlaneGeometry(14,5),new T.MeshBasicMaterial({color:0xf2f6fb,side:T.DoubleSide})); sb.position.set(x,22,z); sb.lookAt(0,0,0); es.add(sb); }
+      const pm=new T.PMREMGenerator(R); scene.environment=pm.fromScene(es,0.02).texture; pm.dispose(); }catch(e){ console.warn("env",e); }
     scene.add(new T.HemisphereLight(0xf4f8ff,0x7d8a99,0.75)); const d0=new T.DirectionalLight(0xdfe8f5,0.45); d0.position.set(6,-30,4); scene.add(d0);
     const d1=new T.DirectionalLight(0xffffff,1.7); d1.position.set(4,34,18); d1.target.position.set(18,0,0); scene.add(d1); scene.add(d1.target);
     const hq=!matchMedia("(pointer:coarse)").matches; d1.castShadow=true; d1.shadow.mapSize.set(hq?4096:2048,hq?4096:2048); d1.shadow.radius=3; Object.assign(d1.shadow.camera,{left:-24,right:24,top:24,bottom:-24,near:1,far:90}); d1.shadow.bias=-0.0005;
@@ -3973,7 +4079,7 @@ const AC3D=(()=>{
     // belly fairing (wing-to-body) — lower fuselage zone
     { const bf=new T.SphereGeometry(1,40,20); bf.scale(4.9,0.82,1.62); const m=add("100",bf,null,"Carenado ala-fuselaje"); m.position.set(15.6,-1.18,0); }
     // doors (zone 800) painted
-    const doorM=(k,x0)=>mat(0xffffff,{map:doorTex(x0>21?k+"N":k)});
+    const doorM=(k,x0)=>mat(0xffffff,{map:doorTex(x0>sweepX(Math.PI/2)?k+"N":k)});
     const doors=[[3.55,4.45,1.1,2.25,"L1 · puerta delantera izq.","pax"],[29.05,29.85,1.15,2.2,"L2 · puerta trasera izq.","pax"],[3.55,4.35,-2.25,-1.1,"R1 · puerta de servicio der.","pax"],[29.05,29.8,-2.2,-1.15,"R2 · puerta de servicio der.","pax"],
       [15.3,15.95,1.12,1.98,"Salida de emergencia sobre ala izq.","exit"],[15.3,15.95,-1.98,-1.12,"Salida de emergencia sobre ala der.","exit"],
       [7.4,8.9,-2.55,-2.05,"Puerta de carga delantera","cargo"],[23.5,24.8,-2.55,-2.05,"Puerta de carga trasera","cargo"]];
@@ -3987,16 +4093,23 @@ const AC3D=(()=>{
       // navigation lights: red left, green right; strobe at winglet
       const tipP=wingLE(1,side); const nl=new T.Mesh(new T.SphereGeometry(0.09,12,8),new T.MeshBasicMaterial({color:side>0?0xff2a2a:0x2aff6a})); nl.position.set(tipP[0]+0.35,tipP[1]+0.02,tipP[2]+side*0.08); root.add(nl); }
     const fs=[]; for(let i=0;i<=10;i++){ const s=i/10; fs.push({le:finLE(s),c:finC(s),t:0.11,v:s}); } add("300",loft(fs,[0,0,1]),paint(0xffffff,{map:fT2}),"Estabilizador vertical");
+    { const wm=new T.MeshStandardMaterial({color:0x2a2e33,roughness:0.6}); const wick=(p,len=0.3)=>{ const c=new T.Mesh(new T.CylinderGeometry(0.008,0.012,len,6),wm); c.rotation.z=-Math.PI/2; c.position.set(p[0]+len/2,p[1],p[2]); root.add(c); };
+      for(const side of [1,-1]){ for(const s of [0.74,0.84,0.94]){ const le=wingLE(s,side); wick([le[0]+wingChord(s),le[1],le[2]]); } for(const s of [0.7,0.9]){ const le=htLE(s,side); wick([le[0]+htC(s),le[1],le[2]],0.24); } }
+      for(const s of [0.62,0.86]){ const le=finLE(s); wick([le[0]+finC(s),le[1],0],0.24); } }
     // dorsal fin fillet
-    { const df=new T.BufferGeometry(); const a=[27.0,1.45,0], b=[29.4,1.35+0.2,0], c=[29.9,2.6,0]; df.setAttribute("position",new T.Float32BufferAttribute([...a,...b,...c],3)); df.computeVertexNormals(); add("300",df,mat(0x0a0c52),"Aleta dorsal"); }
+    { const df=new T.BufferGeometry(); const a=[27.0,1.45,0], b=[29.4,1.35+0.2,0], c=[29.9,2.6,0]; df.setAttribute("position",new T.Float32BufferAttribute([...a,...b,...c],3)); df.computeVertexNormals(); add("300",df,paint(0x0B2251),"Aleta dorsal"); }
     // engines: nacelle, inlet lip, fan + spinner, exhaust plug, tapered pylon (zone 400)
     const ng=nacelleGeo(); const fanM=new T.MeshStandardMaterial({color:0x1a2129,metalness:0.7,roughness:0.3}); const lipM=new T.MeshStandardMaterial({color:0xd5dbe2,metalness:0.95,roughness:0.18}); const plugM=new T.MeshStandardMaterial({color:0x6c7682,metalness:0.8,roughness:0.35});
     for(const side of [1,-1]){ const e=ENG(side); const na=add("400",ng,paint(0xffffff,{map:nacelleTex()}),side>0?"Motor 1 (izq.)":"Motor 2 (der.)"); na.position.set(e.x,e.y,e.z);
       const lip=new T.Mesh(new T.TorusGeometry(0.71,0.065,12,48),lipM); lip.rotation.y=Math.PI/2; lip.position.set(e.x+0.02,e.y,e.z); root.add(lip);
       const fan=new T.Mesh(new T.CircleGeometry(0.66,48),fanM); fan.rotation.y=-Math.PI/2; fan.position.set(e.x+0.32,e.y,e.z); root.add(fan);
-      const bl=new T.InstancedMesh(new T.BoxGeometry(0.02,0.56,0.09),fanM,24); const m4=new T.Matrix4(); for(let i=0;i<24;i++){ const a=i/24*Math.PI*2; const q=new T.Quaternion().setFromEuler(new T.Euler(a,0.5,0)); m4.compose(new T.Vector3(e.x+0.3,e.y+Math.cos(a)*0.36,e.z+Math.sin(a)*0.36),q,new T.Vector3(1,1,1)); bl.setMatrixAt(i,m4); } root.add(bl);
-      const sp=new T.Mesh(new T.ConeGeometry(0.17,0.42,24),new T.MeshStandardMaterial({color:0x2b333d,metalness:0.6,roughness:0.3})); sp.rotation.z=Math.PI/2; sp.position.set(e.x+0.12,e.y,e.z); root.add(sp);
+      const duct=new T.Mesh(new T.CylinderGeometry(0.67,0.63,0.75,48,1,true),new T.MeshStandardMaterial({color:0x2a3038,metalness:0.6,roughness:0.45,side:T.BackSide})); duct.rotation.z=Math.PI/2; duct.position.set(e.x+0.37,e.y,e.z); root.add(duct);
+      const bl=new T.InstancedMesh(new T.BoxGeometry(0.018,0.5,0.12),new T.MeshStandardMaterial({color:0x8d969f,metalness:0.92,roughness:0.28}),28); const m4=new T.Matrix4(); for(let i=0;i<28;i++){ const a=i/28*Math.PI*2; const q=new T.Quaternion().setFromEuler(new T.Euler(a,0.62,0)); m4.compose(new T.Vector3(e.x+0.34,e.y+Math.cos(a)*0.4,e.z+Math.sin(a)*0.4),q,new T.Vector3(1,1,1)); bl.setMatrixAt(i,m4); } root.add(bl);
+      const swirl=texOnce("swirl",256,256,(g,W,H)=>{ g.fillStyle="#1d232b"; g.fillRect(0,0,W,H); g.strokeStyle="#ffffff"; g.lineWidth=14; g.beginPath(); for(let t=0;t<=1;t+=0.01){ const x=t*W*1.6-W*0.3, y=H*(1-t); t?g.lineTo(x,y):g.moveTo(x,y); } g.stroke(); });
+      const sp=new T.Mesh(new T.ConeGeometry(0.19,0.46,32),new T.MeshStandardMaterial({color:0xffffff,map:swirl,metalness:0.55,roughness:0.3}));
       const plug=new T.Mesh(new T.ConeGeometry(0.3,0.9,24),plugM); plug.rotation.z=-Math.PI/2; plug.position.set(e.x+5.1,e.y,e.z); root.add(plug);
+      const noz=new T.Mesh(new T.CylinderGeometry(0.43,0.47,0.38,40,1,true),new T.MeshStandardMaterial({color:0x5b636d,metalness:0.85,roughness:0.38,side:T.DoubleSide})); noz.rotation.z=Math.PI/2; noz.position.set(e.x+4.62,e.y,e.z); root.add(noz);
+      const core=new T.Mesh(new T.CylinderGeometry(0.4,0.4,0.05,40,1,true),new T.MeshStandardMaterial({color:0x101317,roughness:0.9,side:T.DoubleSide})); core.rotation.z=Math.PI/2; core.position.set(e.x+4.5,e.y,e.z); root.add(core);
       const pyG=new T.BoxGeometry(3.6,1.0,0.3); const pa=pyG.getAttribute("position"); for(let i=0;i<pa.count;i++){ if(pa.getX(i)<0) pa.setY(i,pa.getY(i)*0.55-0.22); } pyG.computeVertexNormals();
       const py=add("400",pyG,mat(0xe7ebef),"Pilón"); py.position.set(e.x+2.7,e.y+0.82,e.z); }
     // APU exhaust, antennas, pitot probes, beacons
@@ -4006,19 +4119,26 @@ const AC3D=(()=>{
     for(const [x,top] of [[16,true],[17,false]]){ const p=surf(x,top?0:Math.PI,0.05); const b=new T.Mesh(new T.SphereGeometry(0.09,12,8),new T.MeshBasicMaterial({color:0xff3030})); b.position.set(...p); root.add(b); }
     // landing gear (zone 700): strut, oleo, torque link, wheels, doors
     const tyre=new T.MeshStandardMaterial({color:0x15181c,roughness:0.9}); const hub=new T.MeshStandardMaterial({color:0x9aa3ad,metalness:0.8,roughness:0.3}); const strutM=mat(0xB8C0CA,{metalness:0.6,roughness:0.3}); const chrome=new T.MeshStandardMaterial({color:0xe8ecf0,metalness:1,roughness:0.12});
+    const TG={}; const tyreGeo=k=>TG[k]||(TG[k]=(()=>{ const pr=[[0.27,-0.17],[0.36,-0.185],[0.46,-0.18],[0.515,-0.15],[0.535,-0.09],[0.54,0],[0.535,0.09],[0.515,0.15],[0.46,0.18],[0.36,0.185],[0.27,0.17]].map(([r,y])=>new T.Vector2(r*k,y*k)); const g=new T.LatheGeometry(pr,40); g.rotateX(Math.PI/2); return g; })());
     const gear=(x,z,nw,nm,nose)=>{ const g=new T.Group(); const s=new T.Mesh(new T.CylinderGeometry(0.11,0.11,1.3,12),strutM); s.position.set(x,-2.15,z); g.add(s);
       const ol=new T.Mesh(new T.CylinderGeometry(0.075,0.075,0.6,12),chrome); ol.position.set(x,-2.95,z); g.add(ol);
       const tl=new T.Mesh(new T.BoxGeometry(0.28,0.05,0.05),strutM); tl.position.set(x+0.12,-2.85,z); tl.rotation.z=0.6; g.add(tl);
       const ax=new T.Mesh(new T.CylinderGeometry(0.05,0.05,(nw-1)*0.46+0.4,8),strutM); ax.rotation.x=Math.PI/2; ax.position.set(x,-3.22,z); g.add(ax);
-      for(let k=0;k<nw;k++){ const zz=z+(k-(nw-1)/2)*0.46; const w=new T.Mesh(new T.TorusGeometry(nose?0.3:0.38,nose?0.13:0.15,14,28),tyre); w.userData.keepColor=true; w.position.set(x,-3.22,zz); g.add(w);
+      for(let k=0;k<nw;k++){ const zz=z+(k-(nw-1)/2)*0.46; const w=new T.Mesh(tyreGeo(nose?0.82:1),tyre); w.userData.keepColor=true; w.position.set(x,-3.22,zz); g.add(w);
         const h=new T.Mesh(new T.CylinderGeometry(nose?0.22:0.28,nose?0.22:0.28,0.24,20),hub); h.userData.keepColor=true; h.rotation.x=Math.PI/2; h.position.set(x,-3.22,zz); g.add(h); }
       const door=new T.Mesh(new T.BoxGeometry(nose?1.3:1.6,0.9,0.03),mat(0xf2f5f8)); door.position.set(x+(nose?0:-0.1),-1.95,z+(nose?0.42:(z>0?0.55:-0.55))); g.add(door);
       g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.userData.zone="700"; o.userData.keepColor=o.userData.keepColor||false; o.name=nm; (zoneMesh["700"]=zoneMesh["700"]||[]).push(o); } }); root.add(g); };
     gear(3.2,0,2,"Tren de nariz",true); gear(17.6,2.97,2,"Tren principal izq."); gear(17.6,-2.97,2,"Tren principal der.");
     // ground: real shadow + soft contact blob
-    const cv=document.createElement("canvas"); cv.width=cv.height=256; const cx=cv.getContext("2d"); const gr=cx.createRadialGradient(128,128,10,128,128,128); gr.addColorStop(0,"rgba(0,0,0,.28)"); gr.addColorStop(1,"rgba(0,0,0,0)"); cx.fillStyle=gr; cx.fillRect(0,0,256,256);
-    ground=new T.Mesh(new T.PlaneGeometry(44,34),new T.MeshBasicMaterial({map:new T.CanvasTexture(cv),transparent:true,depthWrite:false})); ground.rotation.x=-Math.PI/2; ground.position.set(18,-3.67,0); scene.add(ground);
-    const sh=new T.Mesh(new T.PlaneGeometry(70,50),new T.ShadowMaterial({opacity:0.32})); sh.rotation.x=-Math.PI/2; sh.position.set(18,-3.66,0); sh.receiveShadow=true; scene.add(sh);
+    ground=new T.Group(); scene.add(ground);
+    { const cv=document.createElement("canvas"); cv.width=cv.height=256; const cx=cv.getContext("2d"); const gr=cx.createRadialGradient(128,128,10,128,128,128); gr.addColorStop(0,"rgba(0,0,0,.30)"); gr.addColorStop(1,"rgba(0,0,0,0)"); cx.fillStyle=gr; cx.fillRect(0,0,256,256);
+      const blob=new T.Mesh(new T.PlaneGeometry(44,34),new T.MeshBasicMaterial({map:new T.CanvasTexture(cv),transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.position.set(18,-3.665,0); ground.add(blob); }
+    { const apron=canvasTex(1024,1024,(g,W,H)=>{ g.fillStyle="#8c9096"; g.fillRect(0,0,W,H); for(let i=0;i<9000;i++){ const v=110+Math.random()*60|0; g.fillStyle=`rgba(${v},${v},${v+4},.18)`; g.fillRect(Math.random()*W,Math.random()*H,2,2); }
+        g.strokeStyle="rgba(40,42,46,.28)"; g.lineWidth=2; for(let k=0;k<=5;k++){ g.beginPath(); g.moveTo(k*W/5,0); g.lineTo(k*W/5,H); g.stroke(); g.beginPath(); g.moveTo(0,k*H/5); g.lineTo(W,k*H/5); g.stroke(); }
+        g.fillStyle="#E2B53A"; g.fillRect(0,H*0.5-7,W,14); });
+      const fade=document.createElement("canvas"); fade.width=fade.height=256; const fx=fade.getContext("2d"); const fg=fx.createRadialGradient(128,128,40,128,128,128); fg.addColorStop(0,"#fff"); fg.addColorStop(1,"#000"); fx.fillStyle=fg; fx.fillRect(0,0,256,256);
+      apronMat=new T.MeshStandardMaterial({map:apron,alphaMap:new T.CanvasTexture(fade),transparent:true,roughness:0.92,metalness:0,depthWrite:false}); const ap=new T.Mesh(new T.PlaneGeometry(90,70),apronMat); ap.rotation.x=-Math.PI/2; ap.position.set(18,-3.675,0); ap.receiveShadow=true; ap.renderOrder=-1; ground.add(ap); }
+    const sh=new T.Mesh(new T.PlaneGeometry(70,50),new T.ShadowMaterial({opacity:0.36})); sh.rotation.x=-Math.PI/2; sh.position.set(18,-3.66,0); sh.receiveShadow=true; ground.add(sh);
     markerGroup=new T.Group(); scene.add(markerGroup); labelGroup=new T.Group(); scene.add(labelGroup); decalGroup=new T.Group(); scene.add(decalGroup);
     root.traverse(o=>{ if(o.isMesh&&o.material&&o.userData.zone){ o.material=o.material.clone(); o.userData.base=o.material.color?.clone(); } });
     fusMats=fusMats.map(me=>me.material);
@@ -4097,7 +4217,7 @@ const AC3D=(()=>{
     last={pts,card}; needs=true; }
   function camPos(){ const [tx,ty,tz]=st.target; return [tx+st.dist*Math.sin(st.phi)*Math.cos(st.theta), ty+st.dist*Math.cos(st.phi), tz+st.dist*Math.sin(st.phi)*Math.sin(st.theta)]; }
   function loop(t){ raf=requestAnimationFrame(loop); if(!R||!host||!host.isConnected){ return; }
-    const day=document.documentElement.dataset.theme==="day"; const bg=day?0xE8EEF5:0x0A1420; if(R.__bg!==bg){ R.setClearColor(bg,1); R.__bg=bg; needs=true; }
+    const day=document.documentElement.dataset.theme==="day"; const bg=day?0xE8EEF5:0x0A1420; if(R.__bg!==bg){ R.setClearColor(bg,1); R.__bg=bg; if(apronMat){ apronMat.color.set(day?0xffffff:0x7d838c); } needs=true; }
     if(st.anim){ const a=st.anim, k=Math.min(1,(t-a.t0)/a.ms), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; for(const key of ["theta","phi","dist"]) st[key]=a.from[key]+(a.to[key]-a.from[key])*e; st.target=a.from.target.map((v,i)=>v+(a.to.target[i]-v)*e); if(k>=1) st.anim=null; needs=true; }
     let pulse=false; for(const sp of markerGroup.children) if(sp.userData.pulse){ pulse=true; const s=0.03*(1+0.2*Math.sin(t/180)); sp.scale.set(s,s,1); }
     for(const d of decalGroup.children) for(const o of d.children) if(o.userData.ring){ pulse=true; o.material.opacity=0.55+0.4*Math.sin(t/200); }
