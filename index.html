@@ -652,6 +652,25 @@ tr.click:hover td{background:rgba(63,212,255,.05)}
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AeroPanel"><meta name="theme-color" content="#05080d">
 </head>
 <body>
+<script>
+/* Arranque seguro: si la aplicación no logra mostrarse (error inesperado o copia guardada dañada), en lugar de una
+   pantalla en blanco aparece una ayuda para reintentar o limpiar la copia guardada. No envía datos a ningún lado. */
+(function(){ var lastErr="";
+  addEventListener("error",function(e){ if(e&&e.message) lastErr=e.message; });
+  addEventListener("unhandledrejection",function(e){ var r=e&&e.reason; lastErr=(r&&r.message)||String(r||""); });
+  function ok(){ var a=document.getElementById("auth"), app=document.getElementById("app"); return (a&&!a.hidden&&a.children.length>0&&!a.querySelector(".boot"))||(app&&!app.hidden); }
+  function show(){ if(ok()||document.getElementById("ap-rescue")) return; var d=document.createElement("div"); d.id="ap-rescue";
+    d.setAttribute("style","position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:24px;background:#0B2251;color:#fff;font:16px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;text-align:center");
+    d.innerHTML='<div style="max-width:440px"><h1 style="font-size:24px;margin:0 0 10px">AeroPlanner</h1><p style="color:#C7D4E6;line-height:1.5">La página no terminó de cargar. Normalmente se arregla al reintentar. Si sigue igual, limpie la copia guardada en este dispositivo (sus proyectos en el servidor no se tocan).</p>'+
+      '<p style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px"><button id="ap-r1" style="font:inherit;font-weight:700;padding:11px 18px;border-radius:10px;border:0;background:#2F72DA;color:#fff;cursor:pointer">Reintentar</button>'+
+      '<button id="ap-r2" style="font:inherit;padding:11px 18px;border-radius:10px;border:1px solid #6f86ad;background:transparent;color:#fff;cursor:pointer">Limpiar copia guardada y recargar</button></p>'+
+      (lastErr?'<p style="font-size:12px;color:#8FA3C2;margin-top:14px;word-break:break-word">Detalle técnico: '+String(lastErr).replace(/[<>&]/g,"").slice(0,180)+'</p>':'')+'</div>';
+    document.body.appendChild(d);
+    document.getElementById("ap-r1").onclick=function(){ location.reload(); };
+    document.getElementById("ap-r2").onclick=function(){ var p=[]; try{ if(navigator.serviceWorker) p.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ return r.unregister(); })); })); if(window.caches) p.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })); }catch(e){} Promise.all(p).then(function(){ location.reload(); },function(){ location.reload(); }); }; }
+  addEventListener("DOMContentLoaded",function(){ setTimeout(show,20000); });
+})();
+</script>
 
 <div id="auth"><div class="boot">
   <div class="boot-brand"><b>AEROPANEL</b><span>PLANNER</span></div>
@@ -1038,7 +1057,17 @@ const WB_MSG={EMAIL_EXISTS:"Ese correo ya tiene cuenta: use «Entrar» (o «Olvi
 const wbU=(svc,path)=>WB.cfg.emu?`${WB.cfg.emu}/${svc}${path}`:`https://${svc}.googleapis.com${path}`;
 function wbErr(j,status){ const msg=String(j?.error?.message||""); const code=/^[A-Z_]+(\s*:|$)/.test(msg)?msg.split(/[\s:]/)[0]:(j?.error?.status||(status?"HTTP_"+status:"OFFLINE"));
   const e=new Error(WB_MSG[code]||(status===0?"Sin conexión con el servidor. Revise su internet.":msg||code)); e.code=code; e.status=status; return e; }
-async function wbFetch(url,opt){ let r; try{ r=await fetch(url,opt); }catch{ throw wbErr(null,0); } const j=await r.json().catch(()=>null); if(!r.ok){ const e=wbErr(j,r.status); if(r.status===403&&!e.code.startsWith("PERMISSION")) e.code="PERMISSION_DENIED"; throw e; } return j; }
+/* Firebase requests: each attempt has a time limit; temporary failures (no connection, 429, 5xx) are retried with
+   growing waits. Writes are retried only when the server clearly did not apply them (429 / 503), never after a cut connection. */
+async function wbFetch(url,opt){ const method=(opt?.method||"GET").toUpperCase(), safe=method==="GET"||/securetoken|accounts:lookup/.test(url);
+  const big=typeof opt?.body==="string"&&opt.body.length>200000; const limit=big?90000:25000; let wait=700;
+  for(let attempt=1;;attempt++){ let r, ac=new AbortController(), tm=setTimeout(()=>ac.abort(),limit);
+    try{ r=await fetch(url,{...opt,signal:ac.signal}); }
+    catch{ clearTimeout(tm); if(safe&&attempt<4&&navigator.onLine!==false){ await new Promise(z=>setTimeout(z,wait+Math.random()*400)); wait*=2.2; continue; } throw wbErr(null,0); }
+    clearTimeout(tm); const j=await r.json().catch(()=>null);
+    if(!r.ok){ const retry=(r.status===429||r.status===503||(safe&&r.status>=500))&&attempt<4; if(retry){ await new Promise(z=>setTimeout(z,wait+Math.random()*400)); wait*=2.2; continue; }
+      const e=wbErr(j,r.status); if(r.status===403&&!e.code.startsWith("PERMISSION")) e.code="PERMISSION_DENIED"; throw e; }
+    return j; } }
 const wbPost=(url,body,form)=>wbFetch(url,{method:"POST",headers:{"Content-Type":form?"application/x-www-form-urlencoded":"application/json"},body:form?new URLSearchParams(body):JSON.stringify(body)});
 function wbSetTok(id,rf,exp,email){ WB.idToken=id; WB.refresh=rf; WB.exp=Date.now()+(Math.max(120,+exp||3600)-90)*1000; if(email) WB.email=String(email).toLowerCase();
   try{ localStorage.setItem("ap.web.s",JSON.stringify({rf,email:WB.email})); }catch{} }
@@ -1406,8 +1435,10 @@ const FM = (() => {
         if((sets.length||dels.length||na)&&m.data.updatedBy&&m.data.updatedBy!==st.name) toast(`Actualizado con los cambios de ${m.data.updatedBy}.`,4000); }
       setSync(st.dirty?"pend":"ok"); }
     catch(e){ console.warn("pull",e); setSync("err",e); if(e.code==="NOAUTH"||e.code==="INVALID_REFRESH_TOKEN"||e.code==="USER_NOT_FOUND") lock("Su sesión terminó; entre de nuevo."); else if(e.code==="PERMISSION_DENIED") lock("Su acceso a este servidor fue retirado por el propietario."); } }
-  async function webTick(){ if(document.hidden) return; if(st.dirty&&st.role==="ADMIN") await webPush(); await webPull(); }
-  function webStart(){ if(!st.web||W.poll) return; W.poll=setInterval(webTick,10000); addEventListener("visibilitychange",()=>{ if(!document.hidden) webTick(); }); addEventListener("online",webTick); }
+  async function webTick(){ if(document.hidden||navigator.onLine===false) return; const now=Date.now(); if(W.nextTry&&now<W.nextTry) return; 
+    try{ if(st.dirty&&st.role==="ADMIN") await webPush(); await webPull(); }catch(e){ console.warn("tick",e); }
+    if(W.state==="err"){ W.fails=(W.fails||0)+1; W.nextTry=now+Math.min(120000,10000*Math.pow(2,W.fails-1)); } else { W.fails=0; W.nextTry=0; } }
+  function webStart(){ if(!st.web||W.poll) return; W.poll=setInterval(webTick,10000); addEventListener("visibilitychange",()=>{ if(!document.hidden) webTick(); }); addEventListener("online",()=>{ W.nextTry=0; W.fails=0; webTick(); }); }
 
   /* ---- WEB screens ---- */
   const webFoot=`<p class="auth-foot">Solo pueden entrar las personas cuyo correo autorizó el propietario. Los proyectos están cifrados: además necesita la contraseña del proyecto, que solo el propietario proporciona.</p>`;

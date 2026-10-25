@@ -1,0 +1,42 @@
+name: Verificar y publicar
+# Revisa la página en cada cambio. Si GitHub Pages está en "Source: GitHub Actions" (Settings → Pages),
+# solo se publica cuando la revisión pasa; si falla, el sitio sigue mostrando la última versión buena.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Revisar la página
+        run: node .github/scripts/check-site.mjs
+  publicar:
+    needs: verificar
+    if: github.event_name != 'pull_request' && vars.PUBLICAR_CON_REVISION == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar archivos del sitio
+        run: mkdir _site && cp -r index.html sw.js manifest.webmanifest icon-192.png icon-512.png .nojekyll _site/ && cp README.md _site/ 2>/dev/null || true
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
