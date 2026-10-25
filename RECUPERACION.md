@@ -11,7 +11,7 @@ Si la página deja de abrir, siga esta guía en orden. Con el respaldo en mano, 
 | Archivos del sitio | `index.html` (≈8.3 MB, trae TODO dentro: app, pdf.js, pdf-lib, three.js, OCR, fuentes), `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`, `.nojekyll` |
 | Datos (proyectos, usuarios autorizados) | Firebase, proyecto **aeropanelmro** (Authentication + Firestore). Los proyectos están **cifrados** (AES-256) |
 | Configuración de Firebase | Dentro de `index.html`, en `<script type="application/json" id="ap-fb">` (apiKey, projectId, authDomain, ownerUid) |
-| Puntos de restauración | Etiquetas `respaldo-AAAA-MM-DD` en el repositorio |
+| Puntos de restauración | Ramas `respaldo-AAAA-MM-DD` en el repositorio (copia exacta de una versión buena) |
 
 **Importante:** si la página se cae, **los datos no se pierden**: siguen en Firebase. Cualquier copia de `index.html` publicada en otro sitio vuelve a mostrarlos, siempre que ese dominio esté autorizado en Firebase (paso 4).
 
@@ -62,7 +62,7 @@ En GitHub: repositorio → **Commits** → abra el último cambio bueno → **�
 Con Git:
 ```bash
 git clone https://github.com/aeropanel-mro/Aeropanel-web.git && cd Aeropanel-web
-git checkout respaldo-2026-10-24 -- .     # o el commit bueno
+git checkout origin/respaldo-2026-10-24 -- .     # o el commit bueno
 git commit -m "Restaurar versión buena" && git push
 ```
 
@@ -88,7 +88,7 @@ Copie y pegue esto en una conversación nueva con Claude (adjunte el zip del res
 > Necesito volver a poner en línea mi página web **AeroPlanner · MRO** (planeación de remoción de Access Panels para Embraer 190).
 > - El código está en el repositorio de GitHub `aeropanel-mro/Aeropanel-web` (rama `main`); también te adjunto el respaldo `AeroPlanner_sitio_respaldo.zip`. Es un sitio estático: `index.html` (todo embebido), `sw.js`, `manifest.webmanifest`, íconos y `.nojekyll`.
 > - Los datos están en Firebase, proyecto `aeropanelmro` (Authentication + Firestore, proyectos cifrados). La configuración va dentro de `index.html` en `<script id="ap-fb">`. **No la cambies ni la borres.**
-> - Pasos: 1) agrega el repositorio y revisa que `index.html` esté completo (corre `node .github/scripts/check-site.mjs`); 2) si la página publicada falla por un cambio, regresa al último commit bueno o a la etiqueta `respaldo-*`; 3) si GitHub Pages no está disponible, dime exactamente cómo publicarla en Netlify Drop, Cloudflare Pages o Firebase Hosting, y recuérdame autorizar el dominio nuevo en Firebase Authentication.
+> - Pasos: 1) agrega el repositorio y revisa que `index.html` esté completo (corre `node .github/scripts/check-site.mjs`); 2) si la página publicada falla por un cambio, regresa al último commit bueno o a la rama `respaldo-*`; 3) si GitHub Pages no está disponible, dime exactamente cómo publicarla en Netlify Drop, Cloudflare Pages o Firebase Hosting, y recuérdame autorizar el dominio nuevo en Firebase Authentication.
 > - Reglas que no se pueden romper: solo entran correos autorizados por el propietario; nadie puede compartir la app ni los proyectos; nunca inventar la ubicación de un acceso; nunca dar por confirmado algo aproximado; ante cualquier duda: **REQUIERE VERIFICACIÓN**; no borrar historial ni modificar los PDF originales; sin logos ni nombres de aerolíneas reales (solo la marca AeroPlanner); no enviar mi correo a servicios ajenos.
 > - Al terminar, dame el enlace funcionando y la lista de revisión (entrar, abrir proyecto, avión 3D, reporte PDF).
 
