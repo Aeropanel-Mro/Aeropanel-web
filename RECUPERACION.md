@@ -8,7 +8,7 @@ Si la página deja de abrir, siga esta guía en orden. Con el respaldo en mano, 
 |---|---|
 | Página publicada | https://aeropanel-mro.github.io/Aeropanel-web/ |
 | Código | Repositorio GitHub `aeropanel-mro/Aeropanel-web`, rama `main` |
-| Archivos del sitio | `index.html` (≈8.3 MB, trae TODO dentro: app, pdf.js, pdf-lib, three.js, OCR, fuentes), `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`, `.nojekyll` |
+| Archivos del sitio | `index.html` (≈0.8 MB: la app), carpeta **`lib/`** (componentes: lector y generador de PDF, 3D, OCR, demostración; se descargan solo cuando se usan), `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`, `.nojekyll`. **Suba siempre la carpeta `lib/` junto con `index.html`.** |
 | Datos (proyectos, usuarios autorizados) | Firebase, proyecto **aeropanelmro** (Authentication + Firestore). Los proyectos están **cifrados** (AES-256) |
 | Configuración de Firebase | Dentro de `index.html`, en `<script type="application/json" id="ap-fb">` (apiKey, projectId, authDomain, ownerUid) |
 | Puntos de restauración | Ramas `respaldo-AAAA-MM-DD` en el repositorio (copia exacta de una versión buena) |
@@ -24,7 +24,7 @@ Si la página deja de abrir, siga esta guía en orden. Con el respaldo en mano, 
 
 ## 3. Levantar la página en otro sitio (elija una opción)
 
-Tenga a mano el respaldo `AeroPlanner_sitio_respaldo.zip` (o descargue el repositorio: GitHub → **Code → Download ZIP**). Descomprímalo: debe quedar una carpeta con `index.html` y los demás archivos.
+Tenga a mano el respaldo `AeroPlanner_sitio_respaldo.zip` (o descargue el repositorio: GitHub → **Code → Download ZIP**). Descomprímalo: debe quedar una carpeta con `index.html`, la carpeta `lib/` y los demás archivos.
 
 **A. Netlify Drop (lo más rápido, sin instalar nada)**
 1. Entre a https://app.netlify.com/drop (cree cuenta gratis si no tiene).
@@ -47,7 +47,7 @@ firebase deploy --only hosting
 Enlace: `https://aeropanelmro.web.app`.
 
 **D. Volver a GitHub Pages (si el repositorio se borró)**
-1. Cree un repositorio nuevo, suba los archivos de la carpeta (Add file → Upload files).
+1. Cree un repositorio nuevo, suba los archivos de la carpeta, incluida `lib/` (Add file → Upload files).
 2. **Settings → Pages → Source: Deploy from a branch → main / (root)**.
 
 ## 4. Autorizar el nuevo dominio (obligatorio para poder entrar)
@@ -81,12 +81,32 @@ git commit -m "Restaurar versión buena" && git push
 - Pantalla de recuperación en lugar de pantalla en blanco.
 - GitHub Actions **«Verificar y publicar»** revisa cada cambio. Para que **solo se publiquen versiones revisadas**: Settings → Pages → Source: **GitHub Actions**, y en Settings → Secrets and variables → Actions → Variables cree `PUBLICAR_CON_REVISION` = `true`.
 
-## 8. Mensaje para pedirle a Claude que la levante de nuevo
+- **Monitor cada hora** (Actions → «Monitor de la página»): revisa que la página abra, que los componentes de `lib/` descarguen y que la base de datos **no** se pueda leer sin iniciar sesión. Si algo falla, abre un aviso (*Issue*) y GitHub le envía un correo; el aviso se cierra solo cuando todo vuelve a funcionar.
+- **Respaldo semanal** (Actions → «Respaldo semanal», cada lunes): crea la rama `respaldo-AAAA-MM-DD` con la copia exacta del sitio. Opcional: respaldo cifrado de la base de datos (siguiente sección).
+
+## 8. Respaldo semanal de la base de datos (opcional, 10 minutos, una sola vez)
+
+1. Google Cloud → proyecto **aeropanelmro** → **IAM y administración → Cuentas de servicio → Crear**. Nombre: `respaldo-aeroplanner`. Rol: **Cloud Datastore Viewer** (solo lectura).
+2. En esa cuenta: **Claves → Agregar clave → JSON**. Se descarga un archivo.
+3. GitHub → repositorio → **Settings → Secrets and variables → Actions → New repository secret**:
+   - `FIREBASE_SA_JSON` = todo el contenido del archivo JSON.
+   - `BACKUP_PASSPHRASE` = una frase larga que solo usted conozca (guárdela en un lugar seguro: sin ella el respaldo no se puede abrir).
+4. Listo: cada lunes aparece en Actions → «Respaldo semanal» un archivo `aeroplanner-datos-AAAA-MM-DD.jsonl.gz.enc` (se guarda 90 días).
+5. Para abrirlo: `openssl enc -d -aes-256-cbc -pbkdf2 -iter 300000 -in ARCHIVO.enc -out datos.jsonl.gz -pass pass:"SU FRASE"` y luego `gunzip datos.jsonl.gz`.
+
+## 9. Dominio propio (opcional, más profesional)
+
+1. Compre el dominio (por ejemplo `aeroplanner.mx`) en su proveedor preferido.
+2. En el proveedor, cree un registro **CNAME** `www` → `aeropanel-mro.github.io` (y, para el dominio sin `www`, los 4 registros **A** de GitHub Pages: 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153).
+3. GitHub → **Settings → Pages → Custom domain** → escriba `www.aeroplanner.mx` → **Save** → active **Enforce HTTPS** cuando aparezca.
+4. Autorice el dominio en Firebase (paso 4) y, si limitó la clave de API, agréguelo también ahí.
+
+## 10. Mensaje para pedirle a Claude que la levante de nuevo
 
 Copie y pegue esto en una conversación nueva con Claude (adjunte el zip del respaldo si lo tiene):
 
 > Necesito volver a poner en línea mi página web **AeroPlanner · MRO** (planeación de remoción de Access Panels para Embraer 190).
-> - El código está en el repositorio de GitHub `aeropanel-mro/Aeropanel-web` (rama `main`); también te adjunto el respaldo `AeroPlanner_sitio_respaldo.zip`. Es un sitio estático: `index.html` (todo embebido), `sw.js`, `manifest.webmanifest`, íconos y `.nojekyll`.
+> - El código está en el repositorio de GitHub `aeropanel-mro/Aeropanel-web` (rama `main`); también te adjunto el respaldo `AeroPlanner_sitio_respaldo.zip`. Es un sitio estático: `index.html`, la carpeta `lib/` (componentes), `sw.js`, `manifest.webmanifest`, íconos y `.nojekyll`.
 > - Los datos están en Firebase, proyecto `aeropanelmro` (Authentication + Firestore, proyectos cifrados). La configuración va dentro de `index.html` en `<script id="ap-fb">`. **No la cambies ni la borres.**
 > - Pasos: 1) agrega el repositorio y revisa que `index.html` esté completo (corre `node .github/scripts/check-site.mjs`); 2) si la página publicada falla por un cambio, regresa al último commit bueno o a la rama `respaldo-*`; 3) si GitHub Pages no está disponible, dime exactamente cómo publicarla en Netlify Drop, Cloudflare Pages o Firebase Hosting, y recuérdame autorizar el dominio nuevo en Firebase Authentication.
 > - Reglas que no se pueden romper: solo entran correos autorizados por el propietario; nadie puede compartir la app ni los proyectos; nunca inventar la ubicación de un acceso; nunca dar por confirmado algo aproximado; ante cualquier duda: **REQUIERE VERIFICACIÓN**; no borrar historial ni modificar los PDF originales; sin logos ni nombres de aerolíneas reales (solo la marca AeroPlanner); no enviar mi correo a servicios ajenos.

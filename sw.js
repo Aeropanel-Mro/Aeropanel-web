@@ -2,16 +2,22 @@
    - Red primero (siempre la versión más nueva), con tiempo límite: si la red tarda o falla, se usa la copia guardada.
    - Solo se guardan respuestas correctas (200): un error temporal de GitHub nunca reemplaza la copia buena.
    - Las versiones viejas de la caché se borran al activar. */
-const C = "aeroplanner-v16";
+const C = "aeroplanner-v17", LIBC = "aeroplanner-lib-1";   // components keep their own cache across updates
 const CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+/* components in lib/ carry a version (?v=) in their address: once downloaded they are served from this device (cache first) */
+const LIB_WARM = ["lib-pdfjs", "lib-pdfjs-worker", "lib-pdflib", "three-src"];
 const TIMEOUT_NAV = 8000, TIMEOUT_ASSET = 12000;
 
 self.addEventListener("install", e => {
   self.skipWaiting();
-  e.waitUntil(caches.open(C).then(c => Promise.all(CORE.map(u => fetch(u, { cache: "no-store" }).then(r => r.ok ? c.put(u, r) : null).catch(() => null)))));
+  e.waitUntil(caches.open(C).then(async c => {
+    await Promise.all(CORE.map(u => fetch(u, { cache: "no-store" }).then(r => r.ok ? c.put(u, r) : null).catch(() => null)));
+    // warm the small components the app uses most (PDF reader/writer, 3D) so they also work without internet
+    try { const html = await (await c.match("index.html") || await c.match("./")).text(); for (const id of LIB_WARM) { const m = html.match(new RegExp('id="' + id + '"[^>]*data-src="([^"]+)"')); if (m) { const u = m[1].replace(/&amp;/g, "&"); const lc = await caches.open(LIBC); if (!(await lc.match(u))) { const r = await fetch(u); if (r.ok) await lc.put(u, r); } } } } catch {}
+  }));
 });
 self.addEventListener("activate", e => e.waitUntil((async () => {
-  for (const k of await caches.keys()) if (k !== C) await caches.delete(k);
+  for (const k of await caches.keys()) if (k !== C && k !== LIBC) await caches.delete(k);
   await self.clients.claim();
 })()));
 
@@ -21,6 +27,11 @@ self.addEventListener("fetch", e => {
   const req = e.request, u = new URL(req.url);
   if (req.method !== "GET" || u.origin !== location.origin) return;   // Firebase y demás servicios: directo, sin caché
   const nav = req.mode === "navigate";
+  if (u.pathname.includes("/lib/")) {
+    e.respondWith((async () => { const cache = await caches.open(LIBC); const hit = await cache.match(req); if (hit) return hit;
+      const r = await fetch(req); if (r.ok) cache.put(req, r.clone()).catch(() => {}); return r; })());
+    return;
+  }
   e.respondWith((async () => {
     const cache = await caches.open(C);
     try {

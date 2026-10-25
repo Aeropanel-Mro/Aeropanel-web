@@ -18,7 +18,11 @@ for (const [, attrs = "", code] of scripts) {
   catch (e) { bad(`script ${n}${isModule ? " (módulo)" : ""}: ${String(e.stderr || e.message).split("\n").slice(0, 5).join(" ")}`); }
 }
 n > 0 ? ok(`${n} scripts revisados`) : bad("no se encontraron scripts");
-for (const id of ["lib-pdfjs", "lib-pdflib", "three-src"]) html.includes(`id="${id}"`) ? ok("librería embebida " + id) : bad("falta librería " + id);
+for (const id of ["lib-pdfjs", "lib-pdfjs-worker", "lib-pdflib", "three-src", "ocr-wasm", "ocr-eng", "demo-data"]) {
+  const m = html.match(new RegExp(`id="${id}"[^>]*data-src="([^"?]+)`)); const inline = new RegExp(`id="${id}"[^>]*>[A-Za-z0-9+/=\\s]{1000}`).test(html);
+  if (inline) ok("componente dentro de index.html: " + id);
+  else if (m && fs.existsSync(m[1]) && fs.statSync(m[1]).size > 1000) ok(`componente ${id} en ${m[1]} (${Math.round(fs.statSync(m[1]).size / 1000)} KB)`);
+  else bad("falta el componente " + id + (m ? " (" + m[1] + ")" : "")); }
 try { new Function(fs.readFileSync("sw.js", "utf8")); ok("sw.js sin errores"); } catch (e) { bad("sw.js: " + e.message); }
 try { const m = JSON.parse(fs.readFileSync("manifest.webmanifest", "utf8")); m.name && m.icons?.length ? ok("manifest válido") : bad("manifest incompleto"); } catch (e) { bad("manifest: " + e.message); }
 if (fail.length) { console.log(`\n${fail.length} problema(s): NO se publica esta versión.`); process.exit(1); }

@@ -1,0 +1,49 @@
+name: Respaldo semanal
+# Cada lunes: 1) copia exacta del sitio en una rama «respaldo-AAAA-MM-DD» (nunca se borra);
+# 2) si están configurados los secretos FIREBASE_SA_JSON y BACKUP_PASSPHRASE, respaldo cifrado de la base de datos.
+on:
+  schedule:
+    - cron: "7 13 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sitio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Crear rama de respaldo del sitio
+        run: |
+          B="respaldo-$(date -u +%Y-%m-%d)"
+          git push origin "HEAD:refs/heads/$B" || echo "La rama $B ya existe"
+  datos:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SA_JSON: ${{ secrets.FIREBASE_SA_JSON }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: ¿Hay credenciales?
+        id: chk
+        run: |
+          if [ -n "$FIREBASE_SA_JSON" ] && [ -n "$BACKUP_PASSPHRASE" ]; then echo "ok=1" >> "$GITHUB_OUTPUT"; else echo "::notice::Respaldo de datos omitido: faltan los secretos FIREBASE_SA_JSON y BACKUP_PASSPHRASE (ver RECUPERACION.md)."; fi
+      - if: steps.chk.outputs.ok == '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: steps.chk.outputs.ok == '1'
+        name: Exportar y cifrar
+        run: |
+          pip install -q google-auth requests
+          python .github/scripts/backup_firestore.py
+          F="aeroplanner-datos-$(date -u +%Y-%m-%d).jsonl.gz.enc"
+          gzip -9 respaldo.jsonl
+          openssl enc -aes-256-cbc -pbkdf2 -iter 300000 -salt -in respaldo.jsonl.gz -out "$F" -pass env:BACKUP_PASSPHRASE
+          rm -f respaldo.jsonl.gz
+          echo "F=$F" >> "$GITHUB_ENV"
+      - if: steps.chk.outputs.ok == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.F }}
+          path: ${{ env.F }}
+          retention-days: 90

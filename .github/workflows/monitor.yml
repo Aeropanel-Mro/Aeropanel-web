@@ -1,0 +1,23 @@
+name: Monitor de la página
+# Cada hora: la página abre, sus componentes descargan y la base de datos no se puede leer sin sesión.
+# Si falla, abre un aviso (issue) y GitHub le envía un correo. Se cierra solo al recuperarse.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Revisar página y seguridad
+        run: node .github/scripts/monitor.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL }}
