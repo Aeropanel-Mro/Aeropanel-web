@@ -3871,7 +3871,7 @@ function acMapInner(st,sel,markers){
    ${cardChips(markers)}
    ${v==="3d"?`<div class="ac3d" id="ac3d"><div class="ac3d-tip" hidden></div>
       <div class="ac3d-bar"><div class="seg">${[["iso","3/4"],["front","Frente"],["left","Izq."],["right","Der."],["top","Arriba"],["below","Abajo"]].map(([k,t])=>`<button data-ac3v="${k}">${t}</button>`).join("")}</div>
-      <div class="seg">${[["ext","Exterior"],["cockpit","Cabina pilotos"],["cabin","Pasajeros"],["ebay","E-bay eléctrico"]].map(([k,t])=>`<button data-ac3m="${k}" class="${(S.ac3dMode||"ext")===k?"on":""}">${t}</button>`).join("")}</div>
+      <div class="seg">${[["ext","Exterior"],["cockpit","Cabina pilotos"],["cabin","Pasajeros"],["cargo","Bodegas"],["ebay","E-bay eléctrico"]].map(([k,t])=>`<button data-ac3m="${k}" class="${(S.ac3dMode||"ext")===k?"on":""}">${t}</button>`).join("")}</div>
       <label class="small acchk"><input type="checkbox" data-ac3z ${S.ac3dZones?"checked":""}> Colores por zona</label>
       <label class="small acchk" title="Mostrar u ocultar los círculos de los accesos sobre el avión"><input type="checkbox" data-ac3k ${S.ac3dMarks!==false?"checked":""}> Marcadores</label>
       <label class="small acchk" title="Ver el avión dentro del hangar de mantenimiento"><input type="checkbox" data-ac3h ${S.ac3dHangar!==false?"checked":""}> Hangar MRO</label>
@@ -3902,7 +3902,7 @@ function aircraftCard(sel=null, compact=false){
    Zones ATA 100–800 are separate meshes (touch / click a zone to filter); accesses to remove are markers placed from the
    zone number (approximate — the exact panel is always the drawing). */
 const AC3D=(()=>{
-  let apronMat=null, hangarG=null, apronG=null, roofG=null, envSky=null, envHangar=null, T=null, R=null, scene, cam, root, zoneMesh={}, markerGroup, labelGroup, decalGroup, ground, raf=0, needs=true, host=null, ro=null, tip=null;
+  let inDecals=null, apronMat=null, hangarG=null, apronG=null, roofG=null, envSky=null, envHangar=null, T=null, R=null, scene, cam, root, zoneMesh={}, markerGroup, labelGroup, decalGroup, ground, raf=0, needs=true, host=null, ro=null, tip=null;
   const st={theta:-0.62, phi:1.12, dist:50, target:[18.5,-0.2,0], anim:null};
   const LEN=36.2, RY=1.67, RZ=1.50;
   let TP=null; const loadThree=()=>{ if(window.THREE) return Promise.resolve(window.THREE); TP=TP||libText("three-src").then(t=>{ injectClassic(t); if(!window.THREE) throw new Error("No se pudo iniciar el motor 3D"); return window.THREE; }); return TP; };
@@ -4050,6 +4050,17 @@ const AC3D=(()=>{
     const FL=-0.45;
     // cabin floor (carpet + aisle), ceiling light strip, overhead bins, sidewall dado
     const carpet=canvasTex(512,128,(g,W,H)=>{ g.fillStyle="#1d2a3d"; g.fillRect(0,0,W,H); g.fillStyle="#2b3c56"; g.fillRect(0,H*0.42,W,H*0.16); for(let i=0;i<400;i++){ g.fillStyle=`rgba(255,255,255,${Math.random()*0.04})`; g.fillRect(Math.random()*W,Math.random()*H,2,2); } }); carpet.wrapS=T.RepeatWrapping; carpet.repeat.set(8,1);
+    // cabin liner (sidewalls + ceiling) with window reveals, so the outside paint is never seen from inside
+    { const x0=5.2, x1=28.6, NX=70, NT=56, pos=[], uv=[], idx=[]; for(let i=0;i<=NX;i++){ const x=x0+(x1-x0)*i/NX; for(let j=0;j<=NT;j++){ pos.push(...surf(x,j/NT*Math.PI*2,-0.07)); uv.push(i/NX,j/NT); } }
+      for(let i=0;i<NX;i++) for(let j=0;j<NT;j++){ const a=i*(NT+1)+j, b=a+NT+1; idx.push(a,b,a+1,b,b+1,a+1); }
+      const lg=new T.BufferGeometry(); lg.setAttribute("position",new T.Float32BufferAttribute(pos,3)); lg.setAttribute("uv",new T.Float32BufferAttribute(uv,2)); lg.setIndex(idx); lg.computeVertexNormals();
+      const lt=canvasTex(2048,512,(g,W,H)=>{ const X=x=>(x-x0)/(x1-x0)*W, V=th=>th/(2*Math.PI)*H; g.fillStyle="#EEF0F2"; g.fillRect(0,0,W,H);
+        g.fillStyle="#F6F3EC"; g.fillRect(0,0,W,V(0.55)); g.fillRect(0,V(2*Math.PI-0.55),W,H-V(2*Math.PI-0.55));
+        g.fillStyle="#C9CED4"; for(const th of [1.62,2*Math.PI-1.62]) g.fillRect(0,V(th)-H*0.02,W,H*0.04);
+        g.strokeStyle="rgba(120,128,138,.35)"; g.lineWidth=2; for(let x=5.6;x<28.6;x+=1.06){ g.beginPath(); g.moveTo(X(x),V(0.6)); g.lineTo(X(x),V(1.6)); g.moveTo(X(x),V(2*Math.PI-1.6)); g.lineTo(X(x),V(2*Math.PI-0.6)); g.stroke(); }
+        for(const th of [1.12,2*Math.PI-1.12]) for(let x=5.6;x<28.6;x+=0.53){ if(x>15.2&&x<16.05) continue; const cx=X(x), cy=V(th), ww=0.3/(x1-x0)*W, hh=0.42/(2*Math.PI*1.5)*H;
+          g.fillStyle="#DCD7CC"; g.beginPath(); g.roundRect(cx-ww/2-4,cy-hh/2-4,ww+8,hh+8,ww*0.5); g.fill(); const gr=g.createLinearGradient(0,cy-hh/2,0,cy+hh/2); gr.addColorStop(0,"#8fbbe8"); gr.addColorStop(1,"#d9e9f7"); g.fillStyle=gr; g.beginPath(); g.roundRect(cx-ww/2,cy-hh/2,ww,hh,ww*0.45); g.fill(); } });
+      inner.add(new T.Mesh(lg,new T.MeshStandardMaterial({map:lt,roughness:0.75,side:T.DoubleSide}))); }
     const fl=new T.Mesh(new T.PlaneGeometry(26,2.85),new T.MeshStandardMaterial({map:carpet,roughness:0.95})); fl.rotation.x=-Math.PI/2; fl.position.set(17.6,FL,0); inner.add(fl);
     const binM=M(0xe9ecef,{roughness:0.5}); for(const sd of [1,-1]){ const b=box(23.4,0.38,0.5,binM,17.2,0.98,sd*1.02); b.rotation.x=sd*0.35; box(23.4,0.04,0.5,M(0x9aa6b2),17.2,0.78,sd*1.12); }
     const strip=new T.Mesh(new T.PlaneGeometry(23.4,0.12),new T.MeshBasicMaterial({color:0xfff2d6})); strip.rotation.x=Math.PI/2; strip.position.set(17.2,1.42,0); inner.add(strip);
@@ -4083,10 +4094,47 @@ const AC3D=(()=>{
     // interior lighting
     for(let x=6;x<29;x+=4.5){ const L=new T.PointLight(0xfff1dc,6,9,1.6); L.position.set(x,1.2,0); inner.add(L); }
     const lc=new T.PointLight(0xdbe8ff,4,4,1.5); lc.position.set(2.9,0.9,0); inner.add(lc); const le=new T.PointLight(0xeaf2ff,5,5,1.4); le.position.set(4.2,-0.7,0); inner.add(le);
-    inner.add(new T.AmbientLight(0xffffff,0.25)); }
-  const MODES={cockpit:{eye:[3.0,0.55,0.48],yaw:Math.PI,pitch:-0.28,x:[2.8,4.6],name:"Cabina de pilotos"},cabin:{eye:[5.7,0.95,0],yaw:0,pitch:-0.18,x:[5.5,28.5],name:"Cabina de pasajeros"},ebay:{eye:[5.6,-0.95,0],yaw:Math.PI,pitch:-0.1,x:[2.9,6.0],name:"Compartimiento eléctrico delantero (E-bay)"}};
-  function setMode(m){ const fp=MODES[m]; if(!fp&&!st.fp) return; buildInterior(); inner.visible=!!fp; st.fp=fp?{...fp,eye:[...fp.eye]}:null; st.anim=null;
-    ground.visible=!fp; applyOpts(); cam.near=fp?0.03:0.5; cam.fov=fp?70:34; cam.updateProjectionMatrix(); S.ac3dMode=m||"ext";
+    inner.add(new T.AmbientLight(0xffffff,0.25));
+    // cargo compartments (below the cabin floor): floor panels, liner, ceiling, bulkheads, lights, a few bags
+    const CG={floor:-1.30,ceil:-0.60,wall:1.16};
+    const cFloor=canvasTex(512,256,(g,W,H)=>{ g.fillStyle="#5c636b"; g.fillRect(0,0,W,H); g.strokeStyle="rgba(20,24,28,.6)"; g.lineWidth=3; for(let k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*W/4,0); g.lineTo(k*W/4,H); g.stroke(); } g.beginPath(); g.moveTo(0,H/2); g.lineTo(W,H/2); g.stroke();
+      g.fillStyle="#3c4249"; for(let k=0;k<4;k++) for(let j=0;j<2;j++) for(const [x,y] of [[10,10],[W/4-10,10],[10,H/2-10],[W/4-10,H/2-10]]){ g.beginPath(); g.arc(k*W/4+x,j*H/2+y,3,0,7); g.fill(); } });
+    cFloor.wrapS=cFloor.wrapT=T.RepeatWrapping;
+    const cLiner=canvasTex(512,256,(g,W,H)=>{ g.fillStyle="#d8cfba"; g.fillRect(0,0,W,H); for(let i=0;i<3000;i++){ g.fillStyle=`rgba(120,105,80,${Math.random()*0.06})`; g.fillRect(Math.random()*W,Math.random()*H,2,2); } g.strokeStyle="rgba(110,96,72,.45)"; g.lineWidth=2; for(let k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*W/4,0); g.lineTo(k*W/4,H); g.stroke(); } g.fillStyle="rgba(90,80,60,.6)"; for(let k=0;k<4;k++) for(let y=12;y<H;y+=58){ g.beginPath(); g.arc(k*W/4+8,y,2.5,0,7); g.fill(); } });
+    cLiner.wrapS=T.RepeatWrapping;
+    const cg=new T.Group(); inner.add(cg);
+    for(const [x0,x1] of [[6.6,13.4],[19.6,27.4],[13.4,19.6]]){ const L=x1-x0, cx=(x0+x1)/2, wb=x0===13.4;
+      const ff=cFloor.clone(); ff.needsUpdate=true; ff.repeat.set(L/2.4,1); const f=new T.Mesh(new T.PlaneGeometry(L,CG.wall*1.62),new T.MeshStandardMaterial({map:ff,color:wb?0x6b7177:0xffffff,roughness:0.75,metalness:0.2})); f.rotation.x=-Math.PI/2; f.position.set(cx,CG.floor,0); cg.add(f);
+      const lt=cLiner.clone(); lt.needsUpdate=true; lt.repeat.set(L/2.4,1); const lm=new T.MeshStandardMaterial({map:lt,color:wb?0x8d9399:0xffffff,roughness:0.85,side:T.DoubleSide});
+      for(const sd of [1,-1]){ const w=new T.Mesh(new T.PlaneGeometry(L,CG.ceil-CG.floor),lm); w.position.set(cx,(CG.ceil+CG.floor)/2,sd*CG.wall); cg.add(w); }
+      const c=new T.Mesh(new T.PlaneGeometry(L,CG.wall*2),lm); c.rotation.x=Math.PI/2; c.position.set(cx,CG.ceil,0); cg.add(c);
+      if(!wb) for(let x=x0+1.2;x<x1;x+=2.4){ const lamp=new T.Mesh(new T.PlaneGeometry(0.5,0.12),new T.MeshBasicMaterial({color:0xfff3d6})); lamp.rotation.x=Math.PI/2; lamp.position.set(x,CG.ceil-0.005,0); cg.add(lamp); const L2=new T.PointLight(0xfff0d8,2.2,4,1.6); L2.position.set(x,CG.ceil-0.15,0); cg.add(L2); } }
+    for(const x of [6.6,27.4]){ const b=new T.Mesh(new T.PlaneGeometry(CG.wall*2,CG.ceil-CG.floor),new T.MeshStandardMaterial({map:cLiner,roughness:0.85,side:T.DoubleSide})); b.rotation.y=Math.PI/2; b.position.set(x,(CG.ceil+CG.floor)/2,0); cg.add(b); }
+    for(const x of [13.4,19.6]) for(const sd of [1,-1]){ const b=new T.Mesh(new T.PlaneGeometry(0.75,CG.ceil-CG.floor),new T.MeshStandardMaterial({color:0x7c838a,roughness:0.7,side:T.DoubleSide})); b.rotation.y=Math.PI/2; b.position.set(x,(CG.ceil+CG.floor)/2,sd*0.8); cg.add(b); }
+    const bagM=[0x24364f,0x5a2a2a,0x2f4a36,0x4a4a4a]; for(let i=0;i<7;i++){ const bg=new T.Mesh(new T.BoxGeometry(0.55,0.32,0.38),new T.MeshStandardMaterial({color:bagM[i%4],roughness:0.8})); bg.position.set(23.2+i*0.6,CG.floor+0.16,(i%2?0.45:-0.4)); bg.rotation.y=i*0.4; cg.add(bg); }
+    inDecals=new T.Group(); inner.add(inDecals); }
+  /* textures of interior panels: what the mechanic actually sees inside the aircraft */
+  const IPT={};
+  function innerTex(kind,space){ const k=kind+space; if(IPT[k]) return IPT[k]; return IPT[k]=canvasTex(512,320,(g,W,H)=>{
+    const screws=(col,r=4,step=4)=>{ g.fillStyle=col; for(let i=0;i<=step;i++){ const x=18+i*(W-36)/step; for(const y of [14,H-14]){ g.beginPath(); g.arc(x,y,r,0,7); g.fill(); } } for(let j=1;j<3;j++){ const y=14+j*(H-28)/3; for(const x of [14,W-14]){ g.beginPath(); g.arc(x,y,r,0,7); g.fill(); } } };
+    if(kind==="floor"){ g.fillStyle=space==="cargo"?"#5d646c":"#6f757c"; g.fillRect(0,0,W,H); g.strokeStyle="rgba(255,255,255,.06)"; g.lineWidth=1; for(let x=0;x<W;x+=14) for(let y=0;y<H;y+=12){ g.beginPath(); g.arc(x+(y/12%2)*7,y,6,0,7); g.stroke(); }   // honeycomb hint
+      g.strokeStyle="#2c3136"; g.lineWidth=8; g.strokeRect(4,4,W-8,H-8); screws("#2a2f34",5,6); g.fillStyle="rgba(230,235,240,.75)"; g.font="bold 22px Arial"; g.fillText(space==="cargo"?"CARGO FLOOR PANEL":"FLOOR PANEL · NO STEP ON EDGE",28,H/2+8); }
+    else if(kind==="ceiling"){ const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,space==="cargo"?"#d4cab4":"#f1eee8"); gr.addColorStop(1,space==="cargo"?"#c9bea6":"#e4e0d8"); g.fillStyle=gr; g.beginPath(); g.roundRect(6,6,W-12,H-12,28); g.fill();
+      for(let i=0;i<2500;i++){ g.fillStyle=`rgba(120,110,95,${Math.random()*0.05})`; g.fillRect(Math.random()*W,Math.random()*H,2,2); } g.strokeStyle="rgba(120,110,95,.5)"; g.lineWidth=4; g.beginPath(); g.roundRect(6,6,W-12,H-12,28); g.stroke();
+      if(space==="cabin"){ g.fillStyle="rgba(60,60,60,.35)"; for(let i=0;i<9;i++) for(let j=0;j<4;j++){ g.beginPath(); g.arc(W*0.7+i*9,H*0.3+j*9,2.3,0,7); g.fill(); } } screws("rgba(110,100,85,.8)",3.5,3); }
+    else { g.fillStyle=space==="cargo"?"#d8cfba":"#f3f1ec"; g.fillRect(0,0,W,H); if(space==="cabin"){ g.fillStyle="#cfd3d8"; g.fillRect(0,H*0.78,W,H*0.22); g.fillStyle="#e7e4dd"; g.beginPath(); g.roundRect(W*0.36,H*0.14,W*0.28,H*0.42,40); g.fill(); g.strokeStyle="rgba(140,130,115,.6)"; g.lineWidth=3; g.stroke(); }
+      for(let i=0;i<2500;i++){ g.fillStyle=`rgba(120,110,95,${Math.random()*0.05})`; g.fillRect(Math.random()*W,Math.random()*H,2,2); } g.strokeStyle="rgba(110,100,85,.55)"; g.lineWidth=5; g.strokeRect(3,3,W-6,H-6); screws("rgba(110,100,85,.8)",3.5,4); } }); }
+  /* an interior access drawn where it is: glowing status outline + the real-looking panel; for the selected card it is REMOVED (opening + panel set aside) */
+  function innerDecal(p,color,strong){ const I=p.inner, n=new T.Vector3(...p.n).normalize(); const w=I.kind==="wall"?1.0:0.9, h=I.kind==="wall"?0.62:0.6;
+    const grp=new T.Group(); grp.position.set(p[0],p[1],p[2]); grp.quaternion.copy(new T.Quaternion().setFromUnitVectors(new T.Vector3(0,0,1),n));
+    const glow=new T.Mesh(new T.PlaneGeometry(w+0.1,h+0.1),new T.MeshBasicMaterial({color,transparent:true,opacity:strong?0.95:0.8,side:T.DoubleSide,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2})); grp.add(glow);
+    const face=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshStandardMaterial({map:strong?bayTex():innerTex(I.kind,I.space),roughness:0.6,metalness:I.kind==="floor"?0.25:0.05,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4})); face.position.z=0.004; grp.add(face);
+    if(strong){ const hinge=new T.Group(); hinge.position.set(0,h/2+0.03,0.02); const pl=new T.Mesh(new T.BoxGeometry(w,h,0.02),new T.MeshStandardMaterial({map:innerTex(I.kind,I.space),roughness:0.6})); pl.position.set(0,h/2,0); hinge.add(pl); hinge.rotation.x=1.05; grp.add(hinge);
+      const ring=new T.Mesh(new T.RingGeometry(0.5,0.58,40),new T.MeshBasicMaterial({color:0xFFD400,transparent:true,opacity:0.95,side:T.DoubleSide,depthWrite:false})); ring.scale.set(1.5,1.5,1); ring.position.z=0.01; ring.userData.ring=true; grp.add(ring); }
+    grp.userData.space=I.space; grp.traverse(o=>{ o.renderOrder=5; }); return grp; }
+  const MODES={cockpit:{eye:[3.0,0.55,0.48],yaw:Math.PI,pitch:-0.28,x:[2.8,4.6],name:"Cabina de pilotos"},cabin:{eye:[5.7,0.95,0],yaw:0,pitch:-0.18,x:[5.5,28.5],name:"Cabina de pasajeros"},ebay:{eye:[5.6,-0.95,0],yaw:Math.PI,pitch:-0.1,x:[2.9,6.0],name:"Compartimiento eléctrico delantero (E-bay)"},cargo:{eye:[7.1,-0.86,0],yaw:0,pitch:-0.12,x:[6.9,27.1],name:"Bodegas de carga"}};
+  function setMode(m){ const fp=MODES[m]; if(!fp&&!st.fp) return; buildInterior(); inner.visible=!!fp; st.fp=fp?{...fp,key:m,eye:[...fp.eye]}:null; st.anim=null;
+    ground.visible=!fp; root.traverse(o=>{ if(o.userData.ext) o.visible=!fp; }); if(fp){ const tg=(last.inner||[]).find(i=>i.space===m); if(tg) st.fp.eye[0]=Math.max(fp.x[0],Math.min(fp.x[1],tg.x-2.4)); } applyOpts(); cam.near=fp?0.03:0.5; cam.fov=fp?70:34; cam.updateProjectionMatrix(); S.ac3dMode=m||"ext";
     document.querySelectorAll("[data-ac3m]").forEach(b=>b.classList.toggle("on",(b.dataset.ac3m||"ext")===(m||"ext"))); const h=host?.querySelector(".ac3d-hint"); if(h) h.textContent=fp?`${fp.name} · arrastre para mirar · rueda o pellizco para avanzar / retroceder`:"Arrastre para girar · rueda o pellizco para acercar · doble clic: vista inicial · toque una zona o un acceso"; needs=true; }
   function build(){
     scene=new T.Scene(); root=new T.Group(); scene.add(root);
@@ -4115,7 +4163,7 @@ const AC3D=(()=>{
     const fT=fuselageTex(reg); builtReg=reg; const F=fuselageGeo(); fusMats=[add("200",F.upper,paint(0xffffff,{map:fT}),"Fuselaje superior"),add("100",F.lower,paint(0xffffff,{map:fT}),"Fuselaje inferior"),add("300",F.tail,paint(0xffffff,{map:fT}),"Cono de cola")];
     const dark=new T.MeshStandardMaterial({color:0x0c1724,metalness:0.5,roughness:0.2});
     // belly fairing (wing-to-body) — lower fuselage zone
-    { const bf=new T.SphereGeometry(1,40,20); bf.scale(4.9,0.82,1.62); const m=add("100",bf,null,"Carenado ala-fuselaje"); m.position.set(15.6,-1.18,0); }
+    { const bf=new T.SphereGeometry(1,40,20); bf.scale(4.9,0.82,1.62); const m=add("100",bf,null,"Carenado ala-fuselaje"); m.position.set(15.6,-1.18,0); m.userData.ext=true; }
     // doors (zone 800) painted
     const doorM=(k,x0)=>mat(0xffffff,{map:doorTex(x0>sweepX(Math.PI/2)?k+"N":k)});
     const doors=[[3.55,4.45,1.1,2.25,"L1 · puerta delantera izq.","pax"],[29.05,29.85,1.15,2.2,"L2 · puerta trasera izq.","pax"],[3.55,4.35,-2.25,-1.1,"R1 · puerta de servicio der.","pax"],[29.05,29.8,-2.2,-1.15,"R2 · puerta de servicio der.","pax"],
@@ -4274,7 +4322,15 @@ const AC3D=(()=>{
       g.forEach((it,i)=>{ let t=(L[i]-lmin)/lr; if(flip) t=1-t; const c=sr>1e-4?(Sh[i]-smin)/sr:0.5; it.x._wing={s:sMin+t*(sMax-sMin),cf:0.15+0.7*c}; }); } }
   /* approximate 3-D position (and outward normal) of an access from its zone number (2nd digit = station, 3rd = position, L/R/Z letter = side) */
   const fn=(x,th)=>{ const v=new T.Vector3(0,Math.cos(th)/RY,Math.sin(th)/RZ).normalize(); return [v.x,v.y,v.z]; };
-  function pos3(x){ const p=idParts(x.panel); if(!p) return null; const z=x.major||String(p.d1)+"00"; const side=p.side==="R"?-1:p.side==="L"?1:0; const j=((p.h%9)-4)*0.05;
+  const IKIND={F:"floor",C:"ceiling",W:"wall"}, INAME={floor:"piso",ceiling:"cielo",wall:"forro lateral"};
+  function innerSpot(x,p){ const kind=IKIND[(p.suf||"")[2]]; if(!kind) return null; const zz=x.major||String(p.d1)+"00"; if(zz!=="100"&&zz!=="200") return null;
+    const cargo=zz==="100"; const tab=cargo?{0:[6.9,9.6],1:[6.9,8.2],2:[6.9,9.6],3:[9.6,11.6],4:[11.6,13.2],5:[19.8,22.4],6:[22.4,25.0],7:[25.0,27.1],8:[25.0,27.1],9:[25.0,27.1]}:{0:[5.8,10],1:[2.6,4.4],2:[5.8,10],3:[10,15],4:[15,20],5:[20,24.5],6:[24.5,28.2],7:[24.5,28.2],8:[24.5,28.2],9:[24.5,28.2]};
+    const r=tab[p.d2]||tab[0], xx=lerp(r[0],r[1],clamp01((p.d3+0.5)/10)), sd=p.side==="L"?1:p.side==="R"?-1:0;
+    let q, n; if(kind==="floor"){ q=[xx,(cargo?-1.30:-0.45)+0.012,sd*(cargo?0.45:0.72)]; n=[0,1,0]; }
+    else if(kind==="ceiling"){ q=[xx,(cargo?-0.60:1.40)-0.012,sd*0.5]; n=[0,-1,0]; }
+    else { const s2=sd||1; q=[xx,cargo?-0.95:0.35,s2*(cargo?1.15:1.40)]; n=[0,0,-s2]; }
+    q.n=n; q.inner={space:cargo?"cargo":"cabin",kind,txt:`interior: ${INAME[kind]} de ${cargo?"bodega":"cabina de pasajeros"} — véalo en «${cargo?"Bodegas":"Pasajeros"}»`}; return q; }
+  function pos3(x){ const p=idParts(x.panel); if(!p) return null; { const iq=innerSpot(x,p); if(iq) return iq; } const z=x.major||String(p.d1)+"00"; const side=p.side==="R"?-1:p.side==="L"?1:0; const j=((p.h%9)-4)*0.05;
     const u=clamp01((p.d2-1)/8+p.d3*0.01); const ret=(q,n)=>{ q.n=n; return q; }; const fz=(xx,th,off)=>ret(surf(xx,th,off),fn(xx,th));
     switch(z){
       case "100": { const th=side>0?2.25+j:side<0?-2.25+j:Math.PI+j; return fz(lerp(3,29.5,u),th,0.08); }
@@ -4326,18 +4382,19 @@ const AC3D=(()=>{
       me.material.color.copy(showZones?me.userData.base.clone().lerp(new T.Color(PAL[z]),0.55):me.userData.base); }
     const reg=(proj()?.registration)||""; if(reg!==builtReg){ const t=fuselageTex(reg); for(const m of fusMats){ m.map?.dispose?.(); m.map=t; m.needsUpdate=true; } builtReg=reg; }
     wingFromDrawings(markers);
-    markerGroup.clear(); labelGroup.clear(); decalGroup.clear(); const pts=[];
+    const innerOn=[]; markerGroup.clear(); labelGroup.clear(); decalGroup.clear(); if(markers.some(x=>{ const p=idParts(x.panel); return p&&innerSpot(x,p); })) buildInterior(); inDecals?.clear(); const pts=[];
     for(const x of markers){ const p=pos3(x); if(!p) continue; const rs=cardSet?x.rels.filter(r=>r.card===card):x.rels; const act=["REMOVE","OPEN","CONDITIONAL"].find(a=>rs.some(r=>r.action===a))||"REMOVE";
       const nofig=!drawRefs(x).length; const on=cardSet?cardSet.has(x.panel):true; const color=ST_COLOR[x.status]||"#FFB000";
-      const sp=new T.Sprite(new T.SpriteMaterial({map:markerTex(act,color,nofig),depthTest:false,transparent:true,sizeAttenuation:false,opacity:on?1:0.22})); sp.scale.set(on&&cardSet?0.03:0.022,on&&cardSet?0.03:0.022,1); sp.position.set(...p); sp.renderOrder=10; sp.userData={panel:x.panel,info:`${x.panel} · ${ACT_LABEL[act]||""} · ZONE ${x.zoneResolved||x.major} · ${ZONE_NAMES[x.major]||""}${nofig?" · sin dibujo":""}`,pulse:on&&!!cardSet};
+      const sp=new T.Sprite(new T.SpriteMaterial({map:markerTex(act,color,nofig),depthTest:false,transparent:true,sizeAttenuation:false,opacity:on?1:0.22})); sp.scale.set(on&&cardSet?0.03:0.022,on&&cardSet?0.03:0.022,1); sp.position.set(...p); sp.renderOrder=10; sp.userData={panel:x.panel,info:`${x.panel} · ${ACT_LABEL[act]||""} · ZONE ${x.zoneResolved||x.major} · ${ZONE_NAMES[x.major]||""}${nofig?" · sin dibujo":""}${p.inner?" · "+p.inner.txt:""}`,pulse:on&&!!cardSet};
       markerGroup.add(sp); if(on) pts.push(p);
-      const dc=panelDecal(p,new T.Color(color),on&&!!cardSet); dc.traverse(o=>{ Object.assign(o.userData,{panel:x.panel,info:sp.userData.info}); if(!on&&o.material){ o.material.transparent=true; o.material.opacity=0.2; } }); decalGroup.add(dc);
+      const dc=p.inner?innerDecal(p,new T.Color(color),on&&!!cardSet):panelDecal(p,new T.Color(color),on&&!!cardSet); dc.traverse(o=>{ Object.assign(o.userData,{panel:x.panel,info:sp.userData.info}); if(!on&&o.material){ o.material.transparent=true; o.material.opacity=0.2; } }); (p.inner?inDecals:decalGroup).add(dc);
+      if(p.inner&&on) innerOn.push({x:p[0],space:p.inner.space}); if(p.inner&&on&&S.acIds!==false){ const li=labelSprite(x.panel); li.position.set(p[0]+p.n[0]*0.15,p[1]+p.n[1]*0.15+(p.inner.kind==="wall"?0.42:0),p[2]+p.n[2]*0.15); li.userData.space=p.inner.space; inDecals.add(li); }
       // IDs are written for the selected card (or when there are few accesses); otherwise hover / touch shows them
       if(S.acIds!==false && on && (cardSet || markers.length<=8)){ const l=labelSprite(x.panel); l.position.set(...p); labelGroup.add(l); } }
-    last={pts,card}; applyOpts(); needs=true; }
+    last={pts,card,inner:innerOn.sort((a,b)=>a.x-b.x)}; applyOpts(); needs=true; }
   /* view options: access markers (circles, plates, IDs) on/off and hangar on/off */
   function applyOpts(){ const fp=!!st.fp, marks=S.ac3dMarks!==false, hg=S.ac3dHangar!==false;
-    if(markerGroup){ markerGroup.visible=!fp&&marks; labelGroup.visible=!fp&&marks; decalGroup.visible=marks; }
+    if(markerGroup){ markerGroup.visible=!fp&&marks; labelGroup.visible=!fp&&marks; decalGroup.visible=marks; if(inDecals){ inDecals.visible=marks; const sp=st.fp?.key; for(const o of inDecals.children) o.visible=!sp||o.userData.space===sp; } }
     if(hangarG){ hangarG.visible=hg; apronG.visible=!hg; const env=hg?(envHangar||envSky):envSky; if(env&&scene.environment!==env) scene.environment=env; }
     needs=true; }
   function camPos(){ const [tx,ty,tz]=st.target; return [tx+st.dist*Math.sin(st.phi)*Math.cos(st.theta), ty+st.dist*Math.cos(st.phi), tz+st.dist*Math.sin(st.phi)*Math.sin(st.theta)]; }
@@ -4345,7 +4402,7 @@ const AC3D=(()=>{
     const day=document.documentElement.dataset.theme==="day"; const bg=day?0xE8EEF5:0x0A1420; if(R.__bg!==bg){ R.setClearColor(bg,1); R.__bg=bg; if(apronMat){ apronMat.color.set(day?0xffffff:0x7d838c); } needs=true; }
     if(st.anim){ const a=st.anim, k=Math.min(1,(t-a.t0)/a.ms), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; for(const key of ["theta","phi","dist"]) st[key]=a.from[key]+(a.to[key]-a.from[key])*e; st.target=a.from.target.map((v,i)=>v+(a.to.target[i]-v)*e); if(k>=1) st.anim=null; needs=true; }
     let pulse=false; for(const sp of markerGroup.children) if(sp.userData.pulse){ pulse=true; const s=0.03*(1+0.2*Math.sin(t/180)); sp.scale.set(s,s,1); }
-    for(const d of decalGroup.children) for(const o of d.children) if(o.userData.ring){ pulse=true; o.material.opacity=0.55+0.4*Math.sin(t/200); }
+    for(const d of [...decalGroup.children,...(inDecals?.children||[])]) for(const o of (d.children||[])) if(o.userData.ring){ pulse=true; o.material.opacity=0.55+0.4*Math.sin(t/200); }
     if(!needs&&!pulse) return; needs=false;
     if(st.fp){ const f=st.fp; cam.position.set(...f.eye); cam.lookAt(f.eye[0]+Math.cos(f.pitch)*Math.cos(f.yaw),f.eye[1]+Math.sin(f.pitch),f.eye[2]+Math.cos(f.pitch)*Math.sin(f.yaw)); }
     else { const p=camPos(); cam.position.set(...p); cam.lookAt(...st.target); } if(roofG) roofG.visible=cam.position.y<HG.roof-9; R.render(scene,cam); }
@@ -4359,6 +4416,7 @@ const AC3D=(()=>{
   const ptrs=new Map(); let downAt=null, moved=false, pinch0=null;
   const ray=()=>new T.Raycaster();
   function pick(ev){ const r=R.domElement.getBoundingClientRect(); const v=new T.Vector2(((ev.clientX-r.left)/r.width)*2-1,-((ev.clientY-r.top)/r.height)*2+1); const rc=ray(); rc.setFromCamera(v,cam);
+    const ih=(st.fp&&inDecals&&S.ac3dMarks!==false)?rc.intersectObjects(inDecals.children,true).find(h=>h.object.userData.panel):null; if(ih) return {panel:ih.object.userData.panel,info:ih.object.userData.info};
     const mk=S.ac3dMarks===false?null:((st.fp?[]:rc.intersectObjects(markerGroup.children,false)).filter(h=>h.object.material.opacity>0.5)[0]||rc.intersectObjects(decalGroup.children,true).filter(h=>h.object.userData.panel&&h.object.material.opacity>0.5)[0]); if(mk) return {panel:mk.object.userData.panel,info:mk.object.userData.info};
     const hit=rc.intersectObjects(root.children,true).find(h=>h.object.userData.zone); return hit?{zone:hit.object.userData.zone,info:`ZONE ${hit.object.userData.zone} · ${ZONE_NAMES[hit.object.userData.zone]||""} · ${hit.object.name}`}:null; }
   function bind(cv){
