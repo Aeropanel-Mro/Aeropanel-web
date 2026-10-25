@@ -3950,7 +3950,7 @@ const AC3D=(()=>{
   function canvasTex(w,h,draw){ const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d"); draw(g,w,h); const t=new T.CanvasTexture(c); t.flipY=false; t.colorSpace=T.SRGBColorSpace; t.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy()); return t; }
   /* AeroPlanner house livery (original design, no airline branding): white body, satin-grey belly, a navy sweep that rises
      from the wing root to the tail, with a gold pinstripe and a blue trailing band. */
-  const LIV={navy:"#0B2251",navy2:"#13306E",blue:"#1F5BB8",gold:"#D9A441",belly:"#D4DAE1",white:"#F7F9FB"};
+  const LIV={navy:"#0A0C52",navy2:"#171B70",blue:"#7B2A8C",gold:"#E4007C",belly:"#D4DAE1",white:"#F7F9FB"};   // palette: deep indigo navy, violet band, rosa mexicano pinstripe (colours only, own AeroPlanner design)
   const lerpN=(a,b,t)=>a+(b-a)*t, smooth=t=>{ t=Math.max(0,Math.min(1,t)); return t*t*(3-2*t); };
   const sweepX=th=>{ const h=(1+Math.cos(th))/2; return lerpN(18.6,27.6,Math.pow(smooth(h),0.85)); };   // navy starts aft of this station
   function fuselageTex(reg){ return canvasTex(4096,1024,(g,W,H)=>{
@@ -3959,7 +3959,7 @@ const AC3D=(()=>{
     for(let py=0;py<H;py++){ const c=Math.cos(TH(py)); const k=smooth((-c-0.42)/0.18); g.fillStyle=k<=0?LIV.white:`rgb(${Math.round(lerpN(247,212,k))},${Math.round(lerpN(249,218,k))},${Math.round(lerpN(251,225,k))})`; g.fillRect(0,py,W,1); }
     // navy sweep + blue band + gold pinstripe, drawn per row along the curved boundary
     for(let py=0;py<H;py++){ const th=TH(py), xb=sweepX(th);
-      const gr=g.createLinearGradient(X(xb),0,W,0); gr.addColorStop(0,LIV.navy2); gr.addColorStop(0.45,LIV.navy); gr.addColorStop(1,"#081A3F"); g.fillStyle=gr; g.fillRect(X(xb),py,W-X(xb),1);
+      const gr=g.createLinearGradient(X(xb),0,W,0); gr.addColorStop(0,LIV.navy2); gr.addColorStop(0.45,LIV.navy); gr.addColorStop(1,"#070940"); g.fillStyle=gr; g.fillRect(X(xb),py,W-X(xb),1);
       g.fillStyle=LIV.blue; g.fillRect(X(xb-0.62),py,X(xb-0.24)-X(xb-0.62),1);
       g.fillStyle=LIV.gold; g.fillRect(X(xb-0.16),py,X(xb-0.06)-X(xb-0.16),1); }
     // skin: frames (~0.53 m), lap joints, stringer seams, rivet rows; very light so the paint reads clean
@@ -4007,7 +4007,7 @@ const AC3D=(()=>{
     g.strokeStyle=accent; g.lineWidth=4.2; g.lineCap="round"; g.beginPath(); g.moveTo(15.5,42.5); g.bezierCurveTo(25,37.5,37,35,50.5,36.2); g.stroke();
     g.fillStyle=accent; g.beginPath(); g.arc(50.8,36.2,3.1,0,7); g.fill(); g.restore(); }
   function surfaceTex(kind){ return canvasTex(1024,1024,(g,W,H)=>{
-    if(kind==="fin"){ const gr=g.createLinearGradient(0,H,0,0); gr.addColorStop(0,LIV.navy); gr.addColorStop(0.65,LIV.navy2); gr.addColorStop(1,LIV.blue); g.fillStyle=gr; g.fillRect(0,0,W,H); }
+    if(kind==="fin"){ const gr=g.createLinearGradient(0,H,0,0); gr.addColorStop(0,LIV.navy); gr.addColorStop(1,LIV.navy2); g.fillStyle=gr; g.fillRect(0,0,W,H); }
     else { g.fillStyle="#eef1f4"; g.fillRect(0,0,W,H); if(kind==="wing"){ const gr=g.createLinearGradient(W/2,0,W,0); gr.addColorStop(0,"#dde2e8"); gr.addColorStop(1,"#cfd5dc"); g.fillStyle=gr; g.fillRect(W/2,0,W/2,H); } }
     const U=(xc,upper)=>upper?(0.5*(1-xc))*W:(0.5+0.5*xc)*W, Y=s=>s*H;
     const line=(xc,s0,s1,upper,col="rgba(60,72,86,.75)",lw=3)=>{ g.strokeStyle=col; g.lineWidth=lw; g.beginPath(); g.moveTo(U(xc,upper),Y(s0)); g.lineTo(U(xc,upper),Y(s1)); g.stroke(); };
@@ -4135,7 +4135,7 @@ const AC3D=(()=>{
       for(const side of [1,-1]){ for(const s of [0.74,0.84,0.94]){ const le=wingLE(s,side); wick([le[0]+wingChord(s),le[1],le[2]]); } for(const s of [0.7,0.9]){ const le=htLE(s,side); wick([le[0]+htC(s),le[1],le[2]],0.24); } }
       for(const s of [0.62,0.86]){ const le=finLE(s); wick([le[0]+finC(s),le[1],0],0.24); } }
     // dorsal fin fillet
-    { const df=new T.BufferGeometry(); const a=[27.0,1.45,0], b=[29.4,1.35+0.2,0], c=[29.9,2.6,0]; df.setAttribute("position",new T.Float32BufferAttribute([...a,...b,...c],3)); df.computeVertexNormals(); add("300",df,paint(0x0B2251),"Aleta dorsal"); }
+    { const df=new T.BufferGeometry(); const a=[27.0,1.45,0], b=[29.4,1.35+0.2,0], c=[29.9,2.6,0]; df.setAttribute("position",new T.Float32BufferAttribute([...a,...b,...c],3)); df.computeVertexNormals(); add("300",df,paint(0x0A0C52),"Aleta dorsal"); }
     // engines: nacelle, inlet lip, fan + spinner, exhaust plug, tapered pylon (zone 400)
     const ng=nacelleGeo(); const fanM=new T.MeshStandardMaterial({color:0x1a2129,metalness:0.7,roughness:0.3}); const lipM=new T.MeshStandardMaterial({color:0xd5dbe2,metalness:0.95,roughness:0.18}); const plugM=new T.MeshStandardMaterial({color:0x6c7682,metalness:0.8,roughness:0.35});
     for(const side of [1,-1]){ const e=ENG(side); const na=add("400",ng,paint(0xffffff,{map:nacelleTex()}),side>0?"Motor 1 (izq.)":"Motor 2 (der.)"); na.position.set(e.x,e.y,e.z);
