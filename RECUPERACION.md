@@ -121,3 +121,10 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - ¿Olvidó la llave? En la tarjeta de la llave pulse **«¿Olvidó su llave?»**, escriba el código y una llave nueva. Recibirá un código **nuevo** (el anterior deja de servir). Todo sigue visible igual que antes.
 - ¿Perdió también el código? En el mismo lugar abra **«También perdí el código» → Crear llave nueva**. Los proyectos de sus invitados se vuelven a proteger con la llave nueva cuando cada invitado los abre; la contraseña de invitados de esos proyectos aparecerá como «—» hasta que el creador la cambie.
 - Si activó la llave antes de existir esta opción, al desbloquearla verá **«Crear código ahora»**.
+
+## 12. Monitoreo de accesos y bloqueo
+
+- En su pantalla de inicio (y en «Acceso a la página web» dentro de un proyecto) está **Monitoreo de accesos**: quién está en línea, entradas, equipos usados (24 h / 7 días), alertas y actividad reciente.
+- **Bloquear / Desbloquear** por persona. El bloqueo lo aplica el servidor (reglas v3): la persona queda fuera al momento y no puede volver a entrar.
+- **Bloqueo automático**: si una cuenta entra desde más equipos de los permitidos en 24 h. Lo aplica su página mientras usted tenga AeroPlanner abierto (revisa cada minuto). Al desbloquear, el conteo empieza de cero.
+- Requiere las **reglas v3** publicadas en Firebase. Si faltan, la tarjeta «Reglas de seguridad del servidor» aparece sola en su inicio; cuando están al día, no se muestra.

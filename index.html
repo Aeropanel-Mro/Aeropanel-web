@@ -188,6 +188,28 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .ac3tour.on{background:#FFD400!important;color:#0B1426!important}
 .auth-card .tbl-wrap td{white-space:normal;vertical-align:top}
 .auth-card .tbl-wrap td .btn{margin:2px 0}
+.mon{display:flex;flex-direction:column;gap:10px}
+.mon-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.mon-kpi>div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.mon-kpi b{font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}.mon-kpi span{font-size:12px;opacity:.75}
+.mon-kpi .ok b{color:var(--efis-green,#1f9d55)}.mon-kpi .bad{border-color:var(--efis-red,#d64545)}.mon-kpi .bad b{color:var(--efis-red,#d64545)}
+.mon-pol{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}.mon-pol select{width:auto;padding:4px 8px}
+.mon-alerts{display:flex;flex-direction:column;gap:6px}
+.mon-t th{font-size:12px;text-align:left;font-weight:600}.mon-t tr.over td{background:rgba(214,69,69,.07)}.mon-t b.bad{color:var(--efis-red,#d64545)}
+.mon-t .stack{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.mon .linkish{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;text-align:left;word-break:break-all}
+.mon-h{font-size:14px;margin:6px 0 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mon-log{display:flex;flex-direction:column;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.mon-log>div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;padding:7px 10px;border-bottom:1px solid var(--line-2,rgba(0,0,0,.06));font-size:12.5px}
+.mon-log>div>span:nth-child(3){grid-column:2}.mon-log>div>span:nth-child(4){grid-column:2;font-size:11.5px}
+.mon-log>div>b{word-break:break-all}
+.btn.danger{color:var(--efis-red,#d64545)}
+.start-grid>.auth-card:has(#mon_card){grid-column:1/-1}
+.start-grid>.auth-card:has(#mon_card) .mon-kpi{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+@media (max-width:700px){ .mon-t thead{display:none} .mon-t,.mon-t tbody,.mon-t tr,.mon-t td{display:block;width:100%}
+  .mon-t tr{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)} .mon-t td{border:0!important;padding:0!important;background:none!important} .mon-t td:nth-child(3){grid-column:1} .mon-t td:nth-child(4){grid-column:1/-1}
+  .mon-t td:nth-child(2){text-align:right} .mon-t td:nth-child(4)::before{content:"Dispositivos 24 h · 7 días: ";opacity:.7} .mon-t td:nth-child(5){grid-column:1/-1} .mon-t .stack{flex-direction:row;flex-wrap:wrap}
+  .mon-log>div{grid-template-columns:1fr} .mon-log>div>span:nth-child(3),.mon-log>div>span:nth-child(4){grid-column:1} }
 /* ---------- AeroPlanner brand ---------- */
 .apw{font-family:var(--f-body);font-weight:400!important;letter-spacing:.01em!important;text-transform:none!important}
 .apw span{font-weight:800!important;font-size:inherit!important;letter-spacing:inherit!important;text-transform:none!important;color:inherit!important;display:inline!important;margin:0!important}
@@ -1124,7 +1146,7 @@ async function wcGet(k){ try{ const d=await wcDb(); return await new Promise(r=>
 async function wcPut(k,v){ try{ const d=await wcDb(); d.transaction("a","readwrite").objectStore("a").put(v,k); }catch{} }
 function webRules(owner,ownerUid){ owner=String(owner||"").toLowerCase().replace(/'/g,""); ownerUid=String(ownerUid||"-").replace(/'/g,"");
   return `rules_version = '2';
-// AeroPlanner — reglas de seguridad v2 (pegue esto en Firestore → Reglas → Publicar)
+// AeroPlanner — reglas de seguridad v3 (pegue esto en Firestore → Reglas → Publicar)
 service cloud.firestore {
   match /databases/{database}/documents {
     function signed()   { return request.auth != null; }
@@ -1133,7 +1155,7 @@ service cloud.firestore {
     function isOwner()  { return signed() && (request.auth.uid == '${ownerUid}' || (verified() && mail() == '${owner}')); }
     function inAcl()    { return signed() && exists(/databases/$(database)/documents/acl/$(mail())); }
     function aclOf()    { return get(/databases/$(database)/documents/acl/$(mail())).data; }
-    function member()   { return isOwner() || (inAcl() && (verified() || aclOf().get('uid', '') == request.auth.uid)); }
+    function member()   { return isOwner() || (inAcl() && aclOf().get('blocked', false) != true && (verified() || aclOf().get('uid', '') == request.auth.uid)); }
     function editor()   { return isOwner() || (member() && aclOf().role == 'editor'); }
     function creatorOf(pid) { return get(/databases/$(database)/documents/projects/$(pid)).data.get('createdByUid', ''); }
     // personas autorizadas: solo el propietario las agrega, aprueba o quita; cada quien ve su propio permiso
@@ -1168,6 +1190,20 @@ service cloud.firestore {
       allow read: if isOwner() || (signed() && uid == request.auth.uid);
       allow write: if isOwner() || (signed() && uid == request.auth.uid);
     }
+    // registro de accesos: cada quien agrega los suyos (no puede leer, cambiar ni borrar); solo el propietario los ve
+    match /access/{id} {
+      allow read, delete: if isOwner();
+      allow create: if signed() && request.resource.data.uid == request.auth.uid && request.resource.data.email == mail()
+                    && request.resource.data.keys().hasOnly(['uid','email','ev','dev','ua','at','info']) && request.resource.data.ev is string && request.resource.data.ev.size() < 24;
+    }
+    // ajustes de monitoreo (bloqueo automático): solo el propietario
+    match /config/policy { allow read, write: if isOwner(); }
+    // etiquetas QR con dibujo: cualquiera con el enlace ve ESE acceso (no se pueden listar); solo el propietario publica o desactiva
+    match /verify/{t} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isOwner();
+    }
   }
 }
 `; }
@@ -1184,6 +1220,73 @@ async function aclLoad(){ const box=document.getElementById("acl_list"); if(!box
   const reqBox=document.getElementById("acl_req"); if(reqBox){ const ids=new Set(); reqBox.innerHTML=rq.length?`<div class="banner info" style="margin:8px 0"><b>Cuentas esperando su aprobación</b> (no les llegó el correo de confirmación). Apruebe solo si la persona le confirmó que acaba de crear su cuenta.<div class="tbl-wrap"><table><tbody>${rq.map(r=>`<tr><td>${esc(r.data.email)}</td><td style="white-space:nowrap"><button class="btn sm pri" type="button" data-aclok="${esc(r.id)}" data-em="${esc(r.data.email)}">Aprobar</button> <button class="btn sm ghost" type="button" data-aclno="${esc(r.id)}">Descartar</button></td></tr>`).join("")}</tbody></table></div></div>`:""; }
   try{ const l=await fsList("acl"); box.innerHTML=l.length?`<div class="tbl-wrap"><table><tbody>${l.map(a=>`<tr><td>${esc(a.id)}</td><td>${a.data.role==="editor"?"Editor":"Consulta"}</td><td style="white-space:nowrap"><a class="btn sm ghost" href="${aclMail(a.id,a.data.role)}">Invitar</a> <button class="btn sm ghost" type="button" data-aclrm="${esc(a.id)}">Quitar</button></td></tr>`).join("")}</tbody></table></div>`:"Nadie autorizado todavía."; }
   catch(e){ box.textContent=e.message; } }
+/* ---------- access monitoring (owner): who enters, from which device, alerts, blocking ---------- */
+const monRid=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>"abcdefghijkmnpqrstuvwxyz23456789"[x%32]).join("");
+const MON={ev:new Map(),last:"",acl:[],sess:[],pol:{auto:true,max:2},tSlow:0,tPoll:0,busy:false,el:null,iv:0,noted:new Set(),err:"",who:"",at:0};
+function devId(){ let d=""; try{ d=localStorage.getItem("ap.dev")||""; if(!d){ d=monRid(12); localStorage.setItem("ap.dev",d); } }catch{ d=d||"sin-id"; } return d; }
+const devName=ua=>{ ua=String(ua||""); const os=/iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":/Android/.test(ua)?"Android":/Windows/.test(ua)?"Windows":/Mac OS|Macintosh/.test(ua)?"Mac":/Linux/.test(ua)?"Linux":"Equipo";
+  const br=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Firefox\//.test(ua)?"Firefox":/CriOS|Chrome\//.test(ua)?"Chrome":/Safari\//.test(ua)?"Safari":"navegador"; return os+" · "+br; };
+const monFmt=iso=>{ try{ return new Date(iso).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"}); }catch{ return String(iso||""); } };
+const MON_EV={entrada:"Entró",proyecto:"Abrió el proyecto",expulsada:"Su sesión se cerró: entró desde otro dispositivo",bloqueado:"Intentó entrar estando bloqueado","no-autorizado":"Intentó entrar sin autorización"};
+/* everyone except the owner records their own entries (append-only, they cannot read them) */
+async function accessLog(ev,info=""){ if(!WB.uid||WB.owner) return; try{ await fsCommit([fsW(`access/${Date.now().toString(36)}-${monRid(8)}`,{uid:WB.uid,email:String(WB.email||"").toLowerCase(),ev,dev:devId(),ua:String(navigator.userAgent||"").slice(0,160),at:nowIso(),info:String(info||"").slice(0,120)})]); }catch(e){ console.warn("registro de acceso",e.code||e); } }
+async function fsRecent(col,sinceIso,limit=500){ const j=await fsReq("POST",":runQuery",{structuredQuery:{from:[{collectionId:col}],where:{fieldFilter:{field:{fieldPath:"at"},op:"GREATER_THAN",value:{stringValue:sinceIso}}},orderBy:[{field:{fieldPath:"at"},direction:"DESCENDING"}],limit}});
+  return (j||[]).filter(x=>x.document).map(x=>({id:x.document.name.split("/").pop(),data:fsObj(x.document.fields)})); }
+function monStats(){ const now=Date.now(), d1=now-864e5, d7=now-7*864e5, by=new Map();
+  const P=em=>{ if(!by.has(em)) by.set(em,{email:em,uid:"",ev:[],dev1:new Map(),dev7:new Map(),kick1:0,last:null}); return by.get(em); };
+  const since={}; for(const a of MON.acl){ P(a.id); since[a.id]=Date.parse(a.data.unblockedAt||0)||0; }
+  for(const e of [...MON.ev.values()].sort((a,b)=>b.at.localeCompare(a.at))){ const p=P(e.email); p.uid=p.uid||e.uid; p.ev.push(e); const t=Date.parse(e.at); if(!p.last) p.last=e;
+    if(t>d7&&e.dev) p.dev7.set(e.dev,e.ua); if(t>d1&&t>(since[e.email]||0)&&e.dev&&e.ev!=="no-autorizado"&&e.ev!=="bloqueado") p.dev1.set(e.dev,e.ua); if(t>d1&&e.ev==="expulsada") p.kick1++; }
+  for(const s of MON.sess){ const p=P(String(s.data.email||"").toLowerCase()); p.uid=s.id; p.sess=s.data; }
+  const out=[]; for(const p of by.values()){ const a=MON.acl.find(x=>x.id===p.email); p.acl=a?.data||null; p.blocked=!!a?.data?.blocked;
+    p.online=!!p.sess&&!["revocada","bloqueada"].includes(p.sess.sid)&&now-Date.parse(p.sess.seen||p.sess.at||0)<7*60e3;
+    p.over=!!a&&p.dev1.size>(+MON.pol.max||2); p.noauth=!a&&p.ev.some(e=>e.ev==="no-autorizado"); p.tried=p.ev.some(e=>e.ev==="bloqueado"&&Date.parse(e.at)>d1); out.push(p); }
+  return out.sort((a,b)=>(b.over-a.over)||(b.online-a.online)||String(b.last?.at||"").localeCompare(String(a.last?.at||""))); }
+async function monBlock(email,uid,why,on=true){ const w=[fsW(`acl/${email}`,on?{blocked:true,blockedAt:nowIso(),blockedWhy:String(why||"").slice(0,160)}:{blocked:false,unblockedAt:nowIso()},{mask:on?["blocked","blockedAt","blockedWhy"]:["blocked","unblockedAt"]})];
+  if(on&&uid) w.push(fsW(`sessions/${uid}`,{sid:"bloqueada",email,at:nowIso(),ua:""}));
+  await fsCommit(w); const a=MON.acl.find(x=>x.id===email); if(a) Object.assign(a.data,on?{blocked:true,blockedWhy:why,blockedAt:nowIso()}:{blocked:false,unblockedAt:nowIso()}); MON.tSlow=0; }
+/* one poll: only NEW entries since the last one are read (keeps the free plan's daily reads low); people and sessions every 5 min */
+async function monPoll(force=false){ if(!WB.owner||MON.busy) return; const now=Date.now(); if(!force&&now-MON.tPoll<50e3) return; MON.busy=true; MON.tPoll=now;
+  try{ if(force||now-MON.tSlow>5*60e3){ const [acl,sess,pol]=await Promise.all([fsList("acl"),fsList("sessions"),fsGet("config/policy").catch(()=>null)]); MON.acl=acl; MON.sess=sess; if(pol?.data) MON.pol={auto:pol.data.auto!==false,max:+pol.data.max||2}; MON.tSlow=now; }
+    const since=MON.last||new Date(now-7*864e5).toISOString(); const nw=await fsRecent("access",since);
+    for(const d of nw){ MON.ev.set(d.id,d.data); if(d.data.at>MON.last) MON.last=d.data.at; }
+    if(nw.some(d=>d.data.ev==="entrada"||d.data.ev==="expulsada")&&!force&&now-MON.tSlow>20e3){ MON.sess=await fsList("sessions"); }
+    MON.err=""; MON.at=now;
+    // alerts + automatic block (applied by the owner's page: it works while the owner has AeroPlanner open)
+    for(const p of monStats()){ const key=p.email+"|"+new Date().toISOString().slice(0,10);
+      if(p.over&&!p.blocked){ if(MON.pol.auto){ try{ await monBlock(p.email,p.uid,`Automático: ${p.dev1.size} dispositivos en 24 h`); toast(`Bloqueado automáticamente: ${p.email} entró desde ${p.dev1.size} dispositivos en 24 h.`,9000); }catch(e){ console.warn(e); } }
+        else if(!MON.noted.has(key)){ MON.noted.add(key); toast(`Alerta: ${p.email} entró desde ${p.dev1.size} dispositivos en 24 h.`,9000); } } } }
+  catch(e){ MON.err=e.code==="PERMISSION_DENIED"?"rules":e.message; }
+  finally{ MON.busy=false; } if(MON.el&&document.body.contains(MON.el)) monRender(); }
+function monRender(){ const el=MON.el; if(!el) return;
+  if(MON.err==="rules"){ el.innerHTML=`<div class="auth-err">Para activar el monitoreo publique las reglas nuevas (v3) en Firebase. Están en la tarjeta «Reglas de seguridad del servidor».</div>`; return; }
+  const ps=monStats(), auth=ps.filter(p=>p.acl), d1=Date.now()-864e5; const ent24=[...MON.ev.values()].filter(e=>e.ev==="entrada"&&Date.parse(e.at)>d1).length;
+  const alerts=ps.filter(p=>p.over||p.tried||(p.noauth&&p.ev.some(e=>Date.parse(e.at)>Date.now()-7*864e5)));
+  const evs=[...MON.ev.values()].filter(e=>!MON.who||e.email===MON.who).sort((a,b)=>b.at.localeCompare(a.at)).slice(0,60);
+  el.innerHTML=`<div class="mon">
+    <div class="mon-kpi"><div><b>${auth.length}</b><span>Autorizados</span></div><div class="${auth.some(p=>p.online)?"ok":""}"><b>${auth.filter(p=>p.online).length}</b><span>En línea ahora</span></div><div><b>${ent24}</b><span>Entradas 24 h</span></div><div class="${alerts.length?"bad":""}"><b>${alerts.length}</b><span>Alertas</span></div><div><b>${auth.filter(p=>p.blocked).length}</b><span>Bloqueados</span></div></div>
+    <div class="mon-pol"><label><input type="checkbox" id="mon_auto" ${MON.pol.auto?"checked":""}> Bloquear automáticamente si una cuenta entra desde más de</label> <select id="mon_max" aria-label="Dispositivos permitidos">${[1,2,3,4,5].map(n=>`<option ${+MON.pol.max===n?"selected":""}>${n}</option>`).join("")}</select> <span>dispositivo(s) en 24 h.</span></div>
+    ${alerts.length?`<div class="mon-alerts">${alerts.map(p=>`<div class="auth-err"><b>${esc(p.email)}</b> · ${p.over?`entró desde <b>${p.dev1.size}</b> dispositivos en 24 h (${[...p.dev1].map(([d,ua])=>esc(devName(ua))+` <span class="mono">#${esc(d.slice(0,4))}</span>`).join(", ")})${p.blocked?" · <b>bloqueado</b>":""}`:p.tried?"intentó entrar estando bloqueado":"intentó entrar sin estar autorizado"}</div>`).join("")}</div>`:`<div class="auth-note">Sin alertas: nadie ha entrado desde más dispositivos de los permitidos.</div>`}
+    <div class="tbl-wrap"><table class="mon-t"><thead><tr><th>Persona</th><th>Estado</th><th>Último acceso</th><th>Dispositivos<br><span class="muted">24 h · 7 días</span></th><th></th></tr></thead><tbody>${ps.filter(p=>p.acl||p.noauth).map(p=>`<tr class="${p.over?"over":""}">
+      <td><button class="linkish" type="button" data-monwho="${esc(p.email)}">${esc(p.email)}</button><br><span class="muted">${p.acl?(p.acl.role==="editor"?"Editor":"Consulta"):"no autorizado"}</span></td>
+      <td>${p.blocked?`<span class="pill s-DISCREPANCY">Bloqueado</span>`:p.online?`<span class="pill s-CONFIRMED">En línea</span>`:p.acl?`<span class="muted">Desconectado</span>`:`<span class="pill s-REQUIRES_VERIFICATION">Sin acceso</span>`}</td>
+      <td>${p.last?`${esc(monFmt(p.last.at))}<br><span class="muted">${esc(devName(p.last.ua))}</span>`:`<span class="muted">Nunca ha entrado</span>`}</td>
+      <td><b class="${p.over?"bad":""}">${p.dev1.size}</b> · ${p.dev7.size}${p.kick1?`<br><span class="muted">${p.kick1} cambio(s) de equipo hoy</span>`:""}</td>
+      <td>${p.acl?`<div class="stack">${p.online&&!p.blocked?`<button class="btn sm ghost" type="button" data-sessrv="${esc(p.uid)}" data-sessem="${esc(p.email)}">Cerrar sesión</button>`:""}${p.blocked?`<button class="btn sm" type="button" data-monunb="${esc(p.email)}">Desbloquear</button>`:`<button class="btn sm ghost danger" type="button" data-monblk="${esc(p.email)}" data-uid="${esc(p.uid)}">Bloquear</button>`}</div>`:""}</td></tr>`).join("")||`<tr><td colspan="5" class="muted">Nadie autorizado todavía.</td></tr>`}</tbody></table></div>
+    <h3 class="mon-h">Actividad reciente ${MON.who?`· ${esc(MON.who)} <button class="btn sm ghost" type="button" data-monwho="">Ver todos</button>`:""}</h3>
+    <div class="mon-log">${evs.map(e=>`<div><span class="mono">${esc(monFmt(e.at))}</span><b>${esc(e.email)}</b><span>${esc(MON_EV[e.ev]||e.ev)}${e.info?` <span class="mono">${esc(e.info)}</span>`:""}</span><span class="muted">${esc(devName(e.ua))} · equipo <span class="mono">#${esc(String(e.dev||"").slice(0,4))}</span></span></div>`).join("")||`<p class="muted">Sin actividad en los últimos 7 días.</p>`}</div>
+    ${MON.err?`<div class="auth-err">No se pudo actualizar el monitoreo: ${esc(MON.err)}. Se reintentará solo.</div>`:""}
+    <p class="small muted">Se revisa solo cada minuto mientras tenga AeroPlanner abierto${MON.at?` · última revisión ${new Date(MON.at).toLocaleTimeString("es-MX")}`:""}. <button class="btn sm ghost" type="button" id="mon_re">Actualizar ahora</button></p></div>`;
+  el.querySelector("#mon_re")?.addEventListener("click",()=>monPoll(true));
+  const savePol=async()=>{ MON.pol={auto:el.querySelector("#mon_auto").checked,max:+el.querySelector("#mon_max").value}; try{ await fsCommit([fsW("config/policy",{...MON.pol,at:nowIso()})]); toast(MON.pol.auto?`Bloqueo automático: más de ${MON.pol.max} dispositivo(s) en 24 h.`:"Bloqueo automático desactivado: solo verá alertas."); monPoll(true); }catch(e){ toast(e.message); } };
+  el.querySelector("#mon_auto")?.addEventListener("change",savePol); el.querySelector("#mon_max")?.addEventListener("change",savePol);
+  el.querySelectorAll("[data-monwho]").forEach(b=>b.addEventListener("click",()=>{ MON.who=b.dataset.monwho; monRender(); }));
+  el.querySelectorAll("[data-monblk]").forEach(b=>b.addEventListener("click",async()=>{ if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="¿Bloquear? Toque otra vez"; return; } b.disabled=true;
+    try{ await monBlock(b.dataset.monblk,b.dataset.uid,"Bloqueado por el propietario"); toast(`Bloqueado: ${b.dataset.monblk}. Su sesión se cierra en unos segundos y ya no puede entrar.`,7000); monPoll(true); }catch(e){ toast(e.message); b.disabled=false; } }));
+  el.querySelectorAll("[data-monunb]").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await monBlock(b.dataset.monunb,"","",false); toast(`Desbloqueado: ${b.dataset.monunb}.`); monPoll(true); }catch(e){ toast(e.message); b.disabled=false; } }));
+  el.querySelectorAll("[data-sessrv]").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await fsCommit([fsW(`sessions/${b.dataset.sessrv}`,{sid:"revocada",email:b.dataset.sessem,at:nowIso(),ua:""})]); toast("Sesión cerrada: se cerrará en su dispositivo en unos segundos."); MON.tSlow=0; monPoll(true); }catch(e){ toast(e.message); b.disabled=false; } })); }
+function monMount(el){ if(!el||!WB.owner) return; MON.el=el; monRender(); monPoll(true);
+  if(!MON.iv) MON.iv=setInterval(()=>{ if(!document.hidden) monPoll(); },60e3); }
 if(WB.on){
   document.addEventListener("submit", async ev=>{ if(ev.target?.id!=="f_acl") return; ev.preventDefault(); const f=ev.target, box=f.querySelector(".auth-msg"), btn=f.querySelector("button[type=submit]");
     const em=f.querySelector("#acl_em").value.trim().toLowerCase(), role=f.querySelector("#acl_role").value; btn.disabled=true;
@@ -1407,7 +1510,7 @@ const FM = (() => {
     WB.owner=!!((ou&&WB.uid===ou)||(!ou&&WB.cfg.owner&&WB.verified&&WB.email===String(WB.cfg.owner).toLowerCase())); WB.role=null; WB.inAcl=false;
     if(WB.owner) return; const r=await fsGet(`acl/${WB.email}`); WB.inAcl=!!r;
     // access needs a confirmed e-mail OR the owner's approval of this exact account (when the confirmation e-mail does not arrive)
-    if(r && (WB.verified || (r.data.uid && r.data.uid===WB.uid))) WB.role=r.data.role||null; }
+    WB.blocked=!!r?.data?.blocked; if(r && !WB.blocked && (WB.verified || (r.data.uid && r.data.uid===WB.uid))) WB.role=r.data.role||null; }
   async function webOpen(pid,pw,name,box,keys){
     if(!name) throw new Error("Escriba su nombre para el historial.");
     const say=t=>{ if(box) box.innerHTML=`<div class="auth-note">${E(t)}</div>`; };
@@ -1427,7 +1530,7 @@ const FM = (() => {
     st.web=true; st.role=(WB.owner||WB.role==="editor"||mine)?"ADMIN":"INSPECTOR"; st.name=name; st.label=m.data.registration||"Proyecto";
     S.me={id:"u:"+WB.email,name}; S.fileRole=st.role; try{ localStorage.setItem("ap.web.name",name); }catch{}
     S.pendingAudit=[["WEB_OPENED",`${WB.email} · ${WB.owner?"PROPIETARIO":WB.role==="editor"?"EDITOR":"CONSULTA"} · rev ${W.rev}${keys?" · reanudado":""}`]];
-    resumeSave({pid,name,k:b64(secret),r:wrole});
+    resumeSave({pid,name,k:b64(secret),r:wrole}); accessLog("proyecto",String(m.data.registration||pid));
     if(mine&&wrole==="ADMIN"){ try{ ESC.pub=null; await escLoadPub(); const old=W.esc?JSON.parse(W.esc):null; if(ESC.kid&&(!old||(old.kid||"k0")!==ESC.kid)){ const e=await escSeal({...(W.pwKnown||{}),k:b64(secret)}); if(e){ W.esc=e; W.escDirty=true; markDirty(); } } }catch(e){ console.warn("re-sello",e); } }
   }
   async function webPush(){ if(!st.web||st.role!=="ADMIN") return; if(W.busy){ W.again=true; return; } W.busy=true; setSync("busy");
@@ -1463,7 +1566,7 @@ const FM = (() => {
         if((sets.length||dels.length||na)&&m.data.updatedBy&&m.data.updatedBy!==st.name) toast(`Actualizado con los cambios de ${m.data.updatedBy}.`,4000); }
       setSync(st.dirty?"pend":"ok"); }
     catch(e){ console.warn("pull",e); setSync("err",e); if(e.code==="NOAUTH"||e.code==="INVALID_REFRESH_TOKEN"||e.code==="USER_NOT_FOUND") lock("Su sesión terminó; entre de nuevo."); else if(e.code==="PERMISSION_DENIED") lock("Su acceso a este servidor fue retirado por el propietario."); } }
-  async function webTick(){ if(document.hidden||navigator.onLine===false) return; if((++SESS.n)%3===0&&!(await sessCheck())) return; const now=Date.now(); if(W.nextTry&&now<W.nextTry) return; 
+  async function webTick(){ if(document.hidden||navigator.onLine===false) return; if(WB.owner) monPoll(); if((++SESS.n)%3===0&&!(await sessCheck())) return; const now=Date.now(); if(W.nextTry&&now<W.nextTry) return; 
     try{ if(st.dirty&&st.role==="ADMIN") await webPush(); await webPull(); }catch(e){ console.warn("tick",e); }
     if(W.state==="err"){ W.fails=(W.fails||0)+1; W.nextTry=now+Math.min(120000,10000*Math.pow(2,W.fails-1)); } else { W.fails=0; W.nextTry=0; } }
   function webStart(){ if(!st.web||W.poll) return; W.poll=setInterval(webTick,10000); addEventListener("visibilitychange",()=>{ if(!document.hidden) webTick(); }); addEventListener("online",()=>{ W.nextTry=0; W.fails=0; webTick(); }); }
@@ -1503,31 +1606,36 @@ const FM = (() => {
     const K=await crypto.subtle.decrypt({name:"RSA-OAEP"},ESC.priv,unb64(e.ek)); const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(e.iv)},await crypto.subtle.importKey("raw",K,"AES-GCM",false,["decrypt"]),unb64(e.ct));
     return JSON.parse(td.decode(pt)); }
   /* ---- one session per invited e-mail: logging in somewhere else closes the previous session ---- */
-  const SESS={sid:null,n:0};
+  const SESS={sid:null,n:0,hb:0};
   async function sessClaim(){ if(WB.owner||!WB.uid) return; let sid=null; try{ sid=sessionStorage.getItem("ap.sid"); }catch{}
     try{ const d=await fsGet(`sessions/${WB.uid}`); if(sid&&d?.data?.sid===sid){ SESS.sid=sid; return; } }catch(e){ console.warn("sesiones (reglas)",e.code||e); if(e.code==="PERMISSION_DENIED") return; }
-    sid=b64(rnd(12)); try{ await fsCommit([fsW(`sessions/${WB.uid}`,{sid,email:WB.email||"",ua:String(navigator.userAgent||"").slice(0,160),at:nowIso()})]); SESS.sid=sid; try{ sessionStorage.setItem("ap.sid",sid); }catch{} }catch(e){ console.warn("sesión",e.code||e); } }
+    let prev=null; try{ prev=(await fsGet(`sessions/${WB.uid}`))?.data||null; }catch{}
+    sid=b64(rnd(12)); try{ await fsCommit([fsW(`sessions/${WB.uid}`,{sid,email:WB.email||"",ua:String(navigator.userAgent||"").slice(0,160),dev:devId(),at:nowIso(),seen:nowIso()})]); SESS.sid=sid; try{ sessionStorage.setItem("ap.sid",sid); }catch{} }catch(e){ console.warn("sesión",e.code||e); }
+    accessLog("entrada",prev&&prev.dev&&prev.dev!==devId()&&!["revocada","bloqueada"].includes(prev.sid)?"reemplazó la sesión de otro equipo":""); }
   async function sessCheck(){ if(!SESS.sid||WB.owner) return true; let d=null; try{ d=await fsGet(`sessions/${WB.uid}`); }catch{ return true; }
-    if(d&&d.data.sid!==SESS.sid){ const why=d.data.sid==="revocada"?"El propietario cerró su sesión.":"Su cuenta se abrió en otro dispositivo o navegador y esta sesión se cerró. Cada correo autorizado solo puede tener una sesión abierta.";
+    if(d&&d.data.sid===SESS.sid&&(++SESS.hb)%10===0){ try{ await fsCommit([fsW(`sessions/${WB.uid}`,{seen:nowIso()},{mask:["seen"]})]); }catch{} }
+    if(d&&d.data.sid!==SESS.sid){ const why=d.data.sid==="revocada"?"El propietario cerró su sesión.":d.data.sid==="bloqueada"?"El propietario bloqueó su acceso. Si cree que es un error, comuníquese con él.":"Su cuenta se abrió en otro dispositivo o navegador y esta sesión se cerró. Cada correo autorizado solo puede tener una sesión abierta.";
+      if(!["revocada","bloqueada"].includes(d.data.sid)) await accessLog("expulsada");
       SESS.sid=null; try{ sessionStorage.removeItem("ap.sid"); }catch{} wbSignOut(); await lock(why); return false; } return true; }
   /* ---- owner cards: invitees' projects, active sessions, security rules ---- */
   function ownerCards(){ return card(`<div id="esc_card"><h2>Proyectos de mis invitados</h2><p class="small muted">Las personas que usted autorizó pueden crear proyectos. Con su <b>llave de propietario</b> ve sus contraseñas y los abre.</p><div id="esc_box" class="small muted">Cargando…</div><div class="auth-msg"></div></div>`)
-      +card(`<div><h2>Sesiones activas</h2><p class="small muted">Cada correo autorizado solo puede tener <b>una</b> sesión: si entra desde otro lugar, la anterior se cierra sola. Así nadie puede prestar su acceso.</p><div id="sess_box" class="small muted">Cargando…</div></div>`)
+      +card(`<div id="mon_card"><h2>Monitoreo de accesos</h2><p class="small muted">Quién entra, cuándo y desde qué equipo. Cada correo autorizado solo puede tener <b>una</b> sesión; si alguien entra desde más equipos de los permitidos, se bloquea.</p><div id="mon_box" class="small">Cargando…</div></div>`)
       +card(`<div><h2>Reglas de seguridad del servidor</h2><div id="rules_box" class="small muted">Revisando…</div></div>`); }
   async function ownerLoad(list,nameOf){
     const box=$("#esc_box"), msg=$("#esc_card .auth-msg"); if(!box) return; const say=(t,bad)=>{ if(msg) msg.innerHTML=t?`<div class="${bad?"auth-err":"auth-note"}">${E(t)}</div>`:""; };
     // rules version: v2 lets the owner read config/escrowPriv (absent → null); old rules deny it
     let rulesOld=false; try{ await fsGet("config/escrowPriv"); }catch(e){ rulesOld=e.code==="PERMISSION_DENIED"; }
+    // v3 lets the owner read verify/ (absent → null); v2 and older deny it
+    let rulesV3=false; try{ await fsGet("verify/_reglas_v3"); rulesV3=true; }catch(e){ rulesV3=e.code!=="PERMISSION_DENIED"; }
+    if(!rulesOld&&rulesV3) $("#rules_box")?.closest(".auth-card")?.remove();
     const rb=$("#rules_box"); if(rb){ const txt=webRules(WB.cfg.owner||WB.email,WB.cfg.ownerUid||WB.uid);
-      rb.innerHTML=`${rulesOld?`<div class="auth-err" style="margin-bottom:8px"><b>Falta publicar las reglas nuevas.</b> Sin ellas sus invitados no pueden crear proyectos y no se aplica «una sesión por persona».</div>`:`<div class="auth-note" style="margin-bottom:8px">Reglas v2 activas.</div>`}
+      rb.innerHTML=`<div class="auth-err" style="margin-bottom:8px"><b>Falta publicar las reglas nuevas (v3).</b> Sin ellas no funcionan los QR con dibujo, el monitoreo de accesos ni el bloqueo${rulesOld?", y sus invitados no pueden crear proyectos":""}. Esta tarjeta desaparece sola cuando las publique.</div>
         <p>1) Copie las reglas · 2) Ábralas en Firebase (Firestore → Reglas) · 3) Pegue y pulse <b>Publicar</b>.</p><textarea id="rules_txt" readonly rows="6" class="mono" style="width:100%;font-size:11px">${E(txt)}</textarea>
         <div class="row" style="gap:8px;margin-top:6px"><button class="btn sm" type="button" id="rules_copy">Copiar reglas</button><a class="btn sm ghost" target="_blank" rel="noopener" href="https://console.firebase.google.com/project/${encodeURIComponent(WB.cfg.projectId)}/firestore/rules">Abrir Firebase</a><button class="btn sm ghost" type="button" id="rules_re">Volver a revisar</button></div>`;
       $("#rules_copy")?.addEventListener("click",async()=>{ const t=$("#rules_txt"); try{ await navigator.clipboard.writeText(t.value); toast("Reglas copiadas."); }catch{ t.select(); document.execCommand("copy"); toast("Reglas copiadas."); } });
       $("#rules_re")?.addEventListener("click",()=>ownerLoad(list,nameOf)); }
-    // sessions
-    const sb=$("#sess_box"); if(sb){ try{ const ss=await fsList("sessions"); sb.innerHTML=ss.length?`<div class="tbl-wrap"><table><tbody>${ss.map(x=>`<tr><td>${E(x.data.email||x.id)}</td><td class="small">${x.data.sid==="revocada"?"cerrada por usted":E(new Date(x.data.at).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"}))}<br><span class="muted">${E(/iPhone|iPad/.test(x.data.ua)?"iPhone/iPad":/Android/.test(x.data.ua)?"Android":/Windows/.test(x.data.ua)?"Windows":/Mac/.test(x.data.ua)?"Mac":"Navegador")}</span></td><td>${x.data.sid==="revocada"?"":`<button class="btn sm ghost" type="button" data-sessrv="${E(x.id)}" data-sessem="${E(x.data.email||"")}">Cerrar sesión</button>`}</td></tr>`).join("")}</tbody></table></div>`:"Nadie más ha entrado todavía.";
-        sb.querySelectorAll("[data-sessrv]").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await fsCommit([fsW(`sessions/${b.dataset.sessrv}`,{sid:"revocada",email:b.dataset.sessem,at:nowIso(),ua:""})]); toast("Sesión cerrada: se cerrará en su dispositivo en unos segundos."); ownerLoad(list,nameOf); }catch(e){ toast(e.message); b.disabled=false; } })); }
-      catch(e){ sb.innerHTML=rulesOld?"Disponible cuando publique las reglas nuevas.":E(e.message); } }
+    // access monitoring
+    monMount($("#mon_box"));
     // escrow: setup / unlock / list
     let hasKey=false; try{ hasKey=!!(await fsGet("config/escrow")); }catch{}
     const showRc=(rc,title)=>{ box.innerHTML=`<div class="auth-note"><b>${E(title)}</b><br>Este es su <b>código de recuperación</b>. Guárdelo fuera de la página (impreso o en un lugar seguro): si olvida su llave, con este código pone una nueva. Solo se muestra esta vez.</div>
@@ -1612,7 +1720,8 @@ const FM = (() => {
     try{ await webWho(); }catch(e){ if(["NOAUTH","INVALID_REFRESH_TOKEN","USER_NOT_FOUND","TOKEN_EXPIRED","USER_DISABLED"].includes(e.code)){ wbSignOut(); return webLoginScreen(e.message); } return webInfoScreen("No se pudo conectar",`<p>${E(e.message)}</p>`); }
     if(!WB.verified&&!WB.owner&&!WB.role) return webInfoScreen("Confirme su correo",`<p>Le enviamos un correo a <b>${E(WB.email)}</b>. Abra el enlace que contiene (revise también «spam» y «promociones») y después pulse «Ya lo confirmé».</p>
       <p class="small muted">¿No le llega? Pulse <b>«Pedir aprobación»</b> y avise al propietario: él confirmará su cuenta desde «Personas autorizadas».</p>`,{verify:true});
-    if(!WB.owner&&!WB.role) return webInfoScreen("Correo no autorizado",`<p>El correo <b>${E(WB.email)}</b> todavía no está autorizado. Pida al propietario que lo agregue en «Personas autorizadas» y vuelva a intentar.</p>`);
+    if(!WB.owner&&WB.blocked){ accessLog("bloqueado"); return webInfoScreen("Acceso bloqueado",`<p>El propietario bloqueó el acceso de <b>${E(WB.email)}</b>. Si cree que es un error, comuníquese con él.</p>`); }
+    if(!WB.owner&&!WB.role){ accessLog("no-autorizado"); } if(!WB.owner&&!WB.role) return webInfoScreen("Correo no autorizado",`<p>El correo <b>${E(WB.email)}</b> todavía no está autorizado. Pida al propietario que lo agregue en «Personas autorizadas» y vuelva a intentar.</p>`);
     if(!WB.owner) await sessClaim();
     const rs=await resumeLoad(); if(rs?.pid){ $("#auth").innerHTML=`<div class="start">${hero()}<div class="auth-note" role="status">Abriendo ${E(rs.pid)}…</div></div>`;
       try{ await webOpen(rs.pid,null,rs.name,null,rs); return; }catch(e){ resumeClear(); msg=e.message; } }
@@ -1641,6 +1750,8 @@ const FM = (() => {
         <div class="auth-msg"></div><button class="btn pri" type="submit">Crear proyecto</button>${WB.owner?"":`<p class="small muted" style="margin:8px 0 0">El propietario podrá ver las contraseñas de los proyectos que usted cree. No es posible compartir ni descargar los proyectos.</p>`}</form>`):""}${WB.owner?card(aclHtml())+ownerCards():""}
       </div>${webFoot}</div>`;
     if(WB.owner){ aclLoad(); ownerLoad(list,()=>$("#w_name")?.value.trim()||nm); }
+    // on the home screen too: a closed or blocked session is detected within ~30 s
+    if(!WB.owner&&SESS.sid){ const hb=setInterval(async()=>{ if(!$("#f_wopen")&&!$("#f_wnew")){ clearInterval(hb); return; } if(!document.hidden&&!(await sessCheck())) clearInterval(hb); },30e3); }
     return new Promise(resolve=>{ W.homeResolve=resolve;
       $("#w_out").addEventListener("click",()=>{ wbSignOut(); webScreen().then(resolve); });
       guardOn("f_wopen", async(f)=>{ await webOpen($("#w_pid").value,$("#w_pw").value,$("#w_name").value.trim(),f.querySelector(".auth-msg")); }, resolve);
@@ -3620,7 +3731,7 @@ function qrDialog(){ const list=removalList(); if(!S.runId||!list.length){ toast
       msg.innerHTML=`<div class="auth-note">Creando hoja de etiquetas…</div>`; const bytes=await qrLabelsPdf(list,mode,links);
       audit("QR_LABELS_CREATED",`${list.length} accesos · ${mode==="draw"?"con dibujo":"sin dibujo"}`);
       await reportPreview(`${safeName((proj()?.registration||"AC")+"_"+(proj()?.name||""))}_Etiquetas_QR_${mode==="draw"?"con_dibujo":"sin_dibujo"}_${new Date().toISOString().slice(0,10)}.pdf`,bytes,false,"Etiquetas QR"); }
-    catch(e){ console.error(e); msg.innerHTML=`<div class="auth-err">${esc(e.message)}</div>`; b.disabled=false; } }); }
+    catch(e){ console.error(e); msg.innerHTML=`<div class="auth-err">${esc(e.code==="PERMISSION_DENIED"&&mode==="draw"?"El servidor todavía no permite publicar los dibujos: publique las reglas nuevas (v3). Están en la pantalla de inicio, tarjeta «Reglas de seguridad del servidor».":e.message)}</div>`; b.disabled=false; } }); }
 /* public verification page (#v/<token>): read-only, no sign-in, nothing else of the platform */
 async function showVerify(t){ document.querySelector("#app").hidden=true; const a=document.querySelector("#auth"); a.hidden=false; document.querySelector(".boot")?.remove();
   const box=h=>{ a.innerHTML=`<div class="vpage"><header><svg width="30" height="30" viewBox="0 0 34 34"><rect x="2" y="2" width="30" height="30" rx="6" fill="none" stroke="#FFD400" stroke-width="2.6"/><rect x="21.5" y="21.5" width="7" height="7" fill="#e4007c"/><path d="M17 5L18.9 13.6 27 17.2 27 19.4 18.9 17.6 18.4 23.4 20.9 25.4 20.9 26.8 17 25.9 13.1 26.8 13.1 25.4 15.6 23.4 15.1 17.6 7 19.4 7 17.2 15.1 13.6Z" fill="#fff"/></svg><div><small>VERIFICACIÓN DE ACCESO</small>${h.title||""}</div></header><main>${h.body}</main></div>`; };
@@ -5003,10 +5114,10 @@ document.addEventListener("submit", async ev=>{ if(ev.target?.id!=="webgen") ret
     box.innerHTML=r?.status==="declined"?"":`<div class="auth-note">Paquete descargado. Abra LEEME.txt dentro del ZIP y siga los pasos (unos 10 minutos).</div>`; audit("WEB_PACKAGE_CREATED",""); }
   catch(e){ box.innerHTML=`<div class="auth-err">${esc(e.message)}</div>`; } b.disabled=false; });
 function shareCard(){
-  if(FM.web&&FM.webOwner) setTimeout(()=>{ const b=document.getElementById("acl_list"); if(b&&b.textContent.trim()==="Cargando…") aclLoad(); },0);
+  if(FM.web&&FM.webOwner) setTimeout(()=>{ const b=document.getElementById("acl_list"); if(b&&b.textContent.trim()==="Cargando…") aclLoad(); monMount(document.getElementById("mon_box")); },0);
   if(FM.web) return FM.webOwner?`<section class="card share"><div class="hd"><h2>Acceso a la página web</h2><span class="sp"></span><span class="pill s-CONFIRMED">Solo propietario</span></div><div class="bd" style="display:flex;flex-direction:column;gap:10px">
     <p>Todo se guarda <b>cifrado en su servidor</b> y quienes usted autorice ven los cambios al momento. Para dar acceso: 1) autorice el correo aquí; 2) pulse <b>Invitar</b> (se abre un correo listo); 3) dígale por llamada o mensaje la <b>contraseña de invitados</b> del proyecto (Ajustes → contraseñas).</p>
-    <div style="max-width:780px">${aclHtml()}</div></div></section>`
+    <div style="max-width:780px">${aclHtml()}</div><div id="mon_card"><h2>Monitoreo de accesos</h2><div id="mon_box" class="small">Cargando…</div></div></div></section>`
     :`<section class="card"><div class="hd"><h2>Acceso autorizado</h2><span class="sp"></span><span class="role">${esc(FM.webGuest.role)}</span></div><div class="bd small muted">Entró como <b>${esc(FM.webGuest.email)}</b>. ${FM.webGuest.role==="EDITOR"?"Lo que suba o cambie se guarda en el servidor y lo ven al momento todos los autorizados.":"Puede consultar todo; los cambios los hacen el propietario y los editores."} Solo el propietario puede autorizar personas y dar contraseñas.</div></section>`;
   const g=FM.guest;
   const cg=FM.cloudGuest; if(cg) return `<section class="card"><div class="hd"><h2>Proyecto compartido en la nube</h2><span class="sp"></span><span class="role">${FM.collab?"COLABORADOR":"CONSULTA"}</span></div><div class="bd">

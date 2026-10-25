@@ -14,7 +14,7 @@ async function checkOnce() {
     for (const m of html.matchAll(/id="(three-src|lib-pdfjs)"[^>]*data-src="([^"]+)"/g)) { try { const r = await get(new URL(m[2].replace(/&amp;/g, "&"), SITE)); if (!r.ok) problems.push(`Falta el componente ${m[1]} (HTTP ${r.status}).`); } catch (e) { problems.push(`No se pudo descargar ${m[1]}.`); } }
     const cfgM = html.match(/<script type="application\/json" id="ap-fb">([^<]+)<\/script>/);
     if (cfgM) { try { const c = JSON.parse(cfgM[1]);
-      for (const col of ["projects", "acl", "requests"]) {
+      for (const col of ["projects", "acl", "requests", "sessions", "access", "verify"]) {
         const r = await get(`https://firestore.googleapis.com/v1/projects/${c.projectId}/databases/(default)/documents/${col}?pageSize=1&key=${c.apiKey}`);
         if (r.ok) problems.push(`SEGURIDAD: la colección «${col}» se puede leer SIN iniciar sesión. Revise las reglas de Firestore (Firestore → Reglas) y publique las que genera la app.`);
         else if (r.status >= 500) problems.push(`Firestore respondió HTTP ${r.status} (posible falla temporal de Firebase).`);
