@@ -3846,12 +3846,11 @@ const AC3D=(()=>{
     const X=x=>x/LEN*W, V=th=>((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI)/(2*Math.PI)*H;
     // base: white upper, light grey belly
     const gr=g.createLinearGradient(0,0,0,H); gr.addColorStop(0,"#f7f9fb"); gr.addColorStop(0.36,"#f2f5f8"); gr.addColorStop(0.43,"#d9dee4"); gr.addColorStop(0.57,"#d9dee4"); gr.addColorStop(0.64,"#f2f5f8"); gr.addColorStop(1,"#f7f9fb"); g.fillStyle=gr; g.fillRect(0,0,W,H);
-    // E190 scheme (as in the reference picture): white forward fuselage, NAVY rear fuselage and tail cone with a slanted front edge,
-    // the edge dissolving into horizontal "rosa mexicano" / violet / white dashes. No logo, no titles.
-    const NAVY="#0a0c52", XB=th=>23+1.8*Math.cos(th);
+    // Navy and red livery: white fuselage, deep navy lower/rear band and red accent stripe (own AeroPlanner name; no airline branding).
+    // Painted into the offline canvas texture (no external assets or scripts).
+    const NAVY="#071B4C", RED="#D7193F", XB=th=>22.7+1.35*Math.cos(th);
     for(let py=0;py<H;py++){ const th=py/H*2*Math.PI; g.fillStyle=NAVY; g.fillRect(X(XB(th)),py,W-X(XB(th)),1); }
-    { let seed=7; const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647); const cols=["#e4007c","#b0127f","#7b2a8c","#ffffff","#e4007c","#c2006b"];
-      for(let py=2;py<H;py+=7){ const th=py/H*2*Math.PI, xb=XB(th); for(let k=0;k<3;k++){ const len=0.4+rnd()*2.6, off=-0.6+rnd()*2.2; const x1=xb+off, x0=x1-len; g.fillStyle=cols[Math.floor(rnd()*cols.length)]; g.globalAlpha=0.55+rnd()*0.45; g.fillRect(X(x0),py,X(x1)-X(x0),4); } } g.globalAlpha=1; }
+    for(let py=0;py<H;py++){ const th=py/H*2*Math.PI, xb=XB(th); g.fillStyle=RED; g.fillRect(X(xb-0.23),py,X(xb+0.02)-X(xb-0.23),1); }
     // skin seams: frames every ~0.53 m (light), stronger every 4; stringer joints
     g.strokeStyle="rgba(90,104,120,.22)"; g.lineWidth=1.2; for(let x=4.6,i=0;x<31;x+=0.53,i++){ g.globalAlpha=i%4===0?1:0.45; g.beginPath(); g.moveTo(X(x),0); g.lineTo(X(x),H); g.stroke(); } g.globalAlpha=1;
     for(const th of [0.62,1.42,2.35,2*Math.PI-0.62,2*Math.PI-1.42,2*Math.PI-2.35]){ g.beginPath(); g.moveTo(X(3),V(th)); g.lineTo(X(31.5),V(th)); g.stroke(); }
@@ -3868,9 +3867,9 @@ const AC3D=(()=>{
     for(const sd of [1,-1]){ const T_=t=>sd>0?t:2*Math.PI-t; ws(1.62,2.42,T_(0.04),T_(0.05),T_(0.84),T_(0.74)); ws(2.48,3.12,T_(0.86),T_(0.9),T_(1.3),T_(1.26)); ws(3.18,3.62,T_(0.94),T_(0.96),T_(1.3),T_(1.28)); }
     // radome seam + nose
     g.strokeStyle="rgba(80,92,108,.6)"; g.lineWidth=2; g.beginPath(); g.moveTo(X(1.2),0); g.lineTo(X(1.2),H); g.stroke(); g.fillStyle="#e1e5ea"; g.fillRect(0,0,X(1.2),H);
-    // titles: original AeroPlanner emblem + name (forward fuselage, below the windows)
+    // titles: AeroPlanner emblem + name (forward fuselage, below the windows)
     { const fs=Math.round(H*0.072); g.font=`900 ${fs}px "Arial Black", Arial, sans-serif`; const txt="AEROPLANNER"; const tw=g.measureText(txt).width, ic=fs*1.25, gap=fs*0.35, total=ic+gap+tw;
-      const draw=()=>{ apEmblem(g,ic/2,0,ic,"#0a0c52","#e4007c"); g.fillStyle="#0a0c52"; g.textBaseline="middle"; g.fillText(txt,ic+gap,fs*0.04); };
+      const draw=()=>{ apEmblem(g,ic/2,0,ic,"#071B4C","#D7193F","#071B4C"); g.fillStyle="#071B4C"; g.textBaseline="middle"; g.fillText(txt,ic+gap,fs*0.04); };
       const x0=X(5.4); g.save(); g.translate(x0,V(1.47)); draw(); g.restore(); g.save(); g.translate(x0+total,V(2*Math.PI-1.47)); g.rotate(Math.PI); draw(); g.restore(); }
     // registration on rear fuselage (reads correctly from each side)
     g.font=`bold ${Math.round(H*0.055)}px Arial, sans-serif`; g.fillStyle="#ffffff"; g.textBaseline="middle";
@@ -3882,7 +3881,7 @@ const AC3D=(()=>{
     g.lineWidth=2.4; g.strokeStyle=frame; g.beginPath(); g.roundRect(2,2,30,30,6); g.stroke(); g.fillStyle=accent; g.fillRect(21.5,21.5,7,7);
     g.fillStyle=plane; g.beginPath(); g.moveTo(17,5); g.lineTo(18.9,13.6); g.lineTo(27,17.2); g.lineTo(27,19.4); g.lineTo(18.9,17.6); g.lineTo(18.4,23.4); g.lineTo(20.9,25.4); g.lineTo(20.9,26.8); g.lineTo(17,25.9); g.lineTo(13.1,26.8); g.lineTo(13.1,25.4); g.lineTo(15.6,23.4); g.lineTo(15.1,17.6); g.lineTo(7,19.4); g.lineTo(7,17.2); g.lineTo(15.1,13.6); g.closePath(); g.fill(); g.restore(); }
   function surfaceTex(kind){ return canvasTex(1024,1024,(g,W,H)=>{
-    g.fillStyle=kind==="fin"?"#0a0c52":"#eef1f4"; g.fillRect(0,0,W,H); if(kind==="wing"){ g.fillStyle="#e2e6eb"; g.fillRect(W/2,0,W/2,H); }
+    g.fillStyle=kind==="fin"?"#071B4C":"#eef1f4"; g.fillRect(0,0,W,H); if(kind==="wing"){ g.fillStyle="#e2e6eb"; g.fillRect(W/2,0,W/2,H); }
     const U=(xc,upper)=>upper?(0.5*(1-xc))*W:(0.5+0.5*xc)*W, Y=s=>s*H;
     const line=(xc,s0,s1,upper,col="rgba(60,72,86,.75)",lw=3)=>{ g.strokeStyle=col; g.lineWidth=lw; g.beginPath(); g.moveTo(U(xc,upper),Y(s0)); g.lineTo(U(xc,upper),Y(s1)); g.stroke(); };
     const span=(s,x0,x1,upper,col="rgba(60,72,86,.75)",lw=3)=>{ g.strokeStyle=col; g.lineWidth=lw; g.beginPath(); g.moveTo(U(x0,upper),Y(s)); g.lineTo(U(x1,upper),Y(s)); g.stroke(); };
@@ -3896,13 +3895,11 @@ const AC3D=(()=>{
       g.fillStyle="rgba(70,80,92,.25)"; g.fillRect(U(0.55,true),Y(0.02),U(0.25,true)-U(0.55,true),Y(0.16)); g.fillStyle="rgba(200,40,40,.7)"; g.font="bold 22px Arial"; g.fillText("NO STEP",U(0.7,true),Y(0.12)); }
     if(kind==="ht"){ for(const up of [true,false]){ line(0.70,0.02,0.96,up); line(0.1,0.02,0.96,up,"rgba(60,72,86,.35)",2); span(0.5,0.7,1,up,"rgba(60,72,86,.5)",2); } }
     if(kind==="fin"){ for(const up of [true,false]){ line(0.68,0.04,0.96,up,"rgba(200,210,235,.35)"); span(0.5,0.68,1,up,"rgba(200,210,235,.25)",2);
-        // tail emblem (white on navy); canvas y grows toward the fin root, so draw it upside down to read upright
-        const cx=U(0.4,up), cy=Y(0.5); g.save(); g.translate(cx,cy); g.scale(1,-1); apEmblem(g,0,0,H*0.36,"#ffffff","#e4007c","#ffffff"); g.restore(); } }
-    if(kind==="winglet"){ g.fillStyle="#0a0c52"; g.fillRect(0,H*0.22,W,H*0.78); g.fillStyle="#e4007c"; g.fillRect(0,H*0.84,W,H*0.06); }
+        // tail emblem (white on navy) with red accent; canvas y grows toward the fin root, so draw it upside down to read upright
+        const cx=U(0.4,up), cy=Y(0.5); g.save(); g.translate(cx,cy); g.scale(1,-1); apEmblem(g,0,0,H*0.36,"#ffffff","#D7193F","#ffffff"); g.restore(); } }
+    if(kind==="winglet"){ g.fillStyle="#071B4C"; g.fillRect(0,H*0.22,W,H*0.78); g.fillStyle="#D7193F"; g.fillRect(0,H*0.82,W,H*0.08); }
 }); }
-  let NTX=null; function nacelleTex(){ return NTX||(NTX=canvasTex(512,512,(g,W,H)=>{ g.fillStyle="#f4f6f8"; g.fillRect(0,0,W,H); g.fillStyle="#0a0c52"; g.fillRect(0,H*0.74,W,H*0.26);
-    let seed=11; const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647); const cols=["#e4007c","#b0127f","#7b2a8c","#ffffff"];
-    for(let px=0;px<W;px+=6){ for(let k=0;k<2;k++){ const len=H*(0.03+rnd()*0.1), y1=H*(0.7+rnd()*0.08); g.fillStyle=cols[Math.floor(rnd()*cols.length)]; g.globalAlpha=0.6+rnd()*0.4; g.fillRect(px,y1-len,4,len); } } g.globalAlpha=1; })); }
+  let NTX=null; function nacelleTex(){ return NTX||(NTX=canvasTex(512,512,(g,W,H)=>{ g.fillStyle="#f4f6f8"; g.fillRect(0,0,W,H); g.fillStyle="#071B4C"; g.fillRect(0,H*0.74,W,H*0.26); g.fillStyle="#D7193F"; g.fillRect(0,H*0.69,W,H*0.035); })); }
   function doorTex(kind){ const nv=/N$/.test(kind); kind=kind.replace(/N$/,""); return canvasTex(256,256,(g,W,H)=>{ g.fillStyle=nv?"#0a0c52":"#f2f5f8"; g.fillRect(0,0,W,H); g.strokeStyle=nv?"#3a4a8a":"#4a5868"; g.lineWidth=7; g.beginPath(); g.roundRect(8,8,W-16,H-16,26); g.stroke();
     if(kind==="exit"){ g.fillStyle="#0e1b2b"; g.beginPath(); g.roundRect(W*0.34,H*0.3,W*0.32,H*0.32,22); g.fill(); g.fillStyle="#d6202e"; g.fillRect(W*0.2,H*0.72,W*0.6,H*0.07); g.fillStyle="#fff"; g.font="bold 26px Arial"; g.textAlign="center"; g.fillText("EXIT",W/2,H*0.88); return; }
     if(kind!=="cargo"){ g.fillStyle="#0e1b2b"; g.beginPath(); g.roundRect(W*0.36,H*0.2,W*0.28,H*0.22,14); g.fill(); } g.fillStyle="#4a5868"; g.fillRect(W*0.62,H*0.55,W*0.2,H*0.06); }); }
