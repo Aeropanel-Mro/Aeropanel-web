@@ -2158,15 +2158,15 @@ function chunk(arr, max=170000){ const out=[]; let cur=[], size=2; for(const x o
    Transparent, auditable rules learned from the people who verify the analysis:
    phrases → action, OCR corrections, exclusions, label synonyms. Each rule keeps who/when/how often used.
    Stored in this computer (all projects) and inside the project file; exportable as JSON.          */
-const KB_EMPTY=()=>({v:1,phrases:[],corrections:[],exclusions:[],labels:{card:[],zone:[]},seen:{},stats:{analyses:0,cardsRead:0,ocrPages:0,learnedUses:0},updatedAt:null});
+const KB_EMPTY=()=>({v:1,phrases:[],corrections:[],exclusions:[],accesses:[],labels:{card:[],zone:[]},seen:{},stats:{analyses:0,cardsRead:0,ocrPages:0,learnedUses:0},updatedAt:null});
 S.kb=KB_EMPTY();
 const KB_DB={ open(){ return new Promise((res,rej)=>{ const r=indexedDB.open("aeropanel-kb",1); r.onupgradeneeded=()=>r.result.createObjectStore("kb"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); },
   async get(){ try{ const d=await this.open(); return await new Promise(res=>{ const q=d.transaction("kb").objectStore("kb").get("main"); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch{ return null; } },
   async put(v){ try{ const d=await this.open(); await new Promise(res=>{ const t=d.transaction("kb","readwrite"); t.objectStore("kb").put(v,"main"); t.oncomplete=res; t.onerror=res; }); }catch{} } };
-const kbKey={phrases:x=>x.text+"|"+x.action,corrections:x=>x.from+"|"+x.to,exclusions:x=>x.kind+"|"+x.text};
+const kbKey={phrases:x=>x.text+"|"+x.action,corrections:x=>x.from+"|"+x.to,exclusions:x=>x.kind+"|"+x.text,accesses:x=>x.panel};
 function kbMerge(a,b){ const o=structuredClone(a||KB_EMPTY());
   if(!b) return o;
-  for(const k of ["phrases","corrections","exclusions"]) for(const it of (b[k]||[])){ const ex=o[k].find(x=>kbKey[k](x)===kbKey[k](it)); if(!ex) o[k].push(structuredClone(it)); else { ex.uses=Math.max(ex.uses||0,it.uses||0); if(it.on===false&&(it.at||"")>(ex.at||"")) ex.on=false; } }
+  o.accesses=o.accesses||[]; for(const k of ["phrases","corrections","exclusions","accesses"]) for(const it of (b[k]||[])){ const ex=o[k].find(x=>kbKey[k](x)===kbKey[k](it)); if(!ex) o[k].push(structuredClone(it)); else { ex.uses=Math.max(ex.uses||0,it.uses||0); if(it.on===false&&(it.at||"")>(ex.at||"")) ex.on=false; } }
   for(const k of ["card","zone"]) o.labels[k]=[...new Set([...(o.labels[k]||[]),...(b.labels?.[k]||[])])];
   for(const [k,v] of Object.entries(b.seen||{})){ const e=o.seen[k]; if(!e||(v.n||0)>(e.n||0)) o.seen[k]=v; }
   for(const k of Object.keys(o.stats)) o.stats[k]=Math.max(o.stats[k]||0,b.stats?.[k]||0);
@@ -2179,14 +2179,14 @@ const exKey=x=>(x.kind+"_"+x.text).replace(/[^A-Za-z0-9_\-]/g,"");
 let KBS={ex:{},rm:{},updateTime:null};
 async function kbShared(){ try{ const d=await fsGet("learning/main"); const dt=d?.data||{}; KBS={ex:dt.ex||{},rm:dt.rm||{},updateTime:d?.updateTime||null};
     let kb={}; try{ kb=JSON.parse(dt.kb||"{}"); }catch{}
-    S.kb=kbMerge(S.kb,{phrases:kb.phrases||[],corrections:kb.corrections||[],exclusions:Object.values(KBS.ex),labels:kb.labels||{card:[],zone:[]}});
+    S.kb=kbMerge(S.kb,{phrases:kb.phrases||[],corrections:kb.corrections||[],exclusions:Object.values(KBS.ex),accesses:kb.accesses||[],labels:kb.labels||{card:[],zone:[]}});
     // restored by the owner: never comes back from older copies
     S.kb.exclusions=S.kb.exclusions.filter(x=>{ const r=KBS.rm[exKey(x)]; return !r||String(x.at||"")>r; }); }catch(e){ console.warn("kb shared",e); } }
 let kbST=null;
 function kbPush(){ if(!FM.web) return; clearTimeout(kbST); kbST=setTimeout(async()=>{ try{ const d=await fsGet("learning/main"); const cur=d?.data||{}; const ex={...(cur.ex||{})}, rm={...(cur.rm||{})};
     for(const x of S.kb.exclusions){ if(x.on===false) continue; const k=exKey(x); if(!ex[k]&&!(rm[k]&&String(x.at||"")<=rm[k])) ex[k]={id:x.id,kind:x.kind,text:x.text,by:x.by||null,at:x.at||nowIso(),src:x.src||"",uses:x.uses||0,on:true}; }
-    let kbOld={}; try{ kbOld=JSON.parse(cur.kb||"{}"); }catch{} const mg=kbMerge({...KB_EMPTY(),...kbOld,labels:kbOld.labels||{card:[],zone:[]}},{phrases:S.kb.phrases,corrections:S.kb.corrections,exclusions:[],labels:S.kb.labels});
-    const kb=JSON.stringify({phrases:mg.phrases.slice(-400),corrections:mg.corrections.slice(-400),labels:mg.labels});
+    let kbOld={}; try{ kbOld=JSON.parse(cur.kb||"{}"); }catch{} const mg=kbMerge({...KB_EMPTY(),...kbOld,labels:kbOld.labels||{card:[],zone:[]}},{phrases:S.kb.phrases,corrections:S.kb.corrections,exclusions:[],accesses:S.kb.accesses||[],labels:S.kb.labels});
+    const kb=JSON.stringify({phrases:mg.phrases.slice(-400),corrections:mg.corrections.slice(-400),accesses:(mg.accesses||[]).slice(-2000),labels:mg.labels});
     await fsCommit([fsW("learning/main",{ex,rm,kb,updatedAt:nowIso()},d?{pre:{updateTime:d.updateTime}}:{pre:{exists:false}})]); KBS={ex,rm,updateTime:null}; }catch(e){ console.warn("kb push",e); } },800); }
 async function kbRestore(id){ const i=S.kb.exclusions.findIndex(x=>x.id===id); if(i<0) return; const x=S.kb.exclusions[i]; const k=exKey(x);
   if(FM.web){ const d=await fsGet("learning/main"); const cur=d?.data||{}; const ex={...(cur.ex||{})}, rm={...(cur.rm||{})}; delete ex[k]; rm[k]=nowIso();
@@ -2208,6 +2208,11 @@ function kbLearnCorrection(from,to,src="verification"){ from=String(from||"").to
 function kbLearnExclusion(kind,text,src="verification"){ text=String(text||"").toUpperCase().trim(); if(!text) return null;
   let it=S.kb.exclusions.find(x=>x.kind===kind&&x.text===text); if(!it){ it={id:uid(),kind,text,src,by:S.me.id,at:nowIso(),uses:0,on:true}; S.kb.exclusions.push(it); } else it.on=true;
   kbSave(`exclusion ${kind} "${text}"`); return it; }
+/* an access verified by a person against AMM / IPC: future analyses recognise it as an access to remove */
+function kbLearnAccess(panel,card,note){ panel=String(panel||"").toUpperCase(); if(!/^[1-8][0-9]{2}[A-Z]{2,3}$/.test(panel)) return null; S.kb.accesses=S.kb.accesses||[];
+  let it=S.kb.accesses.find(x=>x.panel===panel); if(it){ it.on=true; it.at=nowIso(); it.by=S.me.id; it.card=card||it.card; it.note=note||it.note; } else { it={id:uid(),panel,card:card||"",note:note||"",src:"verification",by:S.me.id,at:nowIso(),uses:0,on:true}; S.kb.accesses.push(it); }
+  kbSave(`access ${panel} verified`); return it; }
+const kbAccess=panel=>!!(S.kb.accesses||[]).find(x=>x.panel===panel&&x.on!==false);
 function kbLearnLabel(kind,text){ text=String(text||"").toUpperCase().replace(/[^A-Z0-9 .#\-]/g,"").trim(); if(!text||!S.kb.labels[kind]) return; if(!S.kb.labels[kind].includes(text)) S.kb.labels[kind].push(text); kbSave(`label ${kind} "${text}"`); }
 /* words before the ID inside its sentence — candidate phrase to learn */
 function phraseBefore(r){ const s=String(r.sentence||r.line||"").toUpperCase(); const i=s.indexOf(r.panelRaw.toUpperCase()); const pre=(i>=0?s.slice(0,i):s).replace(/\([^)]*\)/g," ").split(/[.;:]/).pop().trim().split(/\s+/).filter(w=>w&&!/^[1-8][0-9]{2}[A-Z]{2,3},?$/.test(w)&&!/^(AND|OR|,|THE|PANELS?|ACCESS)$/.test(w)&&!/^\(?[0-9]{1,3}[.)]?$|^[A-Z][.)]$/.test(w)).slice(-4).join(" "); return pre; }
@@ -3069,7 +3074,14 @@ function decisionOf(x){
 }
 const decPill=d=>`<span class="pill s-${DEC_PILL[d]}">${esc(DEC_LABEL[d])}</span>`;
 function worst(list){ for(const s of ["DISCREPANCY","REQUIRES_VERIFICATION","NOT_FOUND","VERIFIED","CONFIRMED","REJECTED"]) if(list.includes(s)) return s; return "NOT_FOUND"; }
-function eff(r){ const v=S.verifs[r.key]; if(v && v.runId===S.runId){ if(v.decision==="VERIFIED") return "VERIFIED"; if(v.decision==="REJECTED") return "REJECTED"; } return r.status; }
+const REMOVE_ACTS=new Set(["REMOVE","OPEN","CONDITIONAL","INSTALL","NONE",""]);
+/* a human verification (card + access) stays valid in later analyses while the card still asks to remove/open it;
+   an access verified before (learned) is recognised as an access to remove — a DISCREPANCY is never hidden this way */
+function eff(r){ const v=S.verifs[r.key]; const rem=REMOVE_ACTS.has(r.action||"");
+  if(v){ if(v.decision==="VERIFIED"&&(rem||v.runId===S.runId)) return "VERIFIED"; if(v.decision==="REJECTED"&&v.runId===S.runId) return "REJECTED"; if(v.decision==="PENDING") return r.status; }
+  if(rem&&r.status!=="DISCREPANCY"&&r.status!=="CONFIRMED"&&kbAccess(r.panel)) return "VERIFIED";
+  return r.status; }
+const verifiedHow=r=>{ const v=S.verifs[r.key]; if(v&&v.decision==="VERIFIED") return {by:v.by,at:v.at,note:v.note,learned:false}; const k=(S.kb.accesses||[]).find(x=>x.panel===r.panel&&x.on!==false); return k?{by:k.by,at:k.at,note:k.note,learned:true,card:k.card}:null; };
 function counts(rel){ const c={CONFIRMED:0,REQUIRES_VERIFICATION:0,DISCREPANCY:0,NOT_FOUND:0,VERIFIED:0,REJECTED:0}; rel.forEach(r=>c[eff(r)]++); return c; }
 
 /* ---------------- independent second pass (QC) ---------------- */
@@ -4304,7 +4316,7 @@ function aircraftCard(sel=null, compact=false){
    Zones ATA 100–800 are separate meshes (touch / click a zone to filter); accesses to remove are markers placed from the
    zone number (approximate — the exact panel is always the drawing). */
 const AC3D=(()=>{
-  let inDecals=null, apronMat=null, hangarG=null, apronG=null, roofG=null, envSky=null, envHangar=null, T=null, R=null, scene, cam, root, zoneMesh={}, markerGroup, labelGroup, decalGroup, ground, raf=0, needs=true, host=null, ro=null, tip=null; let PREP=false, io=null;
+  let rbfG=null, inDecals=null, apronMat=null, hangarG=null, apronG=null, roofG=null, envSky=null, envHangar=null, T=null, R=null, scene, cam, root, zoneMesh={}, markerGroup, labelGroup, decalGroup, ground, raf=0, needs=true, host=null, ro=null, tip=null; let PREP=false, io=null;
   const st={theta:-0.62, phi:1.12, dist:50, target:[18.5,-0.2,0], anim:null};
   const LEN=36.2, RY=1.67, RZ=1.50;
   let TP=null; const loadThree=()=>{ if(window.THREE) return Promise.resolve(window.THREE); TP=TP||libText("three-src").then(t=>{ injectClassic(t); if(!window.THREE) throw new Error("No se pudo iniciar el motor 3D"); return window.THREE; }); return TP; };
@@ -4382,7 +4394,7 @@ const AC3D=(()=>{
       const gr=g.createLinearGradient(X(x0),V(t0),X(x1),V(t2)); gr.addColorStop(0,"#45627f"); gr.addColorStop(0.5,"#101a26"); gr.addColorStop(1,"#1d2c3c"); g.fillStyle=gr; g.fill(); g.strokeStyle="#1b2129"; g.lineWidth=5; g.stroke(); };
     for(const sd of [1,-1]){ const T_=t=>sd>0?t:2*Math.PI-t; ws(1.62,2.42,T_(0.04),T_(0.05),T_(0.84),T_(0.74)); ws(2.48,3.12,T_(0.86),T_(0.9),T_(1.3),T_(1.26)); ws(3.18,3.62,T_(0.94),T_(0.96),T_(1.3),T_(1.28)); }
     // radome: slightly warmer grey, seam, lightning diverter strips
-    g.fillStyle="#E4E8ED"; g.fillRect(0,0,X(1.2),H); g.strokeStyle="rgba(70,82,98,.55)"; g.lineWidth=2; g.beginPath(); g.moveTo(X(1.2),0); g.lineTo(X(1.2),H); g.stroke();
+    g.fillStyle="#E4E8ED"; g.fillRect(0,0,X(1.2),H); 
     g.strokeStyle="rgba(120,130,142,.5)"; g.lineWidth=1.4; for(let k=0;k<8;k++){ const v=k/8*H; g.beginPath(); g.moveTo(0,v); g.lineTo(X(1.15),v+(k%2?6:-6)); g.stroke(); }
     // static ports, AoA vanes base, drain masts (small details that make the nose read real)
     for(const sd of [1,-1]){ const T_=t=>sd>0?t:2*Math.PI-t; g.fillStyle="#9aa4ae"; g.beginPath(); g.arc(X(4.9),V(T_(1.62)),5,0,7); g.fill(); g.strokeStyle="#55606c"; g.lineWidth=1.2; g.stroke();
@@ -4605,7 +4617,39 @@ const AC3D=(()=>{
     // APU exhaust, antennas, pitot probes, beacons
     { const apu=new T.Mesh(new T.CylinderGeometry(0.1,0.12,0.3,16),plugM); apu.rotation.z=Math.PI/2; apu.position.set(LEN-0.05,fus(LEN-0.1).yc,0); root.add(apu); }
     const antM=mat(0x9aa4b0); for(const [x,top] of [[9,true],[21,true],[6,false],[25,false]]){ const a=new T.Mesh(new T.BoxGeometry(0.42,0.32,0.05),antM); const p=surf(x,top?0:Math.PI,0.12); a.position.set(p[0],p[1]+(top?0.04:-0.04),p[2]); root.add(a); }
-    for(const sd of [1,-1]){ const p=surf(2.2,sd*1.75,0.05); const pt=new T.Mesh(new T.CylinderGeometry(0.02,0.02,0.32,8),antM); pt.rotation.z=Math.PI/2; pt.position.set(p[0]-0.05,p[1],p[2]+sd*0.06); root.add(pt); }
+    // nose details (after the hangar photo): radome joint ring, pitot-static probes, AoA vanes, TAT probe, wipers and,
+    // in MRO hangar mode, the red «REMOVE BEFORE FLIGHT» streamers hanging from the probes
+    { const seamM=new T.MeshStandardMaterial({color:0x56606c,roughness:0.55,metalness:0.2});
+      const ring=[]; for(let i=0;i<=72;i++){ const th=i/72*2*Math.PI; ring.push(new T.Vector3(...surf(1.24+0.14*Math.cos(th),th,0.004))); }
+      root.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(ring,true),110,0.008,5,true),seamM));
+      const probeM=new T.MeshStandardMaterial({color:0xd3d8de,metalness:0.9,roughness:0.22}), baseM=new T.MeshStandardMaterial({color:0xaab3bd,metalness:0.6,roughness:0.35});
+      rbfG=new T.Group(); root.add(rbfG);
+      const rbfTex=canvasTex(64,512,(g,W,H)=>{ g.fillStyle="#C1121F"; g.fillRect(0,0,W,H); g.fillStyle="rgba(0,0,0,.18)"; g.fillRect(0,0,4,H); g.fillRect(W-4,0,4,H);
+        g.save(); g.translate(W/2,H*0.55); g.rotate(Math.PI/2); g.fillStyle="#fff"; g.font="bold 26px Arial,sans-serif"; g.textAlign="center"; g.textBaseline="middle"; g.fillText("REMOVE BEFORE FLIGHT",0,0); g.restore(); });
+      rbfTex.flipY=true; const rbfM=new T.MeshStandardMaterial({map:rbfTex,side:T.DoubleSide,roughness:0.85});
+      const up=new T.Vector3(0,1,0); const nrm=t=>new T.Vector3(0,Math.cos(t),Math.sin(t)).normalize();
+      const along=(p,n,d)=>[p[0],p[1]+n.y*d,p[2]+n.z*d];
+      const streamer=(tip,len,sd,k)=>{ const s=new T.Mesh(new T.PlaneGeometry(0.075,len),rbfM); s.position.set(tip[0]+0.03,tip[1]-len/2,tip[2]+sd*0.012); s.rotation.y=sd*0.25+k*0.2; s.rotation.z=(k%2?0.05:-0.04); rbfG.add(s); };
+      for(const sd of [1,-1]){
+        // two pitot-static probes per side (L-shaped: mast + forward tube)
+        [[2.62,1.40],[3.02,1.74]].forEach(([x,th],k)=>{ const t=sd*th, p=surf(x,t,0), n=nrm(t);
+          const base=new T.Mesh(new T.CylinderGeometry(0.055,0.065,0.02,18),baseM); base.position.set(...p); base.quaternion.setFromUnitVectors(up,n); root.add(base);
+          const mast=new T.Mesh(new T.CylinderGeometry(0.011,0.022,0.17,10),probeM); mast.position.set(...along(p,n,0.085)); mast.quaternion.setFromUnitVectors(up,n); root.add(mast);
+          const tip=along(p,n,0.16); const tube=new T.Mesh(new T.CylinderGeometry(0.011,0.013,0.3,10),probeM); tube.rotation.z=Math.PI/2; tube.position.set(tip[0]-0.12,tip[1],tip[2]); root.add(tube);
+          streamer(tip,0.85,sd,k); });
+        // angle-of-attack vane (flat blade) and its streamer
+        { const t=sd*2.02, p=surf(3.42,t,0), n=nrm(t); const base=new T.Mesh(new T.CylinderGeometry(0.05,0.05,0.015,18),baseM); base.position.set(...p); base.quaternion.setFromUnitVectors(up,n); root.add(base);
+          const vane=new T.Mesh(new T.BoxGeometry(0.15,0.11,0.012),probeM); vane.position.set(...along(p,n,0.06)); vane.quaternion.setFromUnitVectors(up,n); root.add(vane); streamer(along(p,n,0.1),0.7,sd,2); }
+        // windshield wiper: arm + blade resting on the lower edge of the windshield
+        { const a=new T.Vector3(...surf(2.34,sd*0.80,0.035)), b=new T.Vector3(...surf(1.80,sd*0.36,0.035)); const len=a.distanceTo(b);
+          const wM=new T.MeshStandardMaterial({color:0x8a939d,roughness:0.35,metalness:0.8});
+          const arm=new T.Mesh(new T.BoxGeometry(0.03,0.028,len),wM); arm.position.copy(a.clone().add(b).multiplyScalar(0.5)); arm.lookAt(b); root.add(arm);
+          const blade=new T.Mesh(new T.BoxGeometry(0.03,0.016,len*0.85),wM); blade.position.copy(a.clone().lerp(b,0.55)).add(new T.Vector3(0.03,0,0)); blade.lookAt(b.clone().add(new T.Vector3(0.03,0,0))); root.add(blade);
+          const hubW=new T.Mesh(new T.CylinderGeometry(0.03,0.03,0.03,12),wM); hubW.position.copy(a); root.add(hubW); }
+      }
+      // total-air-temperature probe low on the nose, with streamer
+      { const t=Math.PI, p=surf(2.9,t,0), n=nrm(t); const tat=new T.Mesh(new T.BoxGeometry(0.12,0.12,0.03),probeM); tat.position.set(...along(p,n,0.06)); root.add(tat); streamer(along(p,n,0.12),0.6,1,3); }
+    }
     for(const [x,top] of [[16,true],[17,false]]){ const p=surf(x,top?0:Math.PI,0.05); const b=new T.Mesh(new T.SphereGeometry(0.09,12,8),new T.MeshBasicMaterial({color:0xff3030})); b.position.set(...p); root.add(b); }
     // landing gear (zone 700): strut, oleo, torque link, wheels, doors
     const tyre=new T.MeshStandardMaterial({color:0x15181c,roughness:0.9}); const hub=new T.MeshStandardMaterial({color:0x9aa3ad,metalness:0.8,roughness:0.3}); const strutM=mat(0xB8C0CA,{metalness:0.6,roughness:0.3}); const chrome=new T.MeshStandardMaterial({color:0xe8ecf0,metalness:1,roughness:0.12});
@@ -4817,7 +4861,7 @@ const AC3D=(()=>{
   /* view options: access markers (circles, plates, IDs) on/off and hangar on/off */
   function applyOpts(){ const fp=!!st.fp, marks=S.ac3dMarks!==false, hg=S.ac3dHangar!==false;
     if(markerGroup){ markerGroup.visible=!fp&&marks; labelGroup.visible=!fp&&marks; decalGroup.visible=marks; if(inDecals){ inDecals.visible=marks; const sp=st.fp?.key; for(const o of inDecals.children) o.visible=!sp||o.userData.space===sp; } }
-    if(hangarG){ hangarG.visible=hg; apronG.visible=!hg; const env=hg?(envHangar||envSky):envSky; if(env&&scene.environment!==env) scene.environment=env; }
+    if(rbfG) rbfG.visible=hg; if(hangarG){ hangarG.visible=hg; apronG.visible=!hg; const env=hg?(envHangar||envSky):envSky; if(env&&scene.environment!==env) scene.environment=env; }
     needs=true; shadowDirty=true; poke(); }
   function camPos(){ const [tx,ty,tz]=st.target; return [tx+st.dist*Math.sin(st.phi)*Math.cos(st.theta), ty+st.dist*Math.cos(st.phi), tz+st.dist*Math.sin(st.phi)*Math.sin(st.theta)]; }
   let shadowDirty=true, onScreen=true, lastAct=0, lastPulse=0, dragging=false, wheelAt=0; const poke=()=>{ lastAct=performance.now(); };
@@ -4882,7 +4926,7 @@ const AC3D=(()=>{
     // a screen redraw re-attaches the same 3D view: rebuild markers only if their data changed, keep the camera mode
     if(!sigSame(sigNow())) update(); const want=S.ac3dMode&&S.ac3dMode!=="ext"?S.ac3dMode:null; if((st.fp?.key||null)!==want) setMode(want); }
   return {mount, mode:m=>{ if(R) setMode(m==="ext"?null:m); }, update:()=>{ if(R&&host?.isConnected) update(); }, focusCard:()=>{ update(); focusCard(); }, reset, zoom:f=>{ st.anim=null; st.dist=Math.max(8,Math.min(90,st.dist*f)); needs=true; }, view:(v)=>{ if(st.fp) setMode(null); const V={front:{theta:Math.PI,phi:1.35},left:{theta:Math.PI/2,phi:1.5},right:{theta:-Math.PI/2,phi:1.5},top:{theta:-Math.PI/2,phi:0.16},below:{theta:-Math.PI/2,phi:2.98},iso:{theta:-0.62,phi:1.12}}[v]; if(V) animTo({...V,target:[18,-0.6,0],dist:44}); },
-    opts:()=>{ if(R) applyOpts(); }, tour:()=>{ if(R) tour(); }, get ready(){ return !!R; } };
+    opts:()=>{ if(R) applyOpts(); }, tour:()=>{ if(R) tour(); }, look:o=>{ if(R&&location.hostname==="localhost"){ if(st.fp) setMode(null); animTo(o,10); } }, get ready(){ return !!R; } };
 })();
 
 /* map interaction: view switch, IDs, zoom (wheel / buttons / pinch-free), drag to pan, hover info */
@@ -5130,13 +5174,16 @@ function vSearch(){
 }
 function vVerify(){
   if(!proj()) return vWelcome();
-  const L=S.rel.filter(r=>!["CONFIRMED"].includes(r.status));
+  const open=S.rel.filter(r=>r.status!=="CONFIRMED"&&!["VERIFIED","REJECTED"].includes(eff(r))); const done=S.rel.filter(r=>r.status!=="CONFIRMED"&&eff(r)==="VERIFIED");
+  const L=open;
   return `${S.kbPending?`<div class="banner row" style="border-left-color:var(--efis-mag)"><span><b class="c-mag">${S.kbPending} regla(s) aprendida(s)</b> pendiente(s) de aplicar.</span><span class="sp"></span>${isAdmin()?`<button class="btn pri sm" data-act="relearn">Re-analizar con lo aprendido</button>`:""}</div>`:""}<section class="card"><div class="hd"><h2>Verification queue</h2><span class="sp"></span><span class="muted small">${L.filter(r=>!["VERIFIED","REJECTED"].includes(eff(r))).length} pendiente(s)</span></div>
   <div class="bd small muted">Cada decisión humana queda registrada con usuario, fecha y nota. La verificación humana se muestra como <b>Verified (human)</b>, separada de la confirmación automática.</div>
   <div class="tbl-wrap"><table><thead><tr><th>Card</th><th>Access panel</th><th>Status</th><th>Reason</th><th>Decision</th></tr></thead><tbody>
   ${L.map(r=>{ const v=S.verifs[r.key]; const cur=v&&v.runId===S.runId?v:null; return `<tr><td class="mono">${esc(r.card)}</td><td class="mono"><button class="plac s-${eff(r)}" data-panel="${esc(r.panel)}">${esc(r.panelRaw)}</button></td><td>${pill(r.status)}${cur?"<br>"+pill(eff(r)):""}</td><td class="small">${esc(r.reasons.join(" "))}</td>
    <td>${cur?`<div class="small">${esc(cur.decision)} · ${esc(nameOf(cur.by))}<br>${fmtDate(cur.at)}<br><i>${esc(cur.note||"")}</i></div>`:""}${isAdmin()?`<div class="row" style="margin-top:6px"><button class="btn sm" data-decide="${esc(r.key)}">Registrar decisión</button></div>`:""}</td></tr>`; }).join("")||`<tr><td colspan="5" class="empty">No hay elementos por verificar.</td></tr>`}
-  </tbody></table></div></section>`;
+  </tbody></table></div></section>
+  ${done.length?`<section class="card"><div class="hd"><h3>Verificados (${done.length})</h3><span class="sp"></span><button class="btn sm ghost" data-act="vshow">${S.showVerified?"Ocultar":"Ver"}</button></div>
+   ${S.showVerified?`<div class="tbl-wrap"><table><thead><tr><th>Card</th><th>Access panel</th><th>Verificado</th><th></th></tr></thead><tbody>${done.map(r=>{ const h=verifiedHow(r)||{}; return `<tr><td class="mono">${esc(r.card)}</td><td><button class="plac s-VERIFIED" data-panel="${esc(r.panel)}">${esc(r.panelRaw)}</button></td><td class="small">${h.learned?`<b>Aprendido</b> (verificado antes${h.card?` en la tarjeta ${esc(h.card)}`:""})`:"Verificado en esta tarjeta"} · ${esc(nameOf(h.by))} · ${fmtDate(h.at)}${h.note?`<br><i>${esc(h.note)}</i>`:""}</td><td>${isAdmin()?`<button class="btn sm ghost" data-decide="${esc(r.key)}">Cambiar</button>`:""}</td></tr>`; }).join("")}</tbody></table></div>`:`<div class="bd small muted">Ya no aparecen en la cola: quedaron guardados y en futuros análisis se reconocen como accesos a remover.</div>`}</section>`:""}`;
 }
 function vReports(){
   if(!proj()) return vWelcome();
@@ -5377,6 +5424,7 @@ function decideSheet(key){
   <form class="sb" id="decform" data-key="${esc(key)}"><p class="small">${pill(r.status)} ${esc(r.reasons.join(" "))}</p>
    <p class="small mono" style="margin:0">“${esc(r.sentence||r.line)}” · instrucción detectada: <b>${esc(ACT_LABEL[r.action]||"—")}</b></p>
    <div class="field"><label for="dec">Decisión</label><select id="dec"><option value="VERIFIED">Verified against approved documentation (AMM/IPC)</option><option value="NOTPANEL">No es un Access Panel — no volver a mostrar</option><option value="REJECTED">Not required in this card (solo este análisis)</option><option value="PENDING">Keep pending</option></select>
+     <label class="row small" id="va_row" style="margin:6px 0 0"><input type="checkbox" id="l_acc" checked> Recordar que <b class="mono">${esc(r.panel)}</b> es un acceso a remover: ya no vuelve a la cola y en futuros análisis (también de otros proyectos) se reconoce solo.</label>
      <p class="small muted" id="np_hint" hidden style="margin:6px 0 0">Se oculta en <b>este proyecto</b> en todas las vistas, aunque vuelva a analizar. Puede volver a mostrarlo en <b>Aprendizaje</b>.</p></div>
    <div class="field"><label for="decnote">Referencia y nota (obligatoria)</label><textarea id="decnote" rows="2" placeholder="Ej.: Verificado en AMM 06-41-00 Fig. 12, rev. 45" required></textarea></div>
    <div class="learn-hint"><b class="c-mag">ENSEÑAR AL SISTEMA</b> <span class="muted">(opcional · se aplicará en futuras tarjetas de todos los proyectos)</span>
@@ -5388,7 +5436,7 @@ function decideSheet(key){
      ${before&&/^[A-Z\/#.]{1,12}$/.test(before)?`<label class="row"><input type="radio" name="l_ex" value="prev"> Un código precedido por «${esc(before)}» no es un Access Panel</label>`:""}</div>
    </div>
    <div class="row"><button class="btn pri" type="submit">Guardar decisión</button></div></form></div></div>`;
-  $("#dec").onchange=e=>{ const v=e.target.value; $("#l_rej").hidden=!["REJECTED","NOTPANEL"].includes(v); $("#np_hint").hidden=v!=="NOTPANEL";
+  $("#dec").onchange=e=>{ const v=e.target.value; $("#l_rej").hidden=!["REJECTED","NOTPANEL"].includes(v); $("#np_hint").hidden=v!=="NOTPANEL"; $("#va_row").hidden=v!=="VERIFIED";
     if(v==="NOTPANEL"){ const tk=document.querySelector('input[name="l_ex"][value="token"]'); if(tk) tk.checked=true; } };
   $("#decform").dataset.before=before; $("#decform").dataset.ocrfrom=ocrFrom||"";
 }
@@ -5415,6 +5463,8 @@ function vLearning(){
    <div class="bd"><p class="small muted" style="margin-top:0">El sistema aprende de las decisiones de los inspectores: cada regla es visible, indica quién la enseñó y cuántas veces se usó, y se puede desactivar. Se guarda en este equipo (para todos los proyectos) y dentro del archivo del proyecto. Las reglas aprendidas se aplican al analizar; un ID corregido por OCR sin regla aprendida sigue pidiendo verificación.</p>
    <div class="eirows" style="grid-template-columns:repeat(5,minmax(0,1fr))">
     <div class="eirow"><span>ANÁLISIS</span><b class="c-cyan">${K.stats.analyses}</b></div><div class="eirow"><span>TARJETAS LEÍDAS</span><b class="c-cyan">${K.stats.cardsRead}</b></div><div class="eirow"><span>PÁGINAS OCR</span><b class="c-cyan">${K.stats.ocrPages}</b></div><div class="eirow"><span>REGLAS</span><b class="c-mag">${rules}</b></div><div class="eirow"><span>USOS DE REGLAS</span><b class="c-green">${K.stats.learnedUses}</b></div></div></div></section>
+  ${(()=>{ const L=(K.accesses||[]).slice().sort((a,b)=>a.panel.localeCompare(b.panel)); return `<section class="card"><div class="hd"><h3>Accesos verificados · se reconocen solos en futuros análisis</h3><span class="sp"></span><span class="pill s-CONFIRMED">${L.filter(on).length}</span></div><div class="bd">
+    ${L.length?`<div class="tbl-wrap"><table><tbody>${L.map(x=>`<tr style="${on(x)?"":"opacity:.45"}"><td class="mono"><b>${esc(x.panel)}</b>${x.card?`<br><span class="small muted">tarjeta ${esc(x.card)}</span>`:""}</td><td class="small">${esc(x.note||"")}<br>${who(x)}</td><td>${A?`<button class="btn sm ghost" data-kbtoggle="accesses:${esc(x.id)}">${on(x)?"Desactivar":"Activar"}</button>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<p class="small muted" style="margin:0">Cuando verifique un acceso en la cola de verificación, quedará aquí y no volverá a pedirle verificarlo.</p>`}</div></section>`; })()}
   ${(()=>{ const np=Object.entries(S.verifs||{}).filter(([,v])=>v?.decision==="NOTPANEL"); return `<section class="card"><div class="hd"><h3>Ocultos en este proyecto · «no es un Access Panel»</h3><span class="sp"></span><span class="pill s-NOT_FOUND">${np.length}</span></div><div class="bd">
     ${np.length?`<div class="tbl-wrap"><table><tbody>${np.sort((a,b)=>a[1].panel.localeCompare(b[1].panel)).map(([id,v])=>`<tr><td class="mono"><b>${esc(v.panel)}</b><br><span class="small muted">CARD ${esc(v.card||"—")}</span></td><td class="small">${esc(v.note||"")}<br><span class="muted">${esc(nameOf(v.by))} · ${esc((v.at||"").slice(0,10))}</span></td><td>${A?`<button class="btn sm ghost" data-npshow="${esc(id)}">Volver a mostrar</button>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<p class="small muted" style="margin:0">Ninguno. Cuando alguien marque un código como «No es un Access Panel», deja de mostrarse aquí en todas las vistas.</p>`}</div></section>`; })()}
   <section class="card"><div class="hd"><h3>Sugerencias · frases frecuentes antes de un Access Panel que el sistema aún no interpreta</h3></div>
@@ -5518,6 +5568,7 @@ document.addEventListener("click", async e=>{
     case "theme": setTheme(document.documentElement.dataset.theme==="day"?"night":"day"); break;
     case "pgprev": case "pgnext": { const sel=$("#vpage"); if(!sel||!sel.options.length) break; const vals=[...sel.options].map(o=>+o.value); const i=vals.indexOf(S.viewer.page); const j=Math.max(0,Math.min(vals.length-1,i+(d.act==="pgnext"?1:-1))); if(vals[j]!==S.viewer.page){ S.viewer.page=vals[j]; drawViewer(); } break; }
     case "qrlabels": qrDialog(); break;
+    case "vshow": S.showVerified=!S.showVerified; render(); break;
     case "dayadd": try{ const d=await addDay(); render(); toast(`${d.name} creado. Cargue ahí sus inspection cards.`); }catch(err){ toast(err.message); } break;
     case "dayrepall": { t.disabled=true; try{ const files=[]; for(const r of dayRows().filter(r=>r.rows.length)){ const rep=await dayReport(r.day.id); files.push({name:rep.name,bytes:rep.bytes}); }
         closeModal(); if(!files.length){ toast("Ningún día tiene accesos a remover."); } else await offerFile(`${safeName((proj()?.registration||"AC"))}_Accesos_por_dia.zip`,makeZip(files)); }catch(err){ console.error(err); toast("Error: "+err.message); closeModal(); } t.disabled=false; break; }
@@ -5556,11 +5607,12 @@ document.addEventListener("submit", async e=>{
     if(dec==="NOTPANEL"){ await S.db.doc(`projects/${S.pid}/verifications/NP~${r.panel}`).set({decision:"NOTPANEL",panel:r.panel,card:r.card,note,by:S.me.id,at:nowIso(),runId:S.runId}); audit("PANEL_NOT_ACCESS",r.panel,`CARD ${r.card} — ${note}`); }
     else { await S.db.doc(`projects/${S.pid}/verifications/${key}`).set({decision:dec,note,by:S.me.id,at:nowIso(),runId:S.runId}); audit("VERIFICATION_DECISION",key,dec+" — "+note); }
     const learned=[];
+    if(dec==="VERIFIED"&&$("#l_acc")?.checked&&kbLearnAccess(r.panel,r.card,note)) learned.push(`${r.panel} es acceso a remover`);
     const la=$("#l_act")?.value, lp=$("#l_phrase")?.value.trim(); if(la&&lp){ if(kbLearnPhrase(lp,la)) learned.push(`frase «${lp.toUpperCase()}» = ${ACT_LABEL[la]}`); }
     if($("#l_ocr")?.checked && f.dataset.ocrfrom && dec!=="REJECTED" && dec!=="NOTPANEL"){ if(kbLearnCorrection(f.dataset.ocrfrom,r.panel)) learned.push(`lectura ${f.dataset.ocrfrom} → ${r.panel}`); }
     const ex=document.querySelector('input[name="l_ex"]:checked')?.value; if((dec==="REJECTED"||dec==="NOTPANEL") && ex){ const t=ex==="token"?r.panel:f.dataset.before; if(t && kbLearnExclusion(ex,t)) learned.push(ex==="token"?`${t} no es Access Panel`:`código tras «${t}» no es Access Panel`); }
     closeModal(); if(dec==="NOTPANEL"){ toast(`${r.panel} ya no se mostrará en este proyecto.${learned.length?" Aprendido para futuras tarjetas.":""}`,6000); if(learned.length) S.kbPending=(S.kbPending||0)+learned.length; render(); }
-    else if(learned.length){ S.kbPending=(S.kbPending||0)+learned.length; toast("Decisión registrada · aprendido: "+learned.join(" · "),6000); render(); } else toast("Decisión registrada."); }
+    else if(learned.length){ const other=learned.filter(x=>!/es acceso a remover$/.test(x)).length; if(other) S.kbPending=(S.kbPending||0)+other; toast("Decisión registrada · aprendido: "+learned.join(" · "),6000); render(); } else { toast("Decisión registrada."); render(); } }
   if(f.id==="cardform"){ const docId=f.dataset.doc; const ov={card:$("#c_no").value.trim(),zone:$("#c_zone").value.trim(),title:$("#c_title").value.trim()};
     if(ov.zone && !/^[1-8][0-9]{2}$/.test(ov.zone)){ toast("La zona debe tener 3 dígitos (100–899)."); return; }
     await S.db.doc(`projects/${S.pid}/overrides/${docId}`).set({...ov,by:S.me.id,at:nowIso()}); S.overrides={...(S.overrides||{}),[docId]:ov}; audit("CARD_DATA_CORRECTED",docId,JSON.stringify(ov));
@@ -5610,7 +5662,7 @@ window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(h 
 window.addEventListener("beforeunload",()=>{ flushAudit(); });
 
 /* ---------------- boot ---------------- */
-if(location.hostname==="localhost") window.__ap={libsInline,apSrc,S,loadExtraction,ocrPage,openPdf,getBytes,traceLeader,renderPageCanvas,cropCanvas,classifyAccess,makeReport,makeAnnotatedFigures,physicalOf,eff,zoneCardAnalysis,accessImage,aircraftSVG,zoneStats,ZONE_NAMES,ST_COLOR,ACT_LABEL};
+if(location.hostname==="localhost") window.__ap={AC3D:typeof AC3D!=="undefined"?AC3D:null,libsInline,apSrc,S,loadExtraction,ocrPage,openPdf,getBytes,traceLeader,renderPageCanvas,cropCanvas,classifyAccess,makeReport,makeAnnotatedFigures,physicalOf,eff,zoneCardAnalysis,accessImage,aircraftSVG,zoneStats,ZONE_NAMES,ST_COLOR,ACT_LABEL};
 render();
 (async()=>{
   await initCaps();
