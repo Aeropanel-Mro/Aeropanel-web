@@ -664,6 +664,14 @@ tr.click:hover td{background:rgba(63,212,255,.05)}
 .rp-page img{display:block;width:100%;height:auto;max-width:900px}
 .rp-page.land img{max-width:1060px}
 .rp-page figcaption{background:#222;color:#ddd;padding:3px 8px;text-align:center}
+/* progress = an airplane flying along a dashed route (CSS only: no extra work for the page) */
+.progress,.progress[class]{position:relative;height:40px!important;background:none!important;border:0!important;border-radius:0!important;overflow:visible!important;margin-right:18px}
+.progress::before{content:"";position:absolute;left:0;right:-18px;top:50%;border-top:2px dashed var(--line,#2a3442);opacity:.9}
+.progress i,.progress[class] i{position:relative;display:block;height:100%!important;min-width:18px;background:none!important;box-shadow:none!important;transition:width .45s cubic-bezier(.22,.8,.3,1)!important}
+.progress i::before{content:"";position:absolute;left:0;right:12px;top:50%;height:3px;margin-top:-1.5px;border-radius:3px;background:linear-gradient(90deg,rgba(63,212,255,0),rgba(63,212,255,.85) 70%,rgba(228,0,124,.9))}
+.progress i::after{content:"";position:absolute;right:-22px;top:50%;width:44px;height:44px;margin-top:-22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M36 29 24 5h-5l7 24zM36 35 24 59h-5l7-24z' fill='%23C9D6E8'/%3E%3Cpath d='M12 29 6 17H3l4 12zM12 35 6 47H3l4-12z' fill='%23E4007C'/%3E%3Crect x='26' y='19' width='8' height='4' rx='2' fill='%2390A4BE'/%3E%3Crect x='26' y='41' width='8' height='4' rx='2' fill='%2390A4BE'/%3E%3Cpath d='M61 32c0-2-3-3.4-7-3.4H10c-2.4 0-4 1.5-4 3.4s1.6 3.4 4 3.4h44c4 0 7-1.4 7-3.4z' fill='%23F4F8FF'/%3E%3Cpath d='M55 30.2c2.3.3 3.6 1 3.6 1.8s-1.3 1.5-3.6 1.8z' fill='%230A0C52'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));animation:apfly .9s ease-in-out infinite alternate}
+@keyframes apfly{from{transform:translateY(-2px) rotate(-2deg)}to{transform:translateY(2px) rotate(2deg)}}
+@media (prefers-reduced-motion:reduce){.progress i::after{animation:none}.progress i{transition:none!important}}
 .rp-zoom{display:inline-flex;align-items:center;gap:4px;margin-right:6px}.rp-zoom b{min-width:46px;text-align:center;font-variant-numeric:tabular-nums}
 .rprev-pages[data-z]{align-items:flex-start}.rprev-pages[data-z] .rp-page{max-width:none;flex:none}
 .rprev-pages[data-z] .rp-page img{max-width:none;width:calc(min(900px,88vw)*var(--rpz,1))}.rprev-pages[data-z] .rp-page.land img{width:calc(min(1060px,88vw)*var(--rpz,1))}
@@ -675,8 +683,12 @@ tr.click:hover td{background:rgba(63,212,255,.05)}
   body.rp-print #modal{position:absolute!important;left:0;top:0;width:100%}
   body.rp-print #modal .sh, body.rp-print #modal .rprev-bar, body.rp-print #modal figcaption{display:none!important}
   body.rp-print #modal .rprev-pages{display:block!important;background:none!important;padding:0!important;overflow:visible!important}
-  body.rp-print #modal .rp-page{box-shadow:none!important;page-break-after:always;break-after:page;margin:0!important}
-  body.rp-print #modal .rp-page img{max-width:100%!important;width:100%!important}
+  body.rp-print #modal .rp-page{box-shadow:none!important;page-break-after:always;break-after:page;break-inside:avoid;page-break-inside:avoid;margin:0!important;height:auto!important;display:flex!important;justify-content:center}
+  body.rp-print #modal .rp-page:last-child{page-break-after:auto;break-after:auto}
+  /* each sheet fits INSIDE one printed page (it used to be full width and spill onto a second sheet) */
+  body.rp-print #modal .rp-page img{width:auto!important;height:auto!important;max-width:100%!important;max-height:96vh!important;object-fit:contain;margin:0 auto}
+  body.rp-print #app, body.rp-print #auth, body.rp-print .toast, body.rp-print #toast{display:none!important}
+  body.rp-print{background:#fff!important;min-height:0!important}
 }
 
 .qropt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:4px;padding:10px 12px;cursor:pointer}
@@ -3843,6 +3855,8 @@ async function reportPreview(name,bytes,final,kind){
   pagesEl().addEventListener("dblclick",e=>{ if(e.target.closest(".rp-page")) setZ(zi>0?0:3,{x:e.clientX,y:e.clientY}); });
   pagesEl().addEventListener("wheel",e=>{ if(!e.ctrlKey) return; e.preventDefault(); setZ(zi+(e.deltaY<0?1:-1),{x:e.clientX,y:e.clientY}); },{passive:false});
   const sharp=/QR/i.test(kind||"");   // QR sheets: high resolution and no compression, so the codes scan from the screen
+  // Ctrl+P / browser menu while the preview is open also prints only the sheets
+  if(!window.__rpPrintHook){ window.__rpPrintHook=1; addEventListener("beforeprint",()=>{ if(document.querySelector(".rprev-wrap")) document.body.classList.add("rp-print"); }); addEventListener("afterprint",()=>document.body.classList.remove("rp-print")); }
   $("#rp_print").onclick=()=>{ document.body.classList.add("rp-print"); const off=()=>{ document.body.classList.remove("rp-print"); removeEventListener("afterprint",off); }; addEventListener("afterprint",off); setTimeout(()=>window.print(),60); setTimeout(off,60000); };
   if($("#rp_zip")) $("#rp_zip").onclick=async ev=>{ const b=ev.target; b.disabled=true; b.textContent="Generando fotos…"; try{ await generatePhotos(); await downloadPhotosZip(); }catch(err){ toast("No se pudieron generar las fotos: "+err.message); } b.disabled=false; b.textContent="Fotos de accesos (ZIP)"; };
   try{ const doc=await openPdf(bytes); const box=$("#rp_pages"); const n=doc.numPages;
