@@ -137,3 +137,10 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - **Vista previa de etiquetas QR**: botones − / + / Ajustar, doble toque o Ctrl + rueda para acercar; la hoja se muestra en alta resolución para escanear desde la pantalla.
 - **Invitados generan QR con dibujo**: requiere publicar las **reglas v4**. Cada invitado desactiva solo sus enlaces; el propietario desactiva todos. El monitoreo registra quién publicó etiquetas.
 - Las reglas v4 también permiten guardar en el servidor el **aprendizaje compartido** (antes se quedaba en cada equipo).
+
+## 14. Escaneo más rápido, QR más rápidos e inspección por día
+
+- **Escaneo**: «Rápido» es el modo por defecto (los proyectos que ya eligieron otro modo lo conservan). «Equilibrado» y «Completo» ya no pasan OCR sobre páginas 100 % digitales cuyos rótulos vienen como texto exacto; «Completo» hace segunda lectura solo cuando la primera es dudosa. Si Rápido no encuentra algún acceso, use Equilibrado.
+- **QR con dibujo**: las imágenes se suben en segundo plano mientras se dibuja la siguiente; si vuelve a generar las etiquetas del mismo análisis, los enlaces vigentes se reutilizan (casi instantáneo). Desactivar los enlaces borra también esa memoria.
+- **Inspección por día**: en Documents, «Día de inspección» antes de cargar tarjetas (las figuras se cargan una sola vez). Cada tarjeta muestra su día y se puede cambiar. En el Dashboard, «Inspección por día» muestra por día: tarjetas, accesos a remover, nuevos ese día y pendientes. «Ver este día» filtra toda la app (zonas, avión 3D, lista, reportes y QR); los reportes y etiquetas llevan el día en el nombre.
+- Los nombres de archivo usan la fecha local (antes, después de las 6 pm salían con la fecha del día siguiente).

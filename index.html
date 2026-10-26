@@ -204,6 +204,8 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .mon-log>div>span:nth-child(3){grid-column:2}.mon-log>div>span:nth-child(4){grid-column:2;font-size:11.5px}
 .mon-log>div>b{word-break:break-all}
 .btn.danger{color:var(--efis-red,#d64545)}
+.cardday{gap:10px;flex-wrap:wrap;align-items:center}.cardday input{width:auto}.cday{width:auto;padding:2px 6px;font-size:12px}
+.dayplan tr.on td{background:rgba(31,157,85,.10)}.daybanner{border-left-color:var(--efis-green,#1f9d55)}
 .start-grid>.auth-card:has(#mon_card){grid-column:1/-1}
 .start-grid>.auth-card:has(#mon_card) .mon-kpi{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 @media (max-width:700px){ .mon-t thead{display:none} .mon-t,.mon-t tbody,.mon-t tr,.mon-t td{display:block;width:100%}
@@ -996,7 +998,7 @@ const DEFAULT_PATTERNS = {
   excludePrev: "P/N,PN,S/N,SN,MODEL,BOEING,AMM,REF,IPC,SRM",
   units: "LB,IN,NM,FT,KG,MM,CM,HR,MN,OZ,LBS,PSI,KTS,RPM,GAL,QTS,DEG,MIN,HRS,SEC,NMS,MPH",
   accessWords: "REMOVE,ACCESS,OPEN,PANEL,PANELS,DOOR,DOORS,FAIRING",
-  ocrLowConf: 85, minWords: 5, ocr: "ON", scanMode: "BALANCED"
+  ocrLowConf: 85, minWords: 5, ocr: "ON", scanMode: "FAST"
 };
 
 /* ---------------- tiny helpers ---------------- */
@@ -1045,10 +1047,17 @@ const S = {
 };
 /* panels marked «no es un Access Panel» in this project stay hidden in every view, also after re-analysing */
 const npSet=()=>new Set(Object.values(S.verifs||{}).filter(v=>v&&v.decision==="NOTPANEL"&&v.panel).map(v=>v.panel));
-S._rel=S.rel; let REL_C={src:null,v:null,out:[]};
+/* inspection day: when one is chosen, every view shows only the accesses requested by that day's cards */
+const todayLocal=()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const dayLabel=d=>{ if(!d) return "Sin día"; try{ return new Date(d+"T12:00:00").toLocaleDateString("es-MX",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); }catch{ return d; } };
+const docDay=id=>S.docs.find(d=>d.id===id)?.day||"";
+S._rel=S.rel; S.day=null; let REL_C={src:null,v:null,day:null,docs:null,out:[]};
 Object.defineProperty(S,"rel",{configurable:true,enumerable:true,
-  get(){ if(REL_C.src!==S._rel||REL_C.v!==S.verifs){ const np=npSet(); REL_C={src:S._rel,v:S.verifs,out:np.size?S._rel.filter(r=>!np.has(r.panel)):S._rel}; } return REL_C.out; },
+  get(){ if(REL_C.src!==S._rel||REL_C.v!==S.verifs||REL_C.day!==S.day||(S.day&&REL_C.docs!==S.docs)){ const np=npSet(); let out=np.size?S._rel.filter(r=>!np.has(r.panel)):S._rel;
+      if(S.day){ const dd=new Map(S.docs.map(d=>[d.id,d.day||""])); const want=S.day==="none"?"":S.day; out=out.filter(r=>(dd.get(r.cardDocId)||"")===want); }
+      REL_C={src:S._rel,v:S.verifs,day:S.day,docs:S.docs,out}; } return REL_C.out; },
   set(v){ S._rel=v||[]; }});
+const relAllDays=()=>{ const np=npSet(); return np.size?S._rel.filter(r=>!np.has(r.panel)):S._rel; };
 let pdfjs=null;
 
 /* ---------------- capabilities ---------------- */
@@ -2100,7 +2109,7 @@ function subscribeProjects(){
 /* data notifications (documents, runs, decisions…) arrive in bursts: one redraw for the whole burst */
 let RS_T=0; function renderSoon(){ if(RS_T) return; RS_T=setTimeout(()=>{ RS_T=0; render(); },150); }
 function selectProject(pid){
-  S.unsub.forEach(u=>u()); S.unsub=[]; S.pid=pid; S.docs=[]; S.runs=[]; S.rel=[]; S.runId=null; S.verifs={}; S.reports=[]; S.annots=[]; auditChunk=0;
+  S.unsub.forEach(u=>u()); S.unsub=[]; S.pid=pid; S.day=null; S.docs=[]; S.runs=[]; S.rel=[]; S.runId=null; S.verifs={}; S.reports=[]; S.annots=[]; auditChunk=0;
   try{ localStorage.setItem("ap.pid",pid); }catch{}
   const base=`projects/${pid}`;
   S.unsub.push(S.db.collection(base+"/documents").onSnapshot(s=>{ S.docs=s.docs.map(d=>({id:d.id,...d.data()})); renderSoon();
@@ -2229,7 +2238,7 @@ function compile(p){
   LEARNED_VERBS=kb.phrases.filter(on).map(x=>[x.action,new RegExp("\\b"+escRx(x.text).replace(/ /g,"\\s+")+"\\b","g"),x]);
   return {panel:new RegExp(P.panel,"g"),card,zone,figure:new RegExp(P.figure,"i"),title:new RegExp(P.title,"i"),cardLabels,zoneLabels,panelTest:/[1-8][0-9]{2} ?[A-Z]{2}/,
     excl,exclTokens:new Set(kb.exclusions.filter(x=>on(x)&&x.kind==="token").map(x=>x.text)),kb,
-    units:list(P.units),access:list(P.accessWords),low:+P.ocrLowConf||85,minWords:+P.minWords||5,ocrOn:String(P.ocr??"ON").toUpperCase()!=="OFF",scanMode:String(P.scanMode||"BALANCED").toUpperCase()};
+    units:list(P.units),access:list(P.accessWords),low:+P.ocrLowConf||85,minWords:+P.minWords||5,ocrOn:String(P.ocr??"ON").toUpperCase()!=="OFF",scanMode:String(P.scanMode||"FAST").toUpperCase()};
 }
 /* ---------------- built-in OCR (offline) ----------------
    Scanned pages (no text layer) are rendered at ~300 dpi, cleaned (grayscale, 3x3 median,
@@ -2370,7 +2379,7 @@ function labelHunt(bin,w,h,dpi,dbg,orphans=true,known=[],want=null,have=null){
   const inside=(c,gs)=>gs.some(g=>c.x0>=g.x0-2&&c.x1<=g.x1+2&&c.y0>=g.y0-2&&c.y1<=g.y1+2);
   const seen=[];
   let orphanReads=0;
-  if(orphans && !done()) for(const c of H){ if(inside(c,gh)) continue; if(done()) break; if(covered(c)){ labelHunt.skipped++; continue; } if(++orphanReads>60) break; const sz=c.h; if(seen.some(q=>Math.abs(q.x-c.x0)<sz*2&&Math.abs(q.y-c.y0)<sz)) continue; seen.push({x:c.x0,y:c.y0});
+  if(orphans && !done()) for(const c of H){ if(inside(c,gh)) continue; if(done()) break; if(covered(c)){ labelHunt.skipped++; continue; } if(++orphanReads>(orphans===true?60:+orphans)) break; const sz=c.h; if(seen.some(q=>Math.abs(q.x-c.x0)<sz*2&&Math.abs(q.y-c.y0)<sz)) continue; seen.push({x:c.x0,y:c.y0});
     read({x0:Math.max(0,c.x0-Math.round(sz*2.6)),x1:Math.min(w-1,c.x1+Math.round(sz*2.6)),y0:c.y0,y1:c.y1,sz,n:1},false); }
   for(const g of gv) if(!done() && g.n>=3 && (g.y1-g.y0)<=g.sz*9 && !gh.some(q=>q.n>=3&&q.x0<=g.x1&&q.x1>=g.x0&&q.y0<=g.y1&&q.y1>=g.y0)){ if(covered(g)){ labelHunt.skipped++; continue; } read(g,true); }
   const uniq=[]; for(const r of res.sort((a,b)=>b.conf-a.conf)){ if(uniq.some(u=>u.text===r.text && Math.abs(u.x-r.x)<r.h*4 && Math.abs(u.y-r.y)<r.h*4)) continue; if(uniq.some(u=>u.x<r.x+r.w&&r.x<u.x+u.w&&u.y<r.y+r.h&&r.y<u.y+u.h)) continue; uniq.push(r); }
@@ -2419,7 +2428,7 @@ onmessage=async e=>{ const d=e.data; try{
     if(skipHunt){ wpartial=true; tried.push({mode:"hunt",ms:0,skipped:true,want:wantHere.length}); }
     if(d.figure && d.hunt!==false && !skipHunt){ // label hunt on the cleaned binary image (same orientation as the page read)
       const BB=rotate(P.bin,d.w,d.h,rot0); let hunted=[]; try{ const known=merged.filter(o=>!o.alt && ((idShape(o.text)===2 && o.conf>=88) || (/^[A-Z]{3,}[.:,]?$/.test(o.text) && o.conf>=90)));
-      const th=Date.now(); hunted=labelHunt(BB.b,BB.w,BB.h,d.dpi||300,!!d.debug,d.huntOrphans!==false,known,wantHere,have); if(labelHunt.early) wpartial=true; tried.push({mode:"hunt",ms:Date.now()-th,n:hunted.length,early:labelHunt.early,reads:labelHunt.reads}); }catch(e){ hunted=[]; }
+      const th=Date.now(); hunted=labelHunt(BB.b,BB.w,BB.h,d.dpi||300,!!d.debug,d.huntOrphans===false?false:(d.huntOrphans===true||d.huntOrphans==null?true:+d.huntOrphans),known,wantHere,have); if(labelHunt.early) wpartial=true; tried.push({mode:"hunt",ms:Date.now()-th,n:hunted.length,early:labelHunt.early,reads:labelHunt.reads}); }catch(e){ hunted=[]; }
       for(const q of hunted){ const hit=merged.filter(o=>ov(o,q)>0.3); if(!hit.length){ merged.push(q); continue; }
         // a hunted ID replaces an overlapping non-ID / weaker read of the same label
         const weak=hit.filter(o=>!/[1-8][0-9]{2}[A-Z]{0,3}/.test(o.text)||o.conf<q.conf-10); if(weak.length===hit.length){ for(const o of hit) merged.splice(merged.indexOf(o),1); merged.push(q); } }
@@ -2492,12 +2501,13 @@ function ocrReady(){
   OCR.ready.catch(e=>{ OCR.lastError=e.message; OCR.ready=null; OCR.pool=[]; });
   return OCR.ready;
 }
-/* scan modes: FAST = one read per page, OCR only where the text layer is missing;
-   BALANCED (default) = figures always scanned with label hunt, cards scanned when they are images / garbage text;
-   FULL = every page of every document, double read and full label hunt */
+/* scan modes: FAST (default) = one read per page, OCR only where the text layer is missing;
+   BALANCED = also figure pages with scanned images or with labels that are not text, with label hunt;
+   FULL = every page with any image, no early stop, second read when the first is doubtful, full label hunt.
+   Pages that are fully digital (exact text, labels included) are never re-read by OCR: it cannot add anything. */
 const SCAN_MODES={FAST:{label:"Rápido",icon:"⚡",dpiCard:250,dpiFig:330,dual:"never",hunt:true,orphans:false},
-  BALANCED:{label:"Equilibrado",icon:"⚖",dpiCard:300,dpiFig:400,dual:"auto",hunt:true,orphans:true},
-  FULL:{label:"Completo",icon:"🔍",dpiCard:300,dpiFig:400,dual:"always",hunt:true,orphans:true}};
+  BALANCED:{label:"Equilibrado",icon:"⚖",dpiCard:300,dpiFig:400,dual:"auto",hunt:true,orphans:24},
+  FULL:{label:"Completo",icon:"🔍",dpiCard:300,dpiFig:400,dual:"auto",hunt:true,orphans:true}};
 /* OCR one pdf.js page. Returns words in the coordinate frame of the page rotated by `rot` (clockwise), scale 1. */
 /* limits how many page images are rendered/queued at once (memory) */
 const RSEM={n:0,q:[]}; const rAcquire=async lim=>{ while(RSEM.n>=lim) await new Promise(r=>RSEM.q.push(r)); RSEM.n++; }; const rRelease=()=>{ RSEM.n--; const f=RSEM.q.shift(); if(f) f(); };
@@ -2784,7 +2794,7 @@ async function extractDocument(doc, ver, onPage){
   const head=new TextDecoder().decode(bytes.slice(0,1024));
   if(!head.includes("%PDF-")) throw new Error("El archivo no tiene firma PDF válida");
   const lib=await loadPdfjs(); const pdf=await openPdf(bytes);
-  const isCard=doc.category==="CARDS"; const mode=SCAN_MODES[C.scanMode]?C.scanMode:"BALANCED";
+  const isCard=doc.category==="CARDS"; const mode=SCAN_MODES[C.scanMode]?C.scanMode:"FAST";
   const pre=[];
   try{
     // 1) text layer + image coverage of every page, and the decision "does this page need OCR?"
@@ -2798,7 +2808,11 @@ async function extractDocument(doc, ver, onPage){
       const garbage=textWords.length>=8 && tokOk/textWords.length<0.6;
       // the text layer alone is enough only for real digital pages (scans with a scanner footer / stamp are not)
       const textUseful = !garbage && (textWords.length>=60 || (textWords.length>=C.minWords && cov<0.35) || (cov>=0.35 && textWords.length>=25 && C.panelTest.test(allText)));
-      const need = C.ocrOn && hasOcr() && (mode==="FULL" || !textUseful || (mode==="BALANCED" && !isCard));
+      // OCR only where it can add something: a digital page whose access labels already come as exact text gains nothing from it
+      const idsInText=textWords.some(w=>/^\(?[1-8][0-9]{2}[A-Z]{2,3}[.,;:)]?$/.test(w.text));
+      const need = C.ocrOn && hasOcr() && (!textUseful
+        || (mode==="BALANCED" && !isCard && (cov>=0.15 || !idsInText))
+        || (mode==="FULL" && (cov>=0.05 || (!isCard && !idsInText))));
       // upright digital text → the OCR does not need to search the orientation
       const knownRot = (!garbage && textWords.length>=C.minWords && !textWords.some(w=>/rotated/.test(w.method))) ? 0 : null;
       pre.push({i,page,vp,textWords,cov,garbage,textUseful,need,knownRot});
@@ -3079,7 +3093,7 @@ async function analyzeProject({reprocess=false}={}){
   const todo=active.filter(d=>reprocess || d.processedVersion!==d.activeVersion || d.status==="UPLOADED" || d.status==="OCR_REQUIRED" || (d.processedEngine||"1.0.0")!==ENGINE);
   S.proc={total:todo.length,done:0,current:"",ok:0,review:0,log:[],phase:"PROCESSING DOCUMENTS",batch:1};
   audit("ANALYSIS_STARTED",`${todo.length} documents to process`); render();
-  S.proc.t0=Date.now(); S.proc.cur=new Map(); S.proc.mode=(SCAN_MODES[compile(p.patterns).scanMode]?compile(p.patterns).scanMode:"BALANCED");
+  S.proc.t0=Date.now(); S.proc.cur=new Map(); S.proc.mode=(SCAN_MODES[compile(p.patterns).scanMode]?compile(p.patterns).scanMode:"FAST");
   // several documents at the same time (each one also spreads its pages over the OCR engine pool)
   let par=1; if(hasOcr() && compile(p.patterns).ocrOn){ try{ await ocrReady(); par=Math.max(1,OCR.pool.length); }catch{} } S.proc.engines=par; render();
   const one=async(d)=>{ const ver=d.versions.find(v=>v.v===d.activeVersion);
@@ -3167,7 +3181,8 @@ async function buildRun(){
 function logicalName(fn){ return fn.replace(/\.pdf$/i,"").trim().toUpperCase().replace(/[\s_]+/g,"_"); }
 async function uploadFiles(files, category){
   if(!canUpload()){ toast("Solo ADMIN / SUPERVISOR con permiso de edición puede cargar documentos."); return; }
-  const list=[...files]; let n=0; S.proc={total:list.length,done:0,current:"",ok:0,review:0,log:[],phase:"UPLOADING"}; render();
+  const list=[...files]; let n=0; const day=category==="CARDS"?(document.getElementById("card_day")?.value||S.cardDay||todayLocal()):null; if(day) S.cardDay=day;
+  S.proc={total:list.length,done:0,current:"",ok:0,review:0,log:[],phase:"UPLOADING"}; render();
   warmOcr(); // OCR engines start while the files are being received
   for(const f of list){
     S.proc.current=f.name; renderProgress();
@@ -3179,12 +3194,15 @@ async function uploadFiles(files, category){
       const hash=await sha256(buf);
       const name=logicalName(f.name);
       const existing=S.docs.find(d=>d.category===category && d.logicalName===name);
-      if(existing?.versions?.some(v=>v.sha256===hash)){ S.proc.log.push({file:f.name,problem:"Identical file already uploaded (same SHA-256).",action:"Skipped — no duplicate created."}); S.proc.done++; continue; }
+      if(existing?.versions?.some(v=>v.sha256===hash)){
+        if(day&&existing.day!==day){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({day,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${name} → ${day}`); S.proc.log.push({file:f.name,problem:`Ya estaba cargada; se movió al día ${dayLabel(day)}.`,action:"Sin duplicar el archivo."}); n++; S.proc.ok++; }
+        else S.proc.log.push({file:f.name,problem:"Identical file already uploaded (same SHA-256).",action:"Skipped — no duplicate created."});
+        S.proc.done++; continue; }
       const up=await S.assets.upload(new Blob([buf],{type:"application/pdf"}),{type:"application/pdf"});
       S.bytes.set(up.id,buf);
       const ver={v:(existing?.versions?.length||0)+1,assetId:up.id,sha256:hash,size:f.size,fileName:f.name,uploadedBy:S.me.id,uploadedAt:nowIso()};
-      if(existing){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({versions:[...existing.versions,ver],activeVersion:ver.v,status:"UPLOADED",updatedAt:nowIso()}); audit("DOCUMENT_NEW_VERSION",`${name} v${ver.v}`); }
-      else { const id=name.replace(/[^A-Za-z0-9_.~:@+-]/g,"_").slice(0,80)+"-"+category.slice(0,3); await S.db.doc(`projects/${S.pid}/documents/${id}`).set({category,logicalName:name,versions:[ver],activeVersion:1,status:"UPLOADED",createdAt:nowIso(),updatedAt:nowIso()}); audit("DOCUMENT_UPLOADED",`${f.name} → ${CATS[category]}`); }
+      if(existing){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({versions:[...existing.versions,ver],activeVersion:ver.v,status:"UPLOADED",updatedAt:nowIso(),...(day?{day}:{})}); audit("DOCUMENT_NEW_VERSION",`${name} v${ver.v}`); }
+      else { const id=name.replace(/[^A-Za-z0-9_.~:@+-]/g,"_").slice(0,80)+"-"+category.slice(0,3); await S.db.doc(`projects/${S.pid}/documents/${id}`).set({category,logicalName:name,versions:[ver],activeVersion:1,status:"UPLOADED",createdAt:nowIso(),updatedAt:nowIso(),...(day?{day}:{})}); audit("DOCUMENT_UPLOADED",`${f.name} → ${CATS[category]}`); }
       n++; S.proc.ok++;
     }catch(e){ S.proc.review++; S.proc.log.push({file:f.name,problem:e?.message||e?.code||String(e),action:"Not stored. Fix and upload again."}); audit("UPLOAD_ERROR",f.name,e?.message||String(e)); }
     S.proc.done++; renderProgress();
@@ -3545,7 +3563,7 @@ async function makeRemovalImages(final){
   const snapshot=JSON.stringify({type:"REMOVAL_IMAGES",final,run:S.runId,sheets:imgs.map(i=>i.g.key),ids:imgs.flatMap(i=>i.g.items.map(q=>q.x.panel))}); const snapHash=(await sha256(new TextEncoder().encode(snapshot))).slice(0,16);
   pages.forEach((pg,i)=>{ pg.drawText(latin(`Snapshot ${snapHash}  |  ${S.runId}  |  ${nameOf(S.me.id)}  |  Page ${i+1}/${pages.length}  |  ${DISCLAIMER}`).slice(0,190),{x:ML,y:18,size:5.8,font:F,color:hex("#7A889B")}); });
   await pdfGuestMark(doc);
-  return {bytes:await doc.save(),snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_Access_Panels_To_Remove_${final?"FINAL":"DRAFT"}_${new Date().toISOString().slice(0,10)}.pdf`};
+  return {bytes:await doc.save(),snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_Access_Panels_To_Remove_${final?"FINAL":"DRAFT"}${S.day?"_DIA_"+S.day:""}_${todayLocal()}.pdf`};
 }
 async function makeReport(type, final){
   if(type==="REMOVAL") return makeRemovalImages(final);
@@ -3569,7 +3587,7 @@ async function makeReport(type, final){
   text(title,ML,20,B); y-=16;
   text(final?"FINAL - authorized":"DRAFT - pending authorization",ML,10,B,final?"#2E8B57":"#D93A3F"); y-=22;
   const c=counts(rel);
-  const info=[["Aircraft",p.aircraftType],["Registration",p.registration],["MSN",p.msn],["Project",p.name],["Customer",p.customer],["Maintenance event",p.event],["Date",new Date().toISOString().slice(0,10)],
+  const info=[["Aircraft",p.aircraftType],["Registration",p.registration],["MSN",p.msn],["Project",p.name],["Customer",p.customer],["Maintenance event",p.event],["Date",todayLocal()],...(S.day?[["Inspection day",S.day==="none"?"cards without day":S.day]]:[]),
     ["Number of cards",String(run?.qc?.cardsProcessed??"")],["Access Panel requests",String(rel.length)],["Unique physical Access Panels",String(phys.length)],["Analysis run",`${S.runId} (engine ${run?.engine||ENGINE})`]];
   for(const [k,v] of info){ text(k.toUpperCase(),ML,8.5,B,"#7A889B"); text(v||"-",ML+180,10); y-=14; }
   y-=4; text(`Confirmed ${c.CONFIRMED+c.VERIFIED}   Requires verification ${c.REQUIRES_VERIFICATION}   Discrepancy ${c.DISCREPANCY}   Not found ${c.NOT_FOUND}`,ML,10,B); y-=22;
@@ -3601,7 +3619,7 @@ async function makeReport(type, final){
     pg.drawText(latin(DISCLAIMER),{x:ML,y:34,size:6.8,font:F,color:hex("#4A5A70"),maxWidth:W-ML-MR});
     pg.drawText(latin(`Snapshot ${snapHash}  |  Generated ${new Date().toISOString().slice(0,16).replace("T"," ")} UTC by ${nameOf(S.me.id)}  |  Page ${i+1}/${pages.length}`),{x:ML,y:20,size:7,font:F,color:hex("#7A889B")}); });
   await pdfGuestMark(doc); const bytes=await doc.save();
-  return {bytes,snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_${{REMOVAL:"Removal_List",TRACE:"Traceability",VERIFY:"Verification"}[type]}_${final?"FINAL":"DRAFT"}_${new Date().toISOString().slice(0,10)}.pdf`};
+  return {bytes,snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_${{REMOVAL:"Removal_List",TRACE:"Traceability",VERIFY:"Verification"}[type]}_${final?"FINAL":"DRAFT"}${S.day?"_DIA_"+S.day:""}_${todayLocal()}.pdf`};
 }
 async function makeAnnotatedFigures(){
   const {PDFDocument,rgb,StandardFonts}=await pdfLib(); const out=await PDFDocument.create(); const B=await out.embedFont(StandardFonts.HelveticaBold);
@@ -3621,7 +3639,7 @@ async function makeAnnotatedFigures(){
     }
   }
   if(!out.getPageCount()) throw new Error("No hay figuras con Access Panels identificados.");
-  return {bytes:await out.save(),name:`${(proj().registration||"AC")}_Annotated_Figures_${new Date().toISOString().slice(0,10)}.pdf`};
+  return {bytes:await out.save(),name:`${(proj().registration||"AC")}_Annotated_Figures_${todayLocal()}.pdf`};
 }
 async function offerFile(name,bytes){
   if(!S.downloads){ toast("La descarga no está disponible en esta vista."); return false; }
@@ -3726,23 +3744,32 @@ async function qrLabelsPdf(list,mode,links){
   return new Uint8Array(await doc.save()); }
 const vToken=()=>{ const a=crypto.getRandomValues(new Uint8Array(16)); return clB64(a).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); };
 async function qrPublishLinks(list,days,onP){
-  const p=proj()||{}; const exp=new Date(Date.now()+days*864e5).toISOString(); const base=location.origin+location.pathname+"#v/";
-  const {groups}=sheetGroups(list); const cache=new Map(), traces=new Map(); const links={}, tokens=[]; let writes=[], i=0;
-  for(const g of groups) for(const it of g.items){ const x=it.x; onP?.(++i,list.length,x.panel);
-    let img=null; try{ const cv=await sheetImageCanvas(g,cache,traces,1300,x.panel); if(cv) img=await canvasJpeg(cv,.72); }catch(e){ console.warn(e); }
-    const t=vToken(); tokens.push(t); links[x.panel]=base+t;
-    const data={panel:x.panel,zone:String(x.zoneResolved||x.major||""),zname:ZONE_NAMES[x.major]||"",figure:String(g.ref.figure||""),page:g.ref.page||0,cards:(x.cards||[]).slice(0,6).join(" · "),reg:p.registration||"",type:p.aircraftType||"",exp:{__ts:exp},by:S.me.name||"",...(WB.uid?{byUid:WB.uid}:{})};
-    if(img&&img.length<900000) data.img=img;
-    writes.push(fsW(`verify/${t}`,data)); if(writes.length>=6){ await fsCommit(writes); writes=[]; } }
-  for(const x of list.filter(x=>!links[x.panel])){ const t=vToken(); tokens.push(t); links[x.panel]=base+t; writes.push(fsW(`verify/${t}`,{...(WB.uid?{byUid:WB.uid}:{}),panel:x.panel,zone:String(x.zoneResolved||x.major||""),zname:ZONE_NAMES[x.major]||"",figure:"",page:0,cards:(x.cards||[]).join(" · "),reg:p.registration||"",type:p.aircraftType||"",exp:{__ts:exp},by:S.me.name||""})); }
-  if(writes.length) await fsCommit(writes);
-  const ld=qrListDoc(); const prev=await qrListGet(ld);
-  await qrListSet(ld,{tokens:[...prev,...tokens],exp,at:nowIso(),by:S.me.name||"",email:WB.email||""}); audit("QR_LINKS_PUBLISHED",`${tokens.length} enlaces · vence ${exp.slice(0,10)}`);
+  const p=proj()||{}; const now=Date.now(); const exp=new Date(now+days*864e5).toISOString(); const base=location.origin+location.pathname+"#v/";
+  const ld=qrListDoc(); const prevDoc=await qrListGet(ld,true); const prevMap=prevDoc.map||{};
+  // links already published for this same analysis that are still valid for the chosen period are reused (no redraw, no upload)
+  const reuse=x=>{ const o=prevMap[x.panel]; return o&&o.run===S.runId&&Date.parse(o.exp)>=Date.parse(exp)-864e5&&(prevDoc.tokens||[]).includes(o.t)?o:null; };
+  const links={}, tokens=[], map={...prevMap}; let reused=0;
+  for(const x of list){ const o=reuse(x); if(o){ links[x.panel]=base+o.t; reused++; } }
+  const fresh=list.filter(x=>!links[x.panel]);
+  const {groups}=sheetGroups(fresh); const cache=new Map(), traces=new Map(); let writes=[], i=reused;
+  // uploads run in the background (max. 2 at a time) while the next images are drawn
+  const inflight=[]; let upErr=null;
+  const flush=async(force)=>{ if(writes.length&&(force||writes.length>=6)){ const w=writes; writes=[]; inflight.push(fsCommit(w).catch(e=>{ upErr=upErr||e; })); }
+    while(inflight.length>(force?0:2)) await inflight.shift(); if(upErr) throw upErr; };
+  const meta=(x,g)=>({panel:x.panel,zone:String(x.zoneResolved||x.major||""),zname:ZONE_NAMES[x.major]||"",figure:String(g?.ref?.figure||""),page:g?.ref?.page||0,cards:(x.cards||[]).slice(0,6).join(" · "),reg:p.registration||"",type:p.aircraftType||"",exp:{__ts:exp},by:S.me.name||"",...(WB.uid?{byUid:WB.uid}:{})});
+  const add=(x,data)=>{ const t=vToken(); tokens.push(t); links[x.panel]=base+t; map[x.panel]={t,exp,run:S.runId}; writes.push(fsW(`verify/${t}`,data)); };
+  for(const g of groups) for(const it of g.items){ const x=it.x; onP?.(++i,list.length,x.panel,reused);
+    let img=null; try{ const cv=await sheetImageCanvas(g,cache,traces,1100,x.panel); if(cv) img=await canvasJpeg(cv,.72); }catch(e){ console.warn(e); }
+    const data=meta(x,g); if(img&&img.length<900000) data.img=img; add(x,data); await flush(false); }
+  for(const x of fresh.filter(x=>!links[x.panel])) add(x,meta(x,null));
+  await flush(true);
+  await qrListSet(ld,{tokens:[...(prevDoc.tokens||[]),...tokens],map,exp,at:nowIso(),by:S.me.name||"",email:WB.email||""}); audit("QR_LINKS_PUBLISHED",`${tokens.length} enlaces nuevos${reused?` · ${reused} reutilizados`:""} · vence ${exp.slice(0,10)}`);
+  links.__reused=reused;
   if(!FM.webOwner) accessLog("qr",`${tokens.length} etiquetas · ${p.registration||S.pid}`); return links; }
 /* where the list of published links is kept: the owner in «main», each invitee in their own list */
 const qrListDoc=()=>`projects/${S.pid}/qrlinks/${FM.web&&!FM.webOwner&&WB.uid?"u_"+WB.uid:"main"}`;
 // on the web these lists live directly on the server (only authorized people read them), so the owner sees the invitees' links
-async function qrListGet(path){ if(FM.web){ const d=await fsGet(path); return d?.data?.tokens||[]; } return (await S.db.doc(path).get()).data()?.tokens||[]; }
+async function qrListGet(path,full){ const d=FM.web?(await fsGet(path))?.data:(await S.db.doc(path).get()).data(); return full?(d||{}):(d?.tokens||[]); }
 async function qrListSet(path,data){ if(FM.web) return fsCommit([fsW(path,data)]); return S.db.doc(path).set(data); }
 async function qrDisableLinks(){
   // owner: every list in the project (his own and the invitees'); invitee: only their own list
@@ -3764,10 +3791,10 @@ function qrDialog(){ const list=removalList(); if(!S.runId||!list.length){ toast
   m.querySelectorAll('input[name=qrmode]').forEach(r=>r.addEventListener("change",()=>{ $("#qrdays").hidden=$('input[name=qrmode]:checked').value!=="draw"; }));
   $("#qr_off")?.addEventListener("click",async ev=>{ const b=ev.target; if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="¿Desactivar todos? Toque otra vez"; return; } b.disabled=true; try{ const n=await qrDisableLinks(); $("#qr_msg").innerHTML=`<div class="auth-note">${n} enlace(s) desactivados. Los QR con dibujo ya impresos dejan de mostrar el dibujo.</div>`; }catch(e){ $("#qr_msg").innerHTML=`<div class="auth-err">${esc(e.message)}</div>`; } b.disabled=false; });
   $("#qr_go").addEventListener("click",async ev=>{ const b=ev.target; b.disabled=true; const mode=$('input[name=qrmode]:checked').value; const msg=$("#qr_msg");
-    try{ let links=null; if(mode==="draw"){ links=await qrPublishLinks(list,+$("#qr_days").value,(i,n,id)=>{ msg.innerHTML=`<div class="auth-note">Publicando dibujos… ${i}/${n} · ${esc(id)}</div>`; }); }
+    try{ let links=null; if(mode==="draw"){ links=await qrPublishLinks(list,+$("#qr_days").value,(i,n,id,ru)=>{ msg.innerHTML=`<div class="auth-note">Publicando dibujos… ${i}/${n} · ${esc(id)}${ru?` · ${ru} ya publicados (reutilizados)`:""}</div>`; }); }
       msg.innerHTML=`<div class="auth-note">Creando hoja de etiquetas…</div>`; const bytes=await qrLabelsPdf(list,mode,links);
       audit("QR_LABELS_CREATED",`${list.length} accesos · ${mode==="draw"?"con dibujo":"sin dibujo"}`);
-      await reportPreview(`${safeName((proj()?.registration||"AC")+"_"+(proj()?.name||""))}_Etiquetas_QR_${mode==="draw"?"con_dibujo":"sin_dibujo"}_${new Date().toISOString().slice(0,10)}.pdf`,bytes,false,"Etiquetas QR"); }
+      await reportPreview(`${safeName((proj()?.registration||"AC")+"_"+(proj()?.name||""))}_Etiquetas_QR_${mode==="draw"?"con_dibujo":"sin_dibujo"}${S.day?"_DIA_"+S.day:""}_${todayLocal()}.pdf`,bytes,false,"Etiquetas QR"); }
     catch(e){ console.error(e); msg.innerHTML=`<div class="auth-err">${esc(e.code==="PERMISSION_DENIED"&&mode==="draw"?(FM.webOwner?"El servidor todavía no permite publicar los dibujos: publique las reglas nuevas (v4). Están en la pantalla de inicio, tarjeta «Reglas de seguridad del servidor».":"El servidor todavía no permite que las personas invitadas publiquen dibujos. Pida al propietario que publique las reglas nuevas (v4). Mientras tanto puede usar las etiquetas «Sin dibujo»."):e.message)}</div>`; b.disabled=false; } }); }
 /* public verification page (#v/<token>): read-only, no sign-in, nothing else of the platform */
 async function showVerify(t){ document.querySelector("#app").hidden=true; const a=document.querySelector("#auth"); a.hidden=false; document.querySelector(".boot")?.remove();
@@ -3868,6 +3895,20 @@ function eicasCard(){
    </div></div></section>`;
 }
 /* ---------------- views ---------------- */
+function dayBanner(){ if(!S.day||!proj()) return ""; const n=S.docs.filter(d=>d.category==="CARDS"&&(d.day||"")===(S.day==="none"?"":S.day)).length;
+  return `<div class="banner row daybanner"><span>Mostrando solo <b>${esc(S.day==="none"?"tarjetas sin día":dayLabel(S.day))}</b> · ${n} tarjeta(s) · ${physicalOf(S.rel).filter(x=>x.decision==="REMOVE"||x.decision==="REMOVE_PENDING").length} acceso(s) a remover</span><span class="sp"></span><button class="btn sm" data-day="">Ver todos los días</button></div>`; }
+/* «Inspección por día»: what each day's cards ask to remove; «nuevos» = not already opened on an earlier day */
+function dayPlanCard(){ const cards=S.docs.filter(d=>d.category==="CARDS"); if(!cards.length) return "";
+  const days=[...new Set(cards.map(d=>d.day||""))].sort(); if(days.length<2&&!days[0]&&!S.day) return "";
+  const all=relAllDays(); const dd=new Map(cards.map(d=>[d.id,d.day||""])); const seen=new Set(); const dated=days.filter(Boolean); const rows=[];
+  for(const day of [...dated,...(days.includes("")?[""]:[])]){ const rel=all.filter(r=>(dd.get(r.cardDocId)||"")===day); const phys=physicalOf(rel).filter(x=>x.decision==="REMOVE"||x.decision==="REMOVE_PENDING");
+    const nuevos=day?phys.filter(x=>!seen.has(x.panel)).length:phys.length; if(day) phys.forEach(x=>seen.add(x.panel));
+    rows.push({day,cards:cards.filter(d=>(d.day||"")===day).length,acc:phys.length,nuevos,pend:phys.filter(x=>x.decision==="REMOVE_PENDING").length}); }
+  const cur=S.day||"";
+  return `<section class="card dayplan"><div class="hd"><h2>Inspección por día</h2><span class="sp"></span>${S.day?`<button class="btn sm" data-day="">Ver todos los días</button>`:""}</div><div class="bd">
+    <div class="tbl-wrap"><table><thead><tr><th>Día</th><th>Tarjetas</th><th>Accesos a remover</th><th>Nuevos ese día</th><th>Pendientes de verificar</th><th></th></tr></thead><tbody>
+    ${rows.reverse().map(r=>`<tr class="${(r.day||"none")===cur?"on":""}"><td><b>${esc(dayLabel(r.day))}</b></td><td class="mono">${r.cards}</td><td class="mono"><b>${r.acc}</b></td><td class="mono">${r.day?r.nuevos:"—"}</td><td class="mono">${r.pend}</td><td>${(r.day||"none")===cur?`<span class="pill s-CONFIRMED">Mostrando</span>`:`<button class="btn sm ${r.day===todayLocal()?"pri":""}" data-day="${r.day||"none"}">Ver este día</button>`}</td></tr>`).join("")}</tbody></table></div>
+    <p class="small muted" style="margin:8px 0 0">«Nuevos ese día» = accesos que no se abrieron en un día anterior. Al elegir un día, toda la app (zonas, avión 3D, lista, reportes y QR) muestra solo los accesos de ese día.</p></div></section>`; }
 function vDashboard(){
   const p=proj();
   if(!p) return vWelcome();
@@ -3881,7 +3922,7 @@ function vDashboard(){
   const tot=phys.length||1; const bar=["CONFIRMED","VERIFIED","REQUIRES_VERIFICATION","DISCREPANCY","NOT_FOUND"].map(s=>`<i style="width:${pc[s]/tot*100}%;background:${ST_COLOR[s]}" title="${ST_LABEL[s]} ${pc[s]}"></i>`).join("");
   const lastRep=S.reports[0]; const run=S.runs.find(r=>r.id===S.runId);
   const stale=S.docs.some(d=>d.category!=="SUPPORT" && d.processedVersion!==d.activeVersion && d.status!=="REQUIRES_REVIEW");
-  return `
+  return `${dayPlanCard()}
   ${S.integrityWarning?`<div class="banner" style="border-left-color:var(--st-dis)"><b>Advertencia de integridad:</b> este archivo fue modificado por alguien sin la contraseña de administrador después del último guardado del administrador. Revise el historial y los resultados antes de usarlos.</div>`:""}${FM.demo?`<div class="banner">Demostración con datos sintéticos: no se guarda.</div>`:S.fileRole!=="ADMIN"?`<div class="banner info">Modo CONSULTA (solo lectura). Los cambios solo los hace el administrador.</div>`:FM.dirty?`<div class="banner row"><span>Hay cambios sin guardar en el archivo. Se guardó una copia cifrada en este equipo; pulse <b>Guardar</b> para descargar el archivo actualizado y compartirlo.</span><span class="sp"></span><button class="btn pri sm" data-act="save">Guardar archivo</button></div>`:""}
   ${procBlock()}
   ${stale && isAdmin() && !S.proc?`<div class="banner info row"><span>Hay documentos nuevos o versiones sin analizar.</span><span class="sp"></span><button class="btn pri sm" data-act="analyze">Start analysis</button></div>`:""}
@@ -3949,21 +3990,22 @@ function vDocuments(){
   const grp=cat=>S.docs.filter(d=>d.category===cat).sort((a,b)=>a.logicalName.localeCompare(b.logicalName));
   const stPill=d=>d.status==="PROCESSED"&&d.processedVersion===d.activeVersion?pill("OK",d.ocrReadPages?.length?"Procesado · OCR":"Procesado"):d.status==="OCR_REQUIRED"?pill("PENDING","Releyendo…"):d.status==="REQUIRES_REVIEW"?pill("DISCREPANCY","Requires review"):pill("PENDING",d.category==="SUPPORT"?"Stored":"Pending analysis");
   const table=cat=>{ const L=grp(cat); return `<div class="tbl-wrap"><table><thead><tr><th>Document</th><th>Active</th><th>Versions</th><th>Pages</th><th>Status</th><th>SHA-256 (active)</th><th></th></tr></thead><tbody>
-    ${L.map(d=>{ const av=d.versions.find(v=>v.v===d.activeVersion)||{}; return `<tr><td><b class="mono">${esc(d.logicalName)}</b><div class="small muted">${esc(av.fileName||"")} · ${fmtDate(av.uploadedAt)} · ${esc(nameOf(av.uploadedBy))}</div>${d.error?`<div class="small bad">${esc(d.error)}</div>`:""}${d.ocrReadPages?.length?`<div class="small">Leído con OCR: p. ${d.ocrReadPages.join(", ")} · confianza media ${d.ocrMean}%</div>`:""}${d.rotatedPages?.length?`<div class="small">Orientación corregida: ${d.rotatedPages.join(", ")}</div>`:""}${d.blankPages?.length?`<div class="small muted">En blanco: p. ${d.blankPages.join(", ")}</div>`:""}${d.ocrPages?.length?`<div class="small">Imagen sin texto legible: p. ${d.ocrPages.join(", ")}${d.aiPages?.length?` · AI read: ${d.aiPages.join(", ")}`:""}</div>`:""}</td>
+    ${L.map(d=>{ const av=d.versions.find(v=>v.v===d.activeVersion)||{}; return `<tr><td><b class="mono">${esc(d.logicalName)}</b><div class="small muted">${esc(av.fileName||"")} · ${fmtDate(av.uploadedAt)} · ${esc(nameOf(av.uploadedBy))}</div>${d.category==="CARDS"?`<div class="small">Día: ${canUpload()?`<input type="date" class="cday" data-cardday="${esc(d.id)}" value="${esc(d.day||"")}" aria-label="Día de inspección de ${esc(d.logicalName)}">`:`<b>${esc(dayLabel(d.day))}</b>`}</div>`:""}${d.error?`<div class="small bad">${esc(d.error)}</div>`:""}${d.ocrReadPages?.length?`<div class="small">Leído con OCR: p. ${d.ocrReadPages.join(", ")} · confianza media ${d.ocrMean}%</div>`:""}${d.rotatedPages?.length?`<div class="small">Orientación corregida: ${d.rotatedPages.join(", ")}</div>`:""}${d.blankPages?.length?`<div class="small muted">En blanco: p. ${d.blankPages.join(", ")}</div>`:""}${d.ocrPages?.length?`<div class="small">Imagen sin texto legible: p. ${d.ocrPages.join(", ")}${d.aiPages?.length?` · AI read: ${d.aiPages.join(", ")}`:""}</div>`:""}</td>
      <td class="mono">v${d.activeVersion}</td>
      <td>${d.versions.length>1&&isAdmin()?`<select data-ver="${esc(d.id)}" aria-label="Active version">${d.versions.map(v=>`<option value="${v.v}" ${v.v===d.activeVersion?"selected":""}>v${v.v} · ${esc(v.uploadedAt?.slice(0,10))}</option>`).join("")}</select>`:d.versions.map(v=>"v"+v.v).join(", ")}</td>
      <td class="tab">${d.pages||"—"}</td><td>${stPill(d)}</td><td class="mono small">${esc(av.sha256?.slice(0,16)||"")}…</td>
      <td class="row"><button class="btn sm" data-view="${esc(d.id)}">View</button>${isAdmin()&&d.ocrPages?.length&&S.sample?d.ocrPages.map(pg=>`<button class="btn sm" data-ai="${esc(d.id)}" data-page="${pg}">Leer p.${pg} con IA (propuesta)</button>`).join(""):""}</td></tr>`; }).join("")||`<tr><td colspan="7" class="empty">Sin documentos en esta categoría.</td></tr>`}</tbody></table></div>`; };
-  const PP=proj().patterns||{}; const cm=SCAN_MODES[String(PP.scanMode||"BALANCED").toUpperCase()]?String(PP.scanMode||"BALANCED").toUpperCase():"BALANCED"; const hc=navigator.hardwareConcurrency||2;
-  const desc={FAST:"Solo lee con OCR las páginas escaneadas; una lectura por página. Ideal para tarjetas digitales.",BALANCED:"Figuras de zona siempre escaneadas con búsqueda de rótulos; tarjetas con OCR cuando son imagen. Recomendado.",FULL:"Todas las páginas de todo, doble lectura y búsqueda exhaustiva. Máxima detección, más lento."};
+  const PP=proj().patterns||{}; const cm=SCAN_MODES[String(PP.scanMode||"FAST").toUpperCase()]?String(PP.scanMode||"FAST").toUpperCase():"FAST"; const hc=navigator.hardwareConcurrency||2;
+  const desc={FAST:"Lee con OCR solo las páginas escaneadas; una lectura por página. Lo más rápido; recomendado para empezar.",BALANCED:"Además busca rótulos en las figuras que son imagen o cuyos rótulos no vienen como texto. Úselo si Rápido no encontró algún acceso.",FULL:"Revisa a fondo toda página con imagen, sin atajos, con segunda lectura cuando la primera es dudosa. Para documentos difíciles."};
   const scanCard=`<section class="card"><div class="hd"><h2>Escaneo</h2><span class="sp"></span><span class="small muted">El OCR ya leído se guarda en caché: re-analizar es inmediato.</span></div>
-   <div class="bd" style="display:flex;flex-direction:column;gap:12px"><div class="scanmodes" role="radiogroup" aria-label="Modo de escaneo">${Object.entries(SCAN_MODES).map(([k,m])=>`<button role="radio" aria-checked="${k===cm}" class="smode ${k===cm?"on":""}" data-scanmode="${k}" ${isAdmin()?"":"disabled"}><b>${m.icon} ${esc(m.label)}${k==="BALANCED"?" · recomendado":""}</b><span class="small">${esc(desc[k])}</span></button>`).join("")}</div>
-    <div class="row small"><label for="ocrworkers" class="muted">Motores OCR en paralelo</label><select id="ocrworkers" ${isAdmin()?"":"disabled"}><option value="0" ${!+PP.ocrWorkers?"selected":""}>Automático (${Math.min(4,Math.max(1,Math.floor(hc/2)))} de ${hc} núcleos)</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${+PP.ocrWorkers===n?"selected":""}>${n}</option>`).join("")}</select><span class="muted">Más motores = más rápido (usa más memoria).</span></div></div></section>`;
+   <div class="bd" style="display:flex;flex-direction:column;gap:12px"><div class="scanmodes" role="radiogroup" aria-label="Modo de escaneo">${Object.entries(SCAN_MODES).map(([k,m])=>`<button role="radio" aria-checked="${k===cm}" class="smode ${k===cm?"on":""}" data-scanmode="${k}" ${isAdmin()?"":"disabled"}><b>${m.icon} ${esc(m.label)}${k==="FAST"?" · recomendado":""}</b><span class="small">${esc(desc[k])}</span></button>`).join("")}</div>
+    <div class="row small"><label for="ocrworkers" class="muted">Motores OCR en paralelo</label><select id="ocrworkers" ${isAdmin()?"":"disabled"}><option value="0" ${!+PP.ocrWorkers?"selected":""}>Automático (${Math.min((navigator.deviceMemory||8)<=4?2:6,Math.max(1,hc-1))} de ${hc} núcleos)</option>${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${+PP.ocrWorkers===n?"selected":""}>${n}</option>`).join("")}</select><span class="muted">Más motores = más rápido (usa más memoria).</span></div></div></section>`;
   return `${procBlock()}
   ${scanCard}
   ${canUpload()?`<section class="card"><div class="hd"><h2>Document management</h2></div><div class="bd grid g3">
     ${Object.entries(CATS).map(([k,t])=>`<label class="drop" data-drop="${k}"><div class="eyebrow">${t}</div><p class="small muted">${k==="FIGURES"?"Dibujos, figuras, diagramas, zonas y Access Panel location drawings.":k==="CARDS"?"Tarjetas de inspección inicial y task cards (uno o muchos PDFs).":"Documentación adicional (se guarda y versiona; no se analiza)."}</p><span class="btn sm">Seleccionar PDFs</span><input type="file" accept="application/pdf,.pdf" multiple hidden data-upload="${k}"></label>`).join("")}
-   </div><div class="bd row" style="padding-top:0"><span class="small muted">Máx. 200 MB por archivo · se calcula SHA-256 · un archivo con el mismo nombre crea una nueva versión (no sobrescribe).</span><span class="sp"></span><button class="btn pri" data-act="analyze" ${S.proc&&!/COMPLETE/.test(S.proc.phase)?"disabled":""}>Start analysis</button><button class="btn sm" data-act="reanalyze">Re-process all</button></div></section>`
+   </div><div class="bd row cardday" style="padding-top:0"><label for="card_day"><b>Día de inspección</b> de las tarjetas que cargue:</label><input type="date" id="card_day" value="${esc(S.cardDay||todayLocal())}"><span class="small muted">Las figuras se cargan una sola vez; las tarjetas, por día. Al analizar solo se procesan las nuevas.</span></div>
+   <div class="bd row" style="padding-top:0"><span class="small muted">Máx. 200 MB por archivo · se calcula SHA-256 · un archivo con el mismo nombre crea una nueva versión (no sobrescribe).</span><span class="sp"></span><button class="btn pri" data-act="analyze" ${S.proc&&!/COMPLETE/.test(S.proc.phase)?"disabled":""}>Start analysis</button><button class="btn sm" data-act="reanalyze">Re-process all</button></div></section>`
    :`<div class="banner info">${isAdmin()?"La carga requiere permiso de edición (Editor) en esta página.":"Su rol es "+esc(role())+": puede consultar documentos, no cargarlos."}</div>`}
   ${Object.entries(CATS).map(([k,t])=>`<section class="card"><div class="hd"><h3>${t}</h3><span class="muted small">${grp(k).length} document(s)</span></div>${table(k)}</section>`).join("")}`;
 }
@@ -5328,7 +5370,7 @@ function render(){
   const V={dashboard:vDashboard,projects:()=>proj()||S.projects.length?vProjects():vWelcome(),documents:vDocuments,cards:vCards,zones:vZones,panels:vPanels,figures:vFigures,search:vSearch,verify:vVerify,learning:vLearning,reports:vReports,history:vHistory,settings:vSettings,more:vMore}[S.route]||vDashboard;
   if(RS_T){ clearTimeout(RS_T); RS_T=0; }
   const y=window.scrollY; const active=document.activeElement?.id;
-  $("#view").innerHTML=V();
+  $("#view").innerHTML=dayBanner()+V();
   window.scrollTo({top:y});
   if(active && $("#"+active) && active!=="q"){ const el=$("#"+active); el.focus(); }
   if(S.route==="figures") drawViewer();
@@ -5338,7 +5380,7 @@ function render(){
 
 /* ---------------- events ---------------- */
 document.addEventListener("click", async e=>{
-  const t=e.target.closest("[data-go],[data-act],[data-panel],[data-project],[data-card],[data-zone],[data-fig],[data-fstatus],[data-decide],[data-close],[data-view],[data-ai],[data-dl],[data-run],[data-rmrole],[data-adduser],[data-dvcat],[data-dvdoc],[data-photo],[data-teach],[data-kbtoggle],[data-kbrestore],[data-npshow],[data-kbdel],[data-cardedit],[data-scanmode],[data-accimg]");
+  const t=e.target.closest("[data-go],[data-act],[data-panel],[data-project],[data-card],[data-zone],[data-fig],[data-fstatus],[data-decide],[data-close],[data-view],[data-ai],[data-dl],[data-run],[data-rmrole],[data-adduser],[data-dvcat],[data-dvdoc],[data-photo],[data-teach],[data-kbtoggle],[data-kbrestore],[data-npshow],[data-day],[data-kbdel],[data-cardedit],[data-scanmode],[data-accimg]");
   if(!t) return;
   if(t.dataset.close!==undefined && e.target!==t && !e.target.closest("button[data-close]")) return;
   if(t.tagName==="A") e.preventDefault();
@@ -5347,6 +5389,7 @@ document.addEventListener("click", async e=>{
   if(d.dvcat){ S.viewer.cat=d.dvcat; S.viewer.doc=null; S.viewer.page=null; S.viewer.manual=false; render(); return; }
   if(d.dvdoc){ S.viewer.doc=d.dvdoc; S.viewer.page=null; render(); return; }
   if(d.teach){ const [k,a]=d.teach.split("|"); if(a==="DISMISS"){ if(S.kb.seen[k]) S.kb.seen[k].dismissed=true; kbSave(); } else if(kbLearnPhrase(k,a,"suggestion")){ S.kbPending=(S.kbPending||0)+1; toast(`Aprendido: «${k}» = ${ACT_LABEL[a]}`); } render(); return; }
+  if(d.day!==undefined&&t.matches("[data-day]")){ S.day=d.day||null; S.acCard=null; render(); window.scrollTo({top:0}); toast(S.day?`Mostrando ${S.day==="none"?"tarjetas sin día":dayLabel(S.day)}.`:"Mostrando todos los días."); return; }
   if(d.npshow){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Mostrar otra vez? Toque otra vez"; return; } t.disabled=true;
     try{ const v=S.verifs[d.npshow]; await S.db.doc(`projects/${S.pid}/verifications/${d.npshow}`).delete(); audit("PANEL_NOT_ACCESS_UNDONE",v?.panel||d.npshow,""); toast(`${v?.panel||""} vuelve a mostrarse en este proyecto.`); }catch(err){ toast(err.message); t.disabled=false; } return; }
   if(d.kbrestore){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Restablecer? Toque otra vez"; return; } t.disabled=true; try{ await kbRestore(d.kbrestore); }catch(err){ toast("No se pudo restablecer: "+err.message); } S.kbPending=(S.kbPending||0)+1; render(); return; }
@@ -5450,6 +5493,8 @@ document.addEventListener("submit", async e=>{
 document.addEventListener("change", async e=>{
   const t=e.target;
   if(t.dataset.upload){ const files=t.files; await uploadFiles(files,t.dataset.upload); t.value=""; }
+  if(t.id==="card_day"){ S.cardDay=t.value||todayLocal(); }
+  if(t.dataset.cardday){ const v=t.value||null; try{ await S.db.doc(`projects/${S.pid}/documents/${t.dataset.cardday}`).update({day:v,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${t.dataset.cardday} → ${v||"sin día"}`); toast(v?`Tarjeta movida al ${dayLabel(v)}.`:"Tarjeta sin día."); }catch(err){ toast(err.message); } }
   if(t.id==="ocrworkers"){ const p=proj(); await S.db.doc(`projects/${S.pid}`).update({patterns:{...(p.patterns||{}),ocrWorkers:+t.value}}); toast("Motores OCR: "+(+t.value||"automático")); }
   if(t.dataset.kbimport){ const f=t.files[0]; t.value=""; if(!f) return; try{ const j=JSON.parse(await f.text()); if(!j || !Array.isArray(j.phrases)||!Array.isArray(j.corrections)) throw new Error("No es una base de conocimiento de AeroPanel");
       const before=(S.kb.phrases.length+S.kb.corrections.length+S.kb.exclusions.length); S.kb=kbMerge(S.kb,j); kbSave("knowledge imported: "+f.name); const added=(S.kb.phrases.length+S.kb.corrections.length+S.kb.exclusions.length)-before; S.kbPending=(S.kbPending||0)+Math.max(1,added); toast(`Importado: ${added} regla(s) nueva(s).`); render(); }catch(err){ toast("No se pudo importar: "+err.message,6000); } }
