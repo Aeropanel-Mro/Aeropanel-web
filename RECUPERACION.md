@@ -128,3 +128,12 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - **Bloquear / Desbloquear** por persona. El bloqueo lo aplica el servidor (reglas v3): la persona queda fuera al momento y no puede volver a entrar.
 - **Bloqueo automático**: si una cuenta entra desde más equipos de los permitidos en 24 h. Lo aplica su página mientras usted tenga AeroPlanner abierto (revisa cada minuto). Al desbloquear, el conteo empieza de cero.
 - Requiere las **reglas v3** publicadas en Firebase. Si faltan, la tarjeta «Reglas de seguridad del servidor» aparece sola en su inicio; cuando están al día, no se muestra.
+
+## 13. Velocidad, «no es acceso», cierre de sesión y QR para invitados (reglas v4)
+
+- **Velocidad en computadora**: la vista 3D ya no redibuja sin parar, calcula las sombras solo cuando cambia la escena, baja la resolución mientras se gira el avión y prepara los gráficos en segundo plano. La pantalla se redibuja una sola vez por ráfaga de datos.
+- **«No es un Access Panel — no volver a mostrar»** (en la decisión de Verificación): el código desaparece de todas las vistas de ese proyecto, también al volver a analizar. Se puede deshacer en **Aprendizaje → Ocultos en este proyecto → Volver a mostrar**.
+- **Cerrar sesión**: botón en la barra superior de la app (sale de la cuenta en ese equipo).
+- **Vista previa de etiquetas QR**: botones − / + / Ajustar, doble toque o Ctrl + rueda para acercar; la hoja se muestra en alta resolución para escanear desde la pantalla.
+- **Invitados generan QR con dibujo**: requiere publicar las **reglas v4**. Cada invitado desactiva solo sus enlaces; el propietario desactiva todos. El monitoreo registra quién publicó etiquetas.
+- Las reglas v4 también permiten guardar en el servidor el **aprendizaje compartido** (antes se quedaba en cada equipo).
