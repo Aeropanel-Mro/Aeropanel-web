@@ -3280,8 +3280,15 @@ async function createDemo(){
 
 /* ---------------- access photos: yellow highlighter on figure / card images ---------------- */
 const HL={fill:"#FFE14D",stroke:"#F2C200",edge:"#6B5500"};
+/* rendered figure pages are shared by cards, reports, QR and photos (a page is drawn once); kept up to ~40 Mpx */
+const PAGE_LRU={m:new Map(),px:0,max:40e6,
+  has(k){ return this.m.has(k); }, get(k){ const v=this.m.get(k); if(v!==undefined){ this.m.delete(k); this.m.set(k,v); } return v; },
+  set(k,v){ if(this.m.has(k)){ const o=this.m.get(k); this.px-=o?o.width*o.height:0; this.m.delete(k); } this.m.set(k,v); this.px+=v?v.width*v.height:0;
+    while(this.px>this.max&&this.m.size>1){ const [k0,v0]=this.m.entries().next().value; this.m.delete(k0); this.px-=v0?v0.width*v0.height:0; } return this; }};
+const TRACE_PG=new Map(); const pageTraces=(docId,pageNo,scale)=>{ const d=S.docs.find(x=>x.id===docId); const k=docId+"@"+(d?.processedVersion||0)+"#"+pageNo+"#"+scale; if(!TRACE_PG.has(k)) TRACE_PG.set(k,new Map()); return TRACE_PG.get(k); };
 async function renderPageCanvas(cache,docId,pageNo,scale=2.4){
-  const k=docId+"#"+pageNo+"#"+scale; if(cache.has(k)) return cache.get(k);
+  const dv=S.docs.find(x=>x.id===docId)?.processedVersion||0; cache=PAGE_LRU;
+  const k=docId+"@"+dv+"#"+pageNo+"#"+scale; if(cache.has(k)) return cache.get(k);
   const d=S.docs.find(x=>x.id===docId); const ver=d?.versions.find(v=>v.v===d.processedVersion); if(!ver){ cache.set(k,null); return null; }
   const rot=await pageRot(docId,pageNo);
   let cv=null; try{ const pdf=await openPdf(await getBytes(ver.assetId)); try{ const pg=await pdf.getPage(pageNo); const vp=pg.getViewport({scale,rotation:(pg.rotate+rot)%360});
@@ -3456,7 +3463,7 @@ function drawingRegion(src){
 async function accessImageCanvas(x,cache,traces,maxW=1600){
   const ref=refOf(x); if(!ref) return null;
   const src=await renderPageCanvas(cache,ref.docId,ref.page,3.2); if(!src) return null;
-  const fm=figureMarks(src,[{bb:ref.bbox,panel:x.panel,focus:true}],traces); const fb=fm.boxes[x.panel]||{label:ref.bbox};
+  const fm=figureMarks(src,[{bb:ref.bbox,panel:x.panel,focus:true}],pageTraces(ref.docId,ref.page,3.2)); const fb=fm.boxes[x.panel]||{label:ref.bbox};
   const ub=unionBox(ref.bbox,fb.panel||null); const ar=src.width/src.height;
   const cx=(ub[0]+ub[2])/2, cy=(ub[1]+ub[3])/2, rr=Math.max((ub[2]-ub[0])/2,(ub[3]-ub[1])/2/ar)+0.035, rm=rr+0.012;
   const region=unionBox(drawingRegion(src),[Math.max(0,cx-rm),Math.max(0,cy-rm*ar),Math.min(1,cx+rm),Math.min(1,cy+rm*ar)]);
@@ -3477,7 +3484,7 @@ function sheetGroups(list){ const m=new Map(); const none=[];
   return {groups,none}; }
 async function sheetImageCanvas(g,cache,traces,maxW=1700,focus=null){
   const src=await renderPageCanvas(cache,g.ref.docId,g.ref.page,3.2); if(!src) return null; const ar=src.width/src.height;
-  const fm=figureMarks(src,g.items.map(it=>({bb:it.ref.bbox,panel:it.x.panel,focus:!focus||it.x.panel===focus})),traces);
+  const fm=figureMarks(src,g.items.map(it=>({bb:it.ref.bbox,panel:it.x.panel,focus:!focus||it.x.panel===focus})),pageTraces(g.ref.docId,g.ref.page,3.2));
   // several accesses on one sheet: the callout labels are already highlighted, so the extra ID tag on each panel outline is
   // dropped (it would cover the drawing); only the clicked access keeps it
   if(g.items.length>2) for(const m of fm.marks) if(m.label && m.label!==focus) delete m.label;
@@ -3498,7 +3505,7 @@ async function accessImage(panel){
   ACC_IMG.set(key,o); return o;
 }
 const SHEET_IMG=new Map();
-async function sheetImage(g,tag=""){ const key=S.runId+"|"+g.key+"|"+tag+"|"+g.items.map(i=>i.x.panel).join(","); if(SHEET_IMG.has(key)) return SHEET_IMG.get(key);
+async function sheetImage(g,tag=""){ const key=S.runId+"|"+g.key+"|"+g.items.map(i=>i.x.panel).join(","); if(SHEET_IMG.has(key)) return SHEET_IMG.get(key);
   const cv=await sheetImageCanvas(g,new Map(),new Map(),1600); if(!cv){ SHEET_IMG.set(key,null); return null; }
   const bytes=await canvasJpeg(cv,.9); const o={bytes,url:URL.createObjectURL(new Blob([bytes],{type:"image/jpeg"})),w:cv.width,h:cv.height,ref:cv.ref}; SHEET_IMG.set(key,o); return o; }
 /* minimal ZIP writer (stored, no compression — JPEG is already compressed) */
@@ -3547,7 +3554,7 @@ async function makeRemovalImages(final){
   // one image per drawing sheet: all the accesses to remove that appear on the same figure page are highlighted together
   const list=removalList(); const {groups,none}=sheetGroups(list);
   const cache=new Map(), traces=new Map(); const imgs=[];
-  for(const g of groups){ const cv=await sheetImageCanvas(g,cache,traces,1700); if(!cv){ none.push(...g.items.map(it=>it.x)); continue; } imgs.push({g,img:await doc.embedJpg(await canvasJpeg(cv,.9)),w:cv.width,h:cv.height}); }
+  let gi=0; for(const g of groups){ S.repProg?.(++gi,groups.length); const cv=await sheetImageCanvas(g,cache,traces,1700); if(!cv){ none.push(...g.items.map(it=>it.x)); continue; } imgs.push({g,img:await doc.embedJpg(await canvasJpeg(cv,.9)),w:cv.width,h:cv.height}); }
   const nAcc=imgs.reduce((a,b)=>a+b.g.items.length,0);
   const pages=[]; const top=H-60, CW=W-ML-MR, gy=16;
   const head=(pg,first)=>{ const {width:W,height:H}=pg.getSize(); pg.drawRectangle({x:0,y:H-30,width:W,height:30,color:hex("#0B1626")});
@@ -3840,9 +3847,9 @@ async function reportPreview(name,bytes,final,kind){
   if($("#rp_zip")) $("#rp_zip").onclick=async ev=>{ const b=ev.target; b.disabled=true; b.textContent="Generando fotos…"; try{ await generatePhotos(); await downloadPhotosZip(); }catch(err){ toast("No se pudieron generar las fotos: "+err.message); } b.disabled=false; b.textContent="Fotos de accesos (ZIP)"; };
   try{ const doc=await openPdf(bytes); const box=$("#rp_pages"); const n=doc.numPages;
     for(let i=1;i<=n;i++){ if(!document.getElementById("rp_pages")) break; $("#rp_info").textContent=`Página ${i} de ${n}…`;
-      const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const sc=sharp?Math.min(5,3400/Math.max(v1.width,v1.height)):Math.min(2.2,1500/Math.max(v1.width,v1.height)); const vp=pg.getViewport({scale:sc});
+      const pg=await doc.getPage(i); const v1=pg.getViewport({scale:1}); const sc=sharp?Math.min(5,3400/Math.max(v1.width,v1.height)):Math.min(1.8,1200/Math.max(v1.width,v1.height)); const vp=pg.getViewport({scale:sc});
       const cv=document.createElement("canvas"); cv.width=Math.round(vp.width); cv.height=Math.round(vp.height); const cx=cv.getContext("2d"); cx.fillStyle="#fff"; cx.fillRect(0,0,cv.width,cv.height);
-      await pg.render({canvasContext:cx,viewport:vp}).promise; const url=URL.createObjectURL(await new Promise(r=>sharp?cv.toBlob(r,"image/png"):cv.toBlob(r,"image/jpeg",.9))); cv.width=cv.height=0;
+      await pg.render({canvasContext:cx,viewport:vp}).promise; const url=URL.createObjectURL(await new Promise(r=>sharp?cv.toBlob(r,"image/png"):cv.toBlob(r,"image/jpeg",.85))); cv.width=cv.height=0;
       const f=document.createElement("figure"); f.className="rp-page"+(v1.width>v1.height?" land":""); f.innerHTML=`<img alt="Página ${i}" src="${url}"><figcaption class="small muted">Página ${i} de ${n}</figcaption>`; box.append(f); }
     if(document.getElementById("rp_info")) $("#rp_info").textContent=`${n} página(s). ${sharp?"Para probar un QR con el celular, acerque con + o con doble toque sobre la hoja. ":""}Revise y luego descargue o imprima.`; }
   catch(err){ console.warn(err); if(document.getElementById("rp_info")) $("#rp_info").textContent="No se pudo mostrar la vista previa ("+err.message+"); puede descargarlo igual."; }
@@ -3945,6 +3952,13 @@ function vDays(){ const p=proj(); if(!p) return vWelcome();
     </div></section>`;
   const all=rows.length>1&&isAdmin()?`<section class="card"><div class="bd row"><span class="small muted">Genera un PDF de accesos a remover por cada día, en un ZIP.</span><span class="sp"></span><button class="btn sm" data-act="dayrepall" ${S.runId?"":"disabled"}>Documentos de todos los días (ZIP)</button></div></section>`:"";
   return head+tabs+body+all; }
+/* day report: generated with a progress window; if nothing changed since the last time it opens at once */
+const DAYREP=new Map();
+async function dayReport(id){ const sig=()=>withDay(id,()=>removalList().map(x=>x.panel+":"+x.status+":"+x.decision).join(",")); const k=S.runId+"|"+id+"|"+dayLabel(id);
+  const hit=DAYREP.get(k); if(hit&&hit.sig===sig()) return hit.rep;
+  const m=$("#modal"); m.innerHTML=`<div class="modal"><div class="sheet" role="dialog" aria-modal="true" aria-label="Generando reporte" style="max-width:420px"><div class="sb" style="padding:22px"><b>Generando reporte de ${esc(dayLabel(id))}…</b><div class="progress" style="margin:12px 0 6px"><i id="rg_bar" style="width:4%"></i></div><span class="small muted" id="rg_txt">Preparando hojas del dibujo…</span></div></div></div>`;
+  S.repProg=(i,n)=>{ const b=document.getElementById("rg_bar"), t=document.getElementById("rg_txt"); if(b) b.style.width=Math.round(i/n*100)+"%"; if(t) t.textContent=`Hoja ${i} de ${n}`; };
+  try{ const rep=await withDay(id,()=>makeReport("REMOVAL",false)); audit("DAY_REPORT",rep.name); DAYREP.set(k,{sig:sig(),rep}); return rep; } finally{ S.repProg=null; } }
 /* runs fn with the app filtered to one day (reports / QR of that day), then goes back to the previous filter */
 async function withDay(id,fn){ const prev=S.day; S.day=id; try{ return await fn(); } finally{ S.day=prev; } }
 function vDashboard(){
@@ -4082,8 +4096,7 @@ function vCards(){
      <div class="cfields"><span><i>ZONE</i>${esc(c.zone||"—")}</span><span><i>ACCESS</i>${req.map(r=>esc(r.panelRaw)).join(", ")||"—"}</span><span><i>FIGURAS</i>${esc(figs.join(", ")||"—")}</span><span><i>ARCHIVO</i>${esc(c.file||"")}</span></div>
      <div class="csum"><div><b>${req.length}</b><span>Accesos que pide</span></div><div><b class="ok">${inFig}</b><span>Localizados en figuras</span></div><div><b class="${req.length-inFig?"warn":""}">${req.length-inFig}</b><span>Sin figura</span></div><div><b>${req.filter(r=>r.action==="CONDITIONAL").length}</b><span>Si se requiere</span></div></div>
      ${(()=>{ if(!req.length) return `<p class="empty">La tarjeta no pide remover ni abrir accesos.</p>`;
-        const PX=new Map(physicalOf(S.rel).map(x=>[x.panel,x])); const xs=req.map(r=>({...(PX.get(r.panel)||{}),rel:r}));
-        const {groups,none}=sheetGroups(xs.filter(x=>x.panel)); S.sheetIx=S.sheetIx||new Map();
+        const {groups,none}=cardSheetGroups(c,req); S.sheetIx=S.sheetIx||new Map();
         return `<div class="sheets">${groups.map(g=>{ const k="card:"+c.card+":"+g.key; S.sheetIx.set(k,g); const z=g.ref.zone||g.items[0].x.major;
           return `<div class="stile"><div class="sh2"><b class="mono">FIG ${esc(g.ref.figure||"?")}</b><span>página ${esc(g.ref.page)} · zona ${esc(z)}</span><span class="sp"></span><span class="pill s-CONFIRMED">${g.items.length} acceso${g.items.length>1?"s":""} en esta hoja</span></div>
             <div class="th" data-sheet="${esc(k)}"><span class="ld">Cargando hoja del dibujo…</span></div>
@@ -4092,6 +4105,13 @@ function vCards(){
      ${other.length?`<h3 class="subh">También mencionados en la tarjeta (sin instrucción de remover)</h3><div class="agrid sm">${other.map(tile).join("")}</div>`:""}
     </div></section></div>`;
 }
+function cardSheetGroups(c,req){ const PX=new Map(physicalOf(S.rel).map(x=>[x.panel,x])); const xs=req.map(r=>({...(PX.get(r.panel)||{}),rel:r})); return sheetGroups(xs.filter(x=>x.panel)); }
+/* while one card is on screen, the drawing sheets of the next cards are prepared in the background */
+function prefetchCards(cur){ const tok=fillThumbs.tok; const byCard=cardsIndex(); const cards=[...byCard.values()].sort((a,b)=>a.card.localeCompare(b.card)); const i=cards.findIndex(x=>x.card===cur);
+  const next=[...cards.slice(i+1,i+3),...cards.slice(Math.max(0,i-1),i)]; const idle=f=>(window.requestIdleCallback?requestIdleCallback(f,{timeout:1500}):setTimeout(f,200));
+  const run=async()=>{ for(const c of next){ const uniq=[...new Map(c.rels.map(r=>[r.panel,r])).values()]; const req=uniq.filter(r=>["REMOVE","OPEN","CONDITIONAL"].includes(r.action)); if(!req.length) continue;
+      const {groups}=cardSheetGroups(c,req); for(const g of groups){ if(fillThumbs.tok!==tok||S.route!=="cards") return; try{ await sheetImage(g,"card:"+c.card+":"+g.key); }catch{} await new Promise(r=>idle(r)); } } };
+  idle(run); }
 /* thumbnails of the drawing for the tiles (one at a time, cached) */
 async function fillThumbs(){
   const tok=(fillThumbs.tok=(fillThumbs.tok||0)+1);
@@ -4101,6 +4121,7 @@ async function fillThumbs(){
   for(const el of [...document.querySelectorAll("[data-thumb]")]){ const id=el.dataset.thumb; if(!id) continue;
     try{ const im=await accessImage(id); if(tok!==fillThumbs.tok) return; if(!el.isConnected) continue; el.innerHTML=im?`<img src="${im.url}" alt="Dibujo de ${esc(id)}">`:`<span>NO APARECE EN LAS FIGURAS CARGADAS</span>`; }
     catch{ el.innerHTML=`<span>No se pudo generar la imagen</span>`; } }
+  if(tok===fillThumbs.tok&&S.route==="cards"){ const cur=document.querySelector(".citem.on")?.dataset.card; if(cur) prefetchCards(cur); }
 }
 function cardDetail(c){
   return `<div class="row"><button class="btn sm ghost" data-go="cards">← Cards</button></div>
@@ -5431,7 +5452,7 @@ document.addEventListener("click", async e=>{
   if(d.daysel){ S.daySel=d.daysel; render(); return; }
   if(d.dayrm){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Quitar? Toque otra vez"; return; } try{ await removeDay(d.dayrm); render(); }catch(err){ toast(err.message); } return; }
   if(d.dayshow){ S.day=d.dayshow; S.acCard=null; go("zones"); toast(`Mostrando ${dayLabel(d.dayshow)} en toda la app.`); return; }
-  if(d.dayrep){ t.disabled=true; try{ const rep=await withDay(d.dayrep,()=>makeReport("REMOVAL",false)); audit("DAY_REPORT",rep.name); await reportPreview(rep.name,rep.bytes,false,`${dayLabel(d.dayrep)} · accesos a remover`); }catch(err){ console.error(err); toast("Error: "+err.message); } t.disabled=false; return; }
+  if(d.dayrep){ t.disabled=true; try{ const rep=await dayReport(d.dayrep); await reportPreview(rep.name,rep.bytes,false,`${dayLabel(d.dayrep)} · accesos a remover`); }catch(err){ console.error(err); toast("Error: "+err.message); closeModal(); } t.disabled=false; return; }
   if(d.dayqr){ S.day=d.dayqr; qrDialog(); return; }
   if(d.npshow){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Mostrar otra vez? Toque otra vez"; return; } t.disabled=true;
     try{ const v=S.verifs[d.npshow]; await S.db.doc(`projects/${S.pid}/verifications/${d.npshow}`).delete(); audit("PANEL_NOT_ACCESS_UNDONE",v?.panel||d.npshow,""); toast(`${v?.panel||""} vuelve a mostrarse en este proyecto.`); }catch(err){ toast(err.message); t.disabled=false; } return; }
@@ -5484,8 +5505,8 @@ document.addEventListener("click", async e=>{
     case "pgprev": case "pgnext": { const sel=$("#vpage"); if(!sel||!sel.options.length) break; const vals=[...sel.options].map(o=>+o.value); const i=vals.indexOf(S.viewer.page); const j=Math.max(0,Math.min(vals.length-1,i+(d.act==="pgnext"?1:-1))); if(vals[j]!==S.viewer.page){ S.viewer.page=vals[j]; drawViewer(); } break; }
     case "qrlabels": qrDialog(); break;
     case "dayadd": try{ const d=await addDay(); render(); toast(`${d.name} creado. Cargue ahí sus inspection cards.`); }catch(err){ toast(err.message); } break;
-    case "dayrepall": { t.disabled=true; try{ const files=[]; for(const r of dayRows().filter(r=>r.rows.length)){ const rep=await withDay(r.day.id,()=>makeReport("REMOVAL",false)); files.push({name:rep.name,bytes:rep.bytes}); audit("DAY_REPORT",rep.name); }
-        if(!files.length){ toast("Ningún día tiene accesos a remover."); } else await offerFile(`${safeName((proj()?.registration||"AC"))}_Accesos_por_dia.zip`,makeZip(files)); }catch(err){ console.error(err); toast("Error: "+err.message); } t.disabled=false; break; }
+    case "dayrepall": { t.disabled=true; try{ const files=[]; for(const r of dayRows().filter(r=>r.rows.length)){ const rep=await dayReport(r.day.id); files.push({name:rep.name,bytes:rep.bytes}); }
+        closeModal(); if(!files.length){ toast("Ningún día tiene accesos a remover."); } else await offerFile(`${safeName((proj()?.registration||"AC"))}_Accesos_por_dia.zip`,makeZip(files)); }catch(err){ console.error(err); toast("Error: "+err.message); closeModal(); } t.disabled=false; break; }
     case "draft": t.disabled=true; try{ await generateReports(false); }catch(err){ console.error(err); toast("Error al generar: "+err.message); } t.disabled=false; break;
     case "final": { if(!$("#ack")?.checked){ toast("Marque la casilla de confirmación para autorizar el reporte FINAL."); return; } t.disabled=true; try{ await generateReports(true); await S.db.doc(`projects/${S.pid}`).update({lastFinalRun:S.runId}); }catch(err){ toast("Error: "+err.message); } t.disabled=false; break; }
     case "photos": try{ await generatePhotos(); toast(`${S.photos?.length||0} foto(s) generadas.`); }catch(err){ toast("Error al generar fotos: "+err.message); } break;
