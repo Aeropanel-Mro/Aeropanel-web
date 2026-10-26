@@ -205,7 +205,17 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .mon-log>div>b{word-break:break-all}
 .btn.danger{color:var(--efis-red,#d64545)}
 .cardday{gap:10px;flex-wrap:wrap;align-items:center}.cardday input{width:auto}.cday{width:auto;padding:2px 6px;font-size:12px}
-.dayplan tr.on td{background:rgba(31,157,85,.10)}.daybanner{border-left-color:var(--efis-green,#1f9d55)}
+.daybanner{border-left-color:var(--efis-green,#1f9d55)}
+.daytabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}.daytab{flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left}
+.daytab b{font-size:15px}.daytab span{font-size:12px;opacity:.75}.daytab.on{border-color:var(--efis-green,#1f9d55);box-shadow:inset 0 -3px 0 var(--efis-green,#1f9d55)}
+.dayk{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.dayk>div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column}
+.dayk b{font-size:24px;font-variant-numeric:tabular-nums}.dayk span{font-size:12px;opacity:.75}.dayk .warn b{color:var(--efis-amber,#e0a800)}
+.daycards{display:flex;flex-direction:column;gap:6px}.daycards .chips{display:flex;flex-wrap:wrap;gap:6px}.daycards .chip{border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px}
+.dayview .hd{flex-wrap:wrap;gap:8px}.daytbl .pill{white-space:normal;text-align:left}
+.sheet.rprev .sh{flex-wrap:wrap}.sheet.rprev .sh h3{order:3;flex:1 1 100%;word-break:break-word;font-size:15px;margin:2px 0 0}
+@media (max-width:700px){ .daytbl thead{display:none} .daytbl,.daytbl tbody,.daytbl tr,.daytbl td{display:block;width:100%}
+  .daytbl tr{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)} .daytbl td{border:0!important;padding:0!important;background:none!important}
+  .daytbl td:nth-child(1){grid-row:span 2} .daytbl td:nth-child(3)::before{content:"Tarjetas: ";opacity:.7} .daytbl td:nth-child(4),.daytbl td:nth-child(5){grid-column:2} }
 .start-grid>.auth-card:has(#mon_card){grid-column:1/-1}
 .start-grid>.auth-card:has(#mon_card) .mon-kpi{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 @media (max-width:700px){ .mon-t thead{display:none} .mon-t,.mon-t tbody,.mon-t tr,.mon-t td{display:block;width:100%}
@@ -1049,12 +1059,13 @@ const S = {
 const npSet=()=>new Set(Object.values(S.verifs||{}).filter(v=>v&&v.decision==="NOTPANEL"&&v.panel).map(v=>v.panel));
 /* inspection day: when one is chosen, every view shows only the accesses requested by that day's cards */
 const todayLocal=()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
-const dayLabel=d=>{ if(!d) return "Sin día"; try{ return new Date(d+"T12:00:00").toLocaleDateString("es-MX",{weekday:"short",day:"numeric",month:"short",year:"numeric"}); }catch{ return d; } };
-const docDay=id=>S.docs.find(d=>d.id===id)?.day||"";
+const daysOf=()=>[...(proj()?.days||[])].sort((a,b)=>a.n-b.n);
+const dayLabel=id=>{ if(!id||id==="none") return "Sin día"; const d=(proj()?.days||[]).find(x=>x.id===id); return d?(d.name||`Día ${d.n}`):"Sin día"; };
+const dayFile=id=>dayLabel(id).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"");
 S._rel=S.rel; S.day=null; let REL_C={src:null,v:null,day:null,docs:null,out:[]};
 Object.defineProperty(S,"rel",{configurable:true,enumerable:true,
   get(){ if(REL_C.src!==S._rel||REL_C.v!==S.verifs||REL_C.day!==S.day||(S.day&&REL_C.docs!==S.docs)){ const np=npSet(); let out=np.size?S._rel.filter(r=>!np.has(r.panel)):S._rel;
-      if(S.day){ const dd=new Map(S.docs.map(d=>[d.id,d.day||""])); const want=S.day==="none"?"":S.day; out=out.filter(r=>(dd.get(r.cardDocId)||"")===want); }
+      if(S.day){ const dd=new Map(S.docs.map(d=>[d.id,d.dayId||""])); const want=S.day==="none"?"":S.day; out=out.filter(r=>(dd.get(r.cardDocId)||"")===want); }
       REL_C={src:S._rel,v:S.verifs,day:S.day,docs:S.docs,out}; } return REL_C.out; },
   set(v){ S._rel=v||[]; }});
 const relAllDays=()=>{ const np=npSet(); return np.size?S._rel.filter(r=>!np.has(r.panel)):S._rel; };
@@ -3179,9 +3190,9 @@ async function buildRun(){
 
 /* ---------------- uploads & versioning ---------------- */
 function logicalName(fn){ return fn.replace(/\.pdf$/i,"").trim().toUpperCase().replace(/[\s_]+/g,"_"); }
-async function uploadFiles(files, category){
+async function uploadFiles(files, category, dayId0){
   if(!canUpload()){ toast("Solo ADMIN / SUPERVISOR con permiso de edición puede cargar documentos."); return; }
-  const list=[...files]; let n=0; const day=category==="CARDS"?(document.getElementById("card_day")?.value||S.cardDay||todayLocal()):null; if(day) S.cardDay=day;
+  const list=[...files]; let n=0; const day=category==="CARDS"?(dayId0!==undefined?dayId0:(document.getElementById("card_dayid")?.value??S.cardDay??"")):null; if(category==="CARDS") S.cardDay=day||"";
   S.proc={total:list.length,done:0,current:"",ok:0,review:0,log:[],phase:"UPLOADING"}; render();
   warmOcr(); // OCR engines start while the files are being received
   for(const f of list){
@@ -3195,14 +3206,14 @@ async function uploadFiles(files, category){
       const name=logicalName(f.name);
       const existing=S.docs.find(d=>d.category===category && d.logicalName===name);
       if(existing?.versions?.some(v=>v.sha256===hash)){
-        if(day&&existing.day!==day){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({day,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${name} → ${day}`); S.proc.log.push({file:f.name,problem:`Ya estaba cargada; se movió al día ${dayLabel(day)}.`,action:"Sin duplicar el archivo."}); n++; S.proc.ok++; }
+        if(category==="CARDS"&&day&&existing.dayId!==day){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({dayId:day,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${name} → ${dayLabel(day)}`); S.proc.log.push({file:f.name,problem:`Ya estaba cargada; se movió a ${dayLabel(day)}.`,action:"Sin duplicar el archivo."}); n++; S.proc.ok++; }
         else S.proc.log.push({file:f.name,problem:"Identical file already uploaded (same SHA-256).",action:"Skipped — no duplicate created."});
         S.proc.done++; continue; }
       const up=await S.assets.upload(new Blob([buf],{type:"application/pdf"}),{type:"application/pdf"});
       S.bytes.set(up.id,buf);
       const ver={v:(existing?.versions?.length||0)+1,assetId:up.id,sha256:hash,size:f.size,fileName:f.name,uploadedBy:S.me.id,uploadedAt:nowIso()};
-      if(existing){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({versions:[...existing.versions,ver],activeVersion:ver.v,status:"UPLOADED",updatedAt:nowIso(),...(day?{day}:{})}); audit("DOCUMENT_NEW_VERSION",`${name} v${ver.v}`); }
-      else { const id=name.replace(/[^A-Za-z0-9_.~:@+-]/g,"_").slice(0,80)+"-"+category.slice(0,3); await S.db.doc(`projects/${S.pid}/documents/${id}`).set({category,logicalName:name,versions:[ver],activeVersion:1,status:"UPLOADED",createdAt:nowIso(),updatedAt:nowIso(),...(day?{day}:{})}); audit("DOCUMENT_UPLOADED",`${f.name} → ${CATS[category]}`); }
+      if(existing){ await S.db.doc(`projects/${S.pid}/documents/${existing.id}`).update({versions:[...existing.versions,ver],activeVersion:ver.v,status:"UPLOADED",updatedAt:nowIso(),...(day?{dayId:day}:{})}); audit("DOCUMENT_NEW_VERSION",`${name} v${ver.v}`); }
+      else { const id=name.replace(/[^A-Za-z0-9_.~:@+-]/g,"_").slice(0,80)+"-"+category.slice(0,3); await S.db.doc(`projects/${S.pid}/documents/${id}`).set({category,logicalName:name,versions:[ver],activeVersion:1,status:"UPLOADED",createdAt:nowIso(),updatedAt:nowIso(),...(day?{dayId:day}:{})}); audit("DOCUMENT_UPLOADED",`${f.name} → ${CATS[category]}`); }
       n++; S.proc.ok++;
     }catch(e){ S.proc.review++; S.proc.log.push({file:f.name,problem:e?.message||e?.code||String(e),action:"Not stored. Fix and upload again."}); audit("UPLOAD_ERROR",f.name,e?.message||String(e)); }
     S.proc.done++; renderProgress();
@@ -3541,7 +3552,7 @@ async function makeRemovalImages(final){
   const pages=[]; const top=H-60, CW=W-ML-MR, gy=16;
   const head=(pg,first)=>{ const {width:W,height:H}=pg.getSize(); pg.drawRectangle({x:0,y:H-30,width:W,height:30,color:hex("#0B1626")});
     pg.drawText("ACCESS PANELS TO REMOVE",{x:ML,y:H-20,size:11,font:B,color:hex("#FFD400")});
-    const r=latin(`${p.aircraftType||""}  ${p.registration||""}  ·  ${new Date().toISOString().slice(0,10)}  ·  ${final?"FINAL":"DRAFT"}`); pg.drawText(r,{x:W-MR-B.widthOfTextAtSize(r,9),y:H-19,size:9,font:B,color:hex("#DCE4EE")});
+    const r=latin(`${p.aircraftType||""}  ${p.registration||""}  ·  ${S.day?dayLabel(S.day):todayLocal()}  ·  ${final?"FINAL":"DRAFT"}`); pg.drawText(r,{x:W-MR-B.widthOfTextAtSize(r,9),y:H-19,size:9,font:B,color:hex("#DCE4EE")});
     if(first){ const t=latin(`${nAcc} access(es) on ${imgs.length} drawing sheet(s)${none.length?`  ·  ${none.length} without figure image (see Verification): ${none.map(x=>x.panel).join(", ")}`:""}`); pg.drawText(t.slice(0,150),{x:ML,y:H-48,size:9,font:F,color:hex("#4A5A70")}); }
     if(!final) pg.drawText("DRAFT - NOT FOR USE",{x:95,y:300,size:58,font:B,color:hex("#D93A3F"),opacity:0.1,rotate:degrees(35)}); };
   const wrapIds=(ids,size,maxW)=>{ const lines=[]; let cur=""; for(const id of ids){ const t=cur?cur+"  "+id:id; if(B.widthOfTextAtSize(t,size)>maxW && cur){ lines.push(cur); cur=id; } else cur=t; } if(cur) lines.push(cur); return lines; };
@@ -3563,7 +3574,7 @@ async function makeRemovalImages(final){
   const snapshot=JSON.stringify({type:"REMOVAL_IMAGES",final,run:S.runId,sheets:imgs.map(i=>i.g.key),ids:imgs.flatMap(i=>i.g.items.map(q=>q.x.panel))}); const snapHash=(await sha256(new TextEncoder().encode(snapshot))).slice(0,16);
   pages.forEach((pg,i)=>{ pg.drawText(latin(`Snapshot ${snapHash}  |  ${S.runId}  |  ${nameOf(S.me.id)}  |  Page ${i+1}/${pages.length}  |  ${DISCLAIMER}`).slice(0,190),{x:ML,y:18,size:5.8,font:F,color:hex("#7A889B")}); });
   await pdfGuestMark(doc);
-  return {bytes:await doc.save(),snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_Access_Panels_To_Remove_${final?"FINAL":"DRAFT"}${S.day?"_DIA_"+S.day:""}_${todayLocal()}.pdf`};
+  return {bytes:await doc.save(),snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_${S.day?dayFile(S.day)+"_":""}Access_Panels_To_Remove_${final?"FINAL":"DRAFT"}${S.day?"":"_"+todayLocal()}.pdf`};
 }
 async function makeReport(type, final){
   if(type==="REMOVAL") return makeRemovalImages(final);
@@ -3587,7 +3598,7 @@ async function makeReport(type, final){
   text(title,ML,20,B); y-=16;
   text(final?"FINAL - authorized":"DRAFT - pending authorization",ML,10,B,final?"#2E8B57":"#D93A3F"); y-=22;
   const c=counts(rel);
-  const info=[["Aircraft",p.aircraftType],["Registration",p.registration],["MSN",p.msn],["Project",p.name],["Customer",p.customer],["Maintenance event",p.event],["Date",todayLocal()],...(S.day?[["Inspection day",S.day==="none"?"cards without day":S.day]]:[]),
+  const info=[["Aircraft",p.aircraftType],["Registration",p.registration],["MSN",p.msn],["Project",p.name],["Customer",p.customer],["Maintenance event",p.event],["Date",todayLocal()],...(S.day?[["Inspection day",dayLabel(S.day)]]:[]),
     ["Number of cards",String(run?.qc?.cardsProcessed??"")],["Access Panel requests",String(rel.length)],["Unique physical Access Panels",String(phys.length)],["Analysis run",`${S.runId} (engine ${run?.engine||ENGINE})`]];
   for(const [k,v] of info){ text(k.toUpperCase(),ML,8.5,B,"#7A889B"); text(v||"-",ML+180,10); y-=14; }
   y-=4; text(`Confirmed ${c.CONFIRMED+c.VERIFIED}   Requires verification ${c.REQUIRES_VERIFICATION}   Discrepancy ${c.DISCREPANCY}   Not found ${c.NOT_FOUND}`,ML,10,B); y-=22;
@@ -3619,7 +3630,7 @@ async function makeReport(type, final){
     pg.drawText(latin(DISCLAIMER),{x:ML,y:34,size:6.8,font:F,color:hex("#4A5A70"),maxWidth:W-ML-MR});
     pg.drawText(latin(`Snapshot ${snapHash}  |  Generated ${new Date().toISOString().slice(0,16).replace("T"," ")} UTC by ${nameOf(S.me.id)}  |  Page ${i+1}/${pages.length}`),{x:ML,y:20,size:7,font:F,color:hex("#7A889B")}); });
   await pdfGuestMark(doc); const bytes=await doc.save();
-  return {bytes,snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_${{REMOVAL:"Removal_List",TRACE:"Traceability",VERIFY:"Verification"}[type]}_${final?"FINAL":"DRAFT"}${S.day?"_DIA_"+S.day:""}_${todayLocal()}.pdf`};
+  return {bytes,snapHash,name:`${(p.registration||"AC").replace(/[^A-Za-z0-9-]/g,"")}_${{REMOVAL:"Removal_List",TRACE:"Traceability",VERIFY:"Verification"}[type]}_${final?"FINAL":"DRAFT"}${S.day?"_"+dayFile(S.day):"_"+todayLocal()}.pdf`};
 }
 async function makeAnnotatedFigures(){
   const {PDFDocument,rgb,StandardFonts}=await pdfLib(); const out=await PDFDocument.create(); const B=await out.embedFont(StandardFonts.HelveticaBold);
@@ -3732,7 +3743,7 @@ async function qrLabelsPdf(list,mode,links){
     q.modules.forEach((row,yy)=>{ let xx=0; while(xx<q.size){ if(!row[xx]){ xx++; continue; } let e=xx; while(e<q.size&&row[e]) e++; pg.drawRectangle({x:x+(4+xx)*u,y:y+s-(4+yy+1)*u,width:(e-xx)*u+0.01,height:u+0.01,color:L.rgb(0,0,0)}); xx=e; } }); };
   for(let pi=0;pi<pages;pi++){ const pg=doc.addPage([W,H]);
     pg.drawText("ETIQUETAS QR · ACCESOS A REMOVER · "+String(p.registration||""),{x:M,y:H-M-14,size:12,font:B,color:navy});
-    pg.drawText(`${p.aircraftType||""} · Hoja ${pi+1} de ${pages} · ${list.length} accesos · ${mode==="draw"?"QR con enlace de verificación (dibujo)":"QR solo con texto del acceso"} · recorte por la línea punteada`,{x:M,y:H-M-29,size:8,font:R_,color:grey});
+    pg.drawText(`${p.aircraftType||""} · ${S.day?latin(dayLabel(S.day))+" · ":""}Hoja ${pi+1} de ${pages} · ${list.length} accesos · ${mode==="draw"?"QR con enlace de verificación (dibujo)":"QR solo con texto del acceso"} · recorte por la línea punteada`,{x:M,y:H-M-29,size:8,font:R_,color:grey});
     list.slice(pi*per,(pi+1)*per).forEach((x,i)=>{ const c=i%cols, r=Math.floor(i/cols); const lx=M+c*(lw+GAP), ly=top-(r+1)*(lh+10)+10;
       pg.drawRectangle({x:lx,y:ly,width:lw,height:lh,borderColor:dash,borderWidth:.8,borderDashArray:[3,2]}); pg.drawLine({start:{x:lx+lw/2,y:ly+6},end:{x:lx+lw/2,y:ly+lh-6},thickness:.6,color:dash,dashArray:[2,2]});
       const f=refOf(x); const sub=`Zona ${x.zoneResolved||x.major||"?"}${x.cards?.length?" · "+x.cards[0]:""}`.slice(0,34);
@@ -3794,7 +3805,7 @@ function qrDialog(){ const list=removalList(); if(!S.runId||!list.length){ toast
     try{ let links=null; if(mode==="draw"){ links=await qrPublishLinks(list,+$("#qr_days").value,(i,n,id,ru)=>{ msg.innerHTML=`<div class="auth-note">Publicando dibujos… ${i}/${n} · ${esc(id)}${ru?` · ${ru} ya publicados (reutilizados)`:""}</div>`; }); }
       msg.innerHTML=`<div class="auth-note">Creando hoja de etiquetas…</div>`; const bytes=await qrLabelsPdf(list,mode,links);
       audit("QR_LABELS_CREATED",`${list.length} accesos · ${mode==="draw"?"con dibujo":"sin dibujo"}`);
-      await reportPreview(`${safeName((proj()?.registration||"AC")+"_"+(proj()?.name||""))}_Etiquetas_QR_${mode==="draw"?"con_dibujo":"sin_dibujo"}${S.day?"_DIA_"+S.day:""}_${todayLocal()}.pdf`,bytes,false,"Etiquetas QR"); }
+      await reportPreview(`${safeName((proj()?.registration||"AC")+"_"+(proj()?.name||""))}${S.day?"_"+dayFile(S.day):""}_Etiquetas_QR_${mode==="draw"?"con_dibujo":"sin_dibujo"}${S.day?"":"_"+todayLocal()}.pdf`,bytes,false,"Etiquetas QR"); }
     catch(e){ console.error(e); msg.innerHTML=`<div class="auth-err">${esc(e.code==="PERMISSION_DENIED"&&mode==="draw"?(FM.webOwner?"El servidor todavía no permite publicar los dibujos: publique las reglas nuevas (v4). Están en la pantalla de inicio, tarjeta «Reglas de seguridad del servidor».":"El servidor todavía no permite que las personas invitadas publiquen dibujos. Pida al propietario que publique las reglas nuevas (v4). Mientras tanto puede usar las etiquetas «Sin dibujo»."):e.message)}</div>`; b.disabled=false; } }); }
 /* public verification page (#v/<token>): read-only, no sign-in, nothing else of the platform */
 async function showVerify(t){ document.querySelector("#app").hidden=true; const a=document.querySelector("#auth"); a.hidden=false; document.querySelector(".boot")?.remove();
@@ -3843,6 +3854,7 @@ const ICON={
   projects:'<path d="M12 2l2.2 7H22l-6 4.3 2.3 7L12 16l-6.3 4.3L8 13.3 2 9h7.8z" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   documents:'<path d="M6 2h9l5 5v15H6zM14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   cards:'<rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9h10M7 13h6" stroke="currentColor" stroke-width="1.8"/>',
+  days:'<rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 14.5h3v3h-3z" fill="currentColor"/>',
   zones:'<path d="M12 3l1.6 6.5 7.4 3v1.8l-7.4-1.4-.5 4.6 2.5 1.9V21L12 20.3 8.4 21v-1.6l2.5-1.9-.5-4.6L3 14.3v-1.8l7.4-3z" fill="currentColor"/>',
   panels:'<rect x="4" y="6" width="16" height="12" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7" cy="9" r="1" fill="currentColor"/><circle cx="17" cy="9" r="1" fill="currentColor"/><circle cx="7" cy="15" r="1" fill="currentColor"/><circle cx="17" cy="15" r="1" fill="currentColor"/>',
   figures:'<rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7" y="8" width="7" height="5" fill="#FFD400" opacity=".9"/>',
@@ -3854,7 +3866,7 @@ const ICON={
   settings:'<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="1.8"/>',
   more:'<circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/>'
 };
-const NAV=[["dashboard","Dashboard"],["projects","Projects"],["documents","Documents"],["cards","Inspection cards"],["zones","Aircraft zones"],["panels","Access panels"],["figures","Document view"],["verify","Verification"],["learning","Aprendizaje"],["reports","Reports"],["history","History"],["settings","Users & settings"]];
+const NAV=[["dashboard","Dashboard"],["projects","Projects"],["documents","Documents"],["days","Inspection por día"],["cards","Inspection cards"],["zones","Aircraft zones"],["panels","Access panels"],["figures","Document view"],["verify","Verification"],["learning","Aprendizaje"],["reports","Reports"],["history","History"],["settings","Users & settings"]];
 const ico=(k,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 function go(route,param=null){ S.route=route; S.param=param; closeModal(); render(); window.scrollTo({top:0}); if(route!=="figures") S.viewer.doc=S.viewer.doc; }
 function renderNav(){
@@ -3895,20 +3907,46 @@ function eicasCard(){
    </div></div></section>`;
 }
 /* ---------------- views ---------------- */
-function dayBanner(){ if(!S.day||!proj()) return ""; const n=S.docs.filter(d=>d.category==="CARDS"&&(d.day||"")===(S.day==="none"?"":S.day)).length;
+function dayBanner(){ if(!S.day||!proj()) return ""; const n=S.docs.filter(d=>d.category==="CARDS"&&(d.dayId||"")===(S.day==="none"?"":S.day)).length;
   return `<div class="banner row daybanner"><span>Mostrando solo <b>${esc(S.day==="none"?"tarjetas sin día":dayLabel(S.day))}</b> · ${n} tarjeta(s) · ${physicalOf(S.rel).filter(x=>x.decision==="REMOVE"||x.decision==="REMOVE_PENDING").length} acceso(s) a remover</span><span class="sp"></span><button class="btn sm" data-day="">Ver todos los días</button></div>`; }
-/* «Inspección por día»: what each day's cards ask to remove; «nuevos» = not already opened on an earlier day */
-function dayPlanCard(){ const cards=S.docs.filter(d=>d.category==="CARDS"); if(!cards.length) return "";
-  const days=[...new Set(cards.map(d=>d.day||""))].sort(); if(days.length<2&&!days[0]&&!S.day) return "";
-  const all=relAllDays(); const dd=new Map(cards.map(d=>[d.id,d.day||""])); const seen=new Set(); const dated=days.filter(Boolean); const rows=[];
-  for(const day of [...dated,...(days.includes("")?[""]:[])]){ const rel=all.filter(r=>(dd.get(r.cardDocId)||"")===day); const phys=physicalOf(rel).filter(x=>x.decision==="REMOVE"||x.decision==="REMOVE_PENDING");
-    const nuevos=day?phys.filter(x=>!seen.has(x.panel)).length:phys.length; if(day) phys.forEach(x=>seen.add(x.panel));
-    rows.push({day,cards:cards.filter(d=>(d.day||"")===day).length,acc:phys.length,nuevos,pend:phys.filter(x=>x.decision==="REMOVE_PENDING").length}); }
-  const cur=S.day||"";
-  return `<section class="card dayplan"><div class="hd"><h2>Inspección por día</h2><span class="sp"></span>${S.day?`<button class="btn sm" data-day="">Ver todos los días</button>`:""}</div><div class="bd">
-    <div class="tbl-wrap"><table><thead><tr><th>Día</th><th>Tarjetas</th><th>Accesos a remover</th><th>Nuevos ese día</th><th>Pendientes de verificar</th><th></th></tr></thead><tbody>
-    ${rows.reverse().map(r=>`<tr class="${(r.day||"none")===cur?"on":""}"><td><b>${esc(dayLabel(r.day))}</b></td><td class="mono">${r.cards}</td><td class="mono"><b>${r.acc}</b></td><td class="mono">${r.day?r.nuevos:"—"}</td><td class="mono">${r.pend}</td><td>${(r.day||"none")===cur?`<span class="pill s-CONFIRMED">Mostrando</span>`:`<button class="btn sm ${r.day===todayLocal()?"pri":""}" data-day="${r.day||"none"}">Ver este día</button>`}</td></tr>`).join("")}</tbody></table></div>
-    <p class="small muted" style="margin:8px 0 0">«Nuevos ese día» = accesos que no se abrieron en un día anterior. Al elegir un día, toda la app (zonas, avión 3D, lista, reportes y QR) muestra solo los accesos de ese día.</p></div></section>`; }
+/* ---------------- Inspection por día ----------------
+   Zone figures are loaded once for the project. Inspection cards are added to a process day (Día 1, Día 2…).
+   One analysis covers everything; this tab splits the result by day and generates each day's documents. */
+async function addDay(){ const p=proj(); const days=[...(p.days||[])]; const n=(days.reduce((a,d)=>Math.max(a,d.n),0))+1; const d={id:"d"+n+"-"+uid().slice(0,4),n,name:`Día ${n}`,at:nowIso()};
+  await S.db.doc(`projects/${S.pid}`).update({days:[...days,d]}); p.days=[...days,d]; S.daySel=d.id; S.cardDay=d.id; audit("DAY_ADDED",d.name); return d; }
+async function removeDay(id){ const p=proj(); if(S.docs.some(d=>d.dayId===id)){ toast("Primero mueva o quite las tarjetas de este día."); return; }
+  const days=(p.days||[]).filter(d=>d.id!==id); await S.db.doc(`projects/${S.pid}`).update({days}); p.days=days; if(S.day===id) S.day=null; if(S.daySel===id) S.daySel=null; audit("DAY_REMOVED",id); }
+function dayRows(){ const all=relAllDays(); const cards=S.docs.filter(d=>d.category==="CARDS"); const dd=new Map(cards.map(d=>[d.id,d.dayId||""]));
+  const firstDay=new Map(); const out=[];
+  for(const day of daysOf()){ const rel=all.filter(r=>dd.get(r.cardDocId)===day.id); const phys=physicalOf(rel).filter(x=>x.decision==="REMOVE"||x.decision==="REMOVE_PENDING").sort((a,b)=>String(a.major).localeCompare(String(b.major))||a.panel.localeCompare(b.panel));
+    const rows=phys.map(x=>({x,prev:firstDay.get(x.panel)||null})); phys.forEach(x=>{ if(!firstDay.has(x.panel)) firstDay.set(x.panel,day); });
+    const dc=cards.filter(d=>d.dayId===day.id); out.push({day,cards:dc,rows,pend:phys.filter(x=>x.decision==="REMOVE_PENDING").length,stale:dc.some(d=>d.processedVersion!==d.activeVersion&&d.status!=="REQUIRES_REVIEW")}); }
+  return out; }
+function vDays(){ const p=proj(); if(!p) return vWelcome();
+  const days=daysOf(), rows=dayRows(), A=canUpload(); const loose=S.docs.filter(d=>d.category==="CARDS"&&!d.dayId);
+  const sel=rows.find(r=>r.day.id===S.daySel)||rows.at(-1); const figs=S.docs.filter(d=>d.category==="FIGURES");
+  const head=`<section class="card"><div class="hd"><h2>Inspection por día</h2><span class="sp"></span>${A?`<button class="btn pri sm" data-act="dayadd">+ Agregar día</button>`:""}</div>
+   <div class="bd small" style="display:flex;flex-direction:column;gap:6px"><span>Las <b>figuras de zona</b> se cargan una sola vez y sirven para todos los días (${figs.length} documento(s) cargado(s)${figs.length?"":` · <a href="#documents" data-go="documents">cargar figuras</a>`}). Las <b>inspection cards</b> se agregan a cada día. Al analizar, el resultado se separa por día y cada día genera sus propios documentos.</span>
+   ${loose.length&&days.length&&A?`<div class="banner row" style="margin:4px 0 0"><span>${loose.length} tarjeta(s) sin día.</span><span class="sp"></span><label class="small">Agregarlas a <select data-dayassign=""><option value="">elegir…</option>${days.map(d=>`<option value="${esc(d.id)}">${esc(d.name||"Día "+d.n)}</option>`).join("")}</select></label></div>`:""}</div></section>`;
+  if(!days.length) return head+`<section class="card"><div class="bd" style="text-align:center;padding:28px"><p><b>Todavía no hay días.</b></p><p class="small muted">Pulse «+ Agregar día» y cargue ahí las inspection cards de ese día.</p></div></section>`;
+  const tabs=`<div class="daytabs" role="tablist">${rows.map(r=>`<button role="tab" aria-selected="${r===sel}" class="daytab ${r===sel?"on":""}" data-daysel="${esc(r.day.id)}"><b>${esc(r.day.name||"Día "+r.day.n)}</b><span>${r.cards.length} tarjeta(s) · ${r.rows.length} acceso(s)${r.stale?" · sin analizar":""}</span></button>`).join("")}</div>`;
+  const r=sel; const nuevos=r.rows.filter(o=>!o.prev).length;
+  const body=`<section class="card dayview"><div class="hd"><h2>${esc(r.day.name||"Día "+r.day.n)}</h2><span class="sp"></span>
+      <button class="btn sm" data-dayshow="${esc(r.day.id)}" ${r.rows.length?"":"disabled"}>Ver en avión y zonas</button>
+      ${isAdmin()?`<button class="btn sm" data-dayrep="${esc(r.day.id)}" ${r.rows.length&&S.runId?"":"disabled"}>Reporte del día (PDF)</button>`:""}
+      <button class="btn sm" data-dayqr="${esc(r.day.id)}" ${r.rows.length?"":"disabled"}>Etiquetas QR del día</button></div>
+    <div class="bd" style="display:flex;flex-direction:column;gap:12px">
+     ${r.stale&&isAdmin()?`<div class="banner row"><span>Hay tarjetas nuevas en este día sin analizar.</span><span class="sp"></span><button class="btn pri sm" data-act="analyze" ${S.proc&&!/COMPLETE/.test(S.proc.phase)?"disabled":""}>Analizar</button></div>`:""}
+     <div class="dayk"><div><b>${r.cards.length}</b><span>Inspection cards</span></div><div><b>${r.rows.length}</b><span>Accesos a remover</span></div><div><b>${nuevos}</b><span>Nuevos este día</span></div><div><b>${r.rows.length-nuevos}</b><span>Ya abiertos en un día anterior</span></div><div class="${r.pend?"warn":""}"><b>${r.pend}</b><span>Pendientes de verificar</span></div></div>
+     <div class="daycards"><b class="small">Tarjetas de este día</b>${r.cards.length?`<div class="chips">${r.cards.map(d=>`<span class="chip mono">${esc(d.logicalName)}${d.status==="REQUIRES_REVIEW"?" ⚠":""}</span>`).join("")}</div>`:`<p class="small muted" style="margin:4px 0">Sin tarjetas todavía.</p>`}
+      ${A?`<div class="row" style="gap:8px;flex-wrap:wrap"><label class="btn sm pri" style="cursor:pointer">Cargar inspection cards a ${esc(r.day.name||"Día "+r.day.n)}<input type="file" accept="application/pdf,.pdf" multiple hidden data-upload="CARDS" data-dayid="${esc(r.day.id)}"></label>${!r.cards.length?`<button class="btn sm ghost" data-dayrm="${esc(r.day.id)}">Quitar este día</button>`:""}</div>`:""}</div>
+     <div class="tbl-wrap"><table class="daytbl"><thead><tr><th>Acceso</th><th>Zona</th><th>Tarjetas</th><th>Estado</th><th>Este día</th></tr></thead><tbody>
+      ${r.rows.map(({x,prev})=>`<tr><td><button class="plac s-${x.status}" data-panel="${esc(x.panel)}">${esc(x.panel)}</button></td><td class="mono">${esc(x.zoneResolved||x.major||"")}<br><span class="small muted">${esc(ZONE_NAMES[x.major]||"")}</span></td><td class="small mono">${esc((x.cards||[]).join(", "))}</td><td>${decPill(x.decision)}</td><td>${prev?`<span class="small muted">Ya abierto en ${esc(prev.name||"Día "+prev.n)}</span>`:`<span class="pill s-CONFIRMED">Remover</span>`}</td></tr>`).join("")||`<tr><td colspan="5" class="small muted">${r.cards.length?(S.runId?"Las tarjetas de este día no piden remover accesos.":"Analice para ver los accesos."):"Cargue las inspection cards de este día."}</td></tr>`}</tbody></table></div>
+    </div></section>`;
+  const all=rows.length>1&&isAdmin()?`<section class="card"><div class="bd row"><span class="small muted">Genera un PDF de accesos a remover por cada día, en un ZIP.</span><span class="sp"></span><button class="btn sm" data-act="dayrepall" ${S.runId?"":"disabled"}>Documentos de todos los días (ZIP)</button></div></section>`:"";
+  return head+tabs+body+all; }
+/* runs fn with the app filtered to one day (reports / QR of that day), then goes back to the previous filter */
+async function withDay(id,fn){ const prev=S.day; S.day=id; try{ return await fn(); } finally{ S.day=prev; } }
 function vDashboard(){
   const p=proj();
   if(!p) return vWelcome();
@@ -3922,7 +3960,7 @@ function vDashboard(){
   const tot=phys.length||1; const bar=["CONFIRMED","VERIFIED","REQUIRES_VERIFICATION","DISCREPANCY","NOT_FOUND"].map(s=>`<i style="width:${pc[s]/tot*100}%;background:${ST_COLOR[s]}" title="${ST_LABEL[s]} ${pc[s]}"></i>`).join("");
   const lastRep=S.reports[0]; const run=S.runs.find(r=>r.id===S.runId);
   const stale=S.docs.some(d=>d.category!=="SUPPORT" && d.processedVersion!==d.activeVersion && d.status!=="REQUIRES_REVIEW");
-  return `${dayPlanCard()}
+  return `
   ${S.integrityWarning?`<div class="banner" style="border-left-color:var(--st-dis)"><b>Advertencia de integridad:</b> este archivo fue modificado por alguien sin la contraseña de administrador después del último guardado del administrador. Revise el historial y los resultados antes de usarlos.</div>`:""}${FM.demo?`<div class="banner">Demostración con datos sintéticos: no se guarda.</div>`:S.fileRole!=="ADMIN"?`<div class="banner info">Modo CONSULTA (solo lectura). Los cambios solo los hace el administrador.</div>`:FM.dirty?`<div class="banner row"><span>Hay cambios sin guardar en el archivo. Se guardó una copia cifrada en este equipo; pulse <b>Guardar</b> para descargar el archivo actualizado y compartirlo.</span><span class="sp"></span><button class="btn pri sm" data-act="save">Guardar archivo</button></div>`:""}
   ${procBlock()}
   ${stale && isAdmin() && !S.proc?`<div class="banner info row"><span>Hay documentos nuevos o versiones sin analizar.</span><span class="sp"></span><button class="btn pri sm" data-act="analyze">Start analysis</button></div>`:""}
@@ -3990,7 +4028,7 @@ function vDocuments(){
   const grp=cat=>S.docs.filter(d=>d.category===cat).sort((a,b)=>a.logicalName.localeCompare(b.logicalName));
   const stPill=d=>d.status==="PROCESSED"&&d.processedVersion===d.activeVersion?pill("OK",d.ocrReadPages?.length?"Procesado · OCR":"Procesado"):d.status==="OCR_REQUIRED"?pill("PENDING","Releyendo…"):d.status==="REQUIRES_REVIEW"?pill("DISCREPANCY","Requires review"):pill("PENDING",d.category==="SUPPORT"?"Stored":"Pending analysis");
   const table=cat=>{ const L=grp(cat); return `<div class="tbl-wrap"><table><thead><tr><th>Document</th><th>Active</th><th>Versions</th><th>Pages</th><th>Status</th><th>SHA-256 (active)</th><th></th></tr></thead><tbody>
-    ${L.map(d=>{ const av=d.versions.find(v=>v.v===d.activeVersion)||{}; return `<tr><td><b class="mono">${esc(d.logicalName)}</b><div class="small muted">${esc(av.fileName||"")} · ${fmtDate(av.uploadedAt)} · ${esc(nameOf(av.uploadedBy))}</div>${d.category==="CARDS"?`<div class="small">Día: ${canUpload()?`<input type="date" class="cday" data-cardday="${esc(d.id)}" value="${esc(d.day||"")}" aria-label="Día de inspección de ${esc(d.logicalName)}">`:`<b>${esc(dayLabel(d.day))}</b>`}</div>`:""}${d.error?`<div class="small bad">${esc(d.error)}</div>`:""}${d.ocrReadPages?.length?`<div class="small">Leído con OCR: p. ${d.ocrReadPages.join(", ")} · confianza media ${d.ocrMean}%</div>`:""}${d.rotatedPages?.length?`<div class="small">Orientación corregida: ${d.rotatedPages.join(", ")}</div>`:""}${d.blankPages?.length?`<div class="small muted">En blanco: p. ${d.blankPages.join(", ")}</div>`:""}${d.ocrPages?.length?`<div class="small">Imagen sin texto legible: p. ${d.ocrPages.join(", ")}${d.aiPages?.length?` · AI read: ${d.aiPages.join(", ")}`:""}</div>`:""}</td>
+    ${L.map(d=>{ const av=d.versions.find(v=>v.v===d.activeVersion)||{}; return `<tr><td><b class="mono">${esc(d.logicalName)}</b><div class="small muted">${esc(av.fileName||"")} · ${fmtDate(av.uploadedAt)} · ${esc(nameOf(av.uploadedBy))}</div>${d.category==="CARDS"&&daysOf().length?`<div class="small">${canUpload()?`<select class="cday" data-carddayid="${esc(d.id)}" aria-label="Día de ${esc(d.logicalName)}">${daysOf().map(x=>`<option value="${esc(x.id)}" ${d.dayId===x.id?"selected":""}>${esc(x.name||"Día "+x.n)}</option>`).join("")}<option value="" ${!d.dayId?"selected":""}>Sin día</option></select>`:`<b>${esc(dayLabel(d.dayId))}</b>`}</div>`:""}${d.error?`<div class="small bad">${esc(d.error)}</div>`:""}${d.ocrReadPages?.length?`<div class="small">Leído con OCR: p. ${d.ocrReadPages.join(", ")} · confianza media ${d.ocrMean}%</div>`:""}${d.rotatedPages?.length?`<div class="small">Orientación corregida: ${d.rotatedPages.join(", ")}</div>`:""}${d.blankPages?.length?`<div class="small muted">En blanco: p. ${d.blankPages.join(", ")}</div>`:""}${d.ocrPages?.length?`<div class="small">Imagen sin texto legible: p. ${d.ocrPages.join(", ")}${d.aiPages?.length?` · AI read: ${d.aiPages.join(", ")}`:""}</div>`:""}</td>
      <td class="mono">v${d.activeVersion}</td>
      <td>${d.versions.length>1&&isAdmin()?`<select data-ver="${esc(d.id)}" aria-label="Active version">${d.versions.map(v=>`<option value="${v.v}" ${v.v===d.activeVersion?"selected":""}>v${v.v} · ${esc(v.uploadedAt?.slice(0,10))}</option>`).join("")}</select>`:d.versions.map(v=>"v"+v.v).join(", ")}</td>
      <td class="tab">${d.pages||"—"}</td><td>${stPill(d)}</td><td class="mono small">${esc(av.sha256?.slice(0,16)||"")}…</td>
@@ -4004,7 +4042,7 @@ function vDocuments(){
   ${scanCard}
   ${canUpload()?`<section class="card"><div class="hd"><h2>Document management</h2></div><div class="bd grid g3">
     ${Object.entries(CATS).map(([k,t])=>`<label class="drop" data-drop="${k}"><div class="eyebrow">${t}</div><p class="small muted">${k==="FIGURES"?"Dibujos, figuras, diagramas, zonas y Access Panel location drawings.":k==="CARDS"?"Tarjetas de inspección inicial y task cards (uno o muchos PDFs).":"Documentación adicional (se guarda y versiona; no se analiza)."}</p><span class="btn sm">Seleccionar PDFs</span><input type="file" accept="application/pdf,.pdf" multiple hidden data-upload="${k}"></label>`).join("")}
-   </div><div class="bd row cardday" style="padding-top:0"><label for="card_day"><b>Día de inspección</b> de las tarjetas que cargue:</label><input type="date" id="card_day" value="${esc(S.cardDay||todayLocal())}"><span class="small muted">Las figuras se cargan una sola vez; las tarjetas, por día. Al analizar solo se procesan las nuevas.</span></div>
+   </div>${daysOf().length?`<div class="bd row cardday" style="padding-top:0"><label for="card_dayid"><b>Inspection cards</b> se agregan a:</label><select id="card_dayid">${daysOf().map(d=>`<option value="${esc(d.id)}" ${(S.cardDay??daysOf().at(-1).id)===d.id?"selected":""}>${esc(d.name||"Día "+d.n)}</option>`).join("")}<option value="" ${S.cardDay===""?"selected":""}>Sin día</option></select><button class="btn sm ghost" data-go="days">Inspection por día →</button><span class="small muted">Las figuras de zona se cargan una sola vez para todo el proyecto.</span></div>`:""}
    <div class="bd row" style="padding-top:0"><span class="small muted">Máx. 200 MB por archivo · se calcula SHA-256 · un archivo con el mismo nombre crea una nueva versión (no sobrescribe).</span><span class="sp"></span><button class="btn pri" data-act="analyze" ${S.proc&&!/COMPLETE/.test(S.proc.phase)?"disabled":""}>Start analysis</button><button class="btn sm" data-act="reanalyze">Re-process all</button></div></section>`
    :`<div class="banner info">${isAdmin()?"La carga requiere permiso de edición (Editor) en esta página.":"Su rol es "+esc(role())+": puede consultar documentos, no cargarlos."}</div>`}
   ${Object.entries(CATS).map(([k,t])=>`<section class="card"><div class="hd"><h3>${t}</h3><span class="muted small">${grp(k).length} document(s)</span></div>${table(k)}</section>`).join("")}`;
@@ -5367,7 +5405,7 @@ function closeModal(){ $("#modal").innerHTML=""; }
 /* ---------------- render ---------------- */
 function render(){
   renderNav();
-  const V={dashboard:vDashboard,projects:()=>proj()||S.projects.length?vProjects():vWelcome(),documents:vDocuments,cards:vCards,zones:vZones,panels:vPanels,figures:vFigures,search:vSearch,verify:vVerify,learning:vLearning,reports:vReports,history:vHistory,settings:vSettings,more:vMore}[S.route]||vDashboard;
+  const V={dashboard:vDashboard,projects:()=>proj()||S.projects.length?vProjects():vWelcome(),documents:vDocuments,days:vDays,cards:vCards,zones:vZones,panels:vPanels,figures:vFigures,search:vSearch,verify:vVerify,learning:vLearning,reports:vReports,history:vHistory,settings:vSettings,more:vMore}[S.route]||vDashboard;
   if(RS_T){ clearTimeout(RS_T); RS_T=0; }
   const y=window.scrollY; const active=document.activeElement?.id;
   $("#view").innerHTML=dayBanner()+V();
@@ -5380,7 +5418,7 @@ function render(){
 
 /* ---------------- events ---------------- */
 document.addEventListener("click", async e=>{
-  const t=e.target.closest("[data-go],[data-act],[data-panel],[data-project],[data-card],[data-zone],[data-fig],[data-fstatus],[data-decide],[data-close],[data-view],[data-ai],[data-dl],[data-run],[data-rmrole],[data-adduser],[data-dvcat],[data-dvdoc],[data-photo],[data-teach],[data-kbtoggle],[data-kbrestore],[data-npshow],[data-day],[data-kbdel],[data-cardedit],[data-scanmode],[data-accimg]");
+  const t=e.target.closest("[data-go],[data-act],[data-panel],[data-project],[data-card],[data-zone],[data-fig],[data-fstatus],[data-decide],[data-close],[data-view],[data-ai],[data-dl],[data-run],[data-rmrole],[data-adduser],[data-dvcat],[data-dvdoc],[data-photo],[data-teach],[data-kbtoggle],[data-kbrestore],[data-npshow],[data-day],[data-daysel],[data-dayrm],[data-dayshow],[data-dayrep],[data-dayqr],[data-kbdel],[data-cardedit],[data-scanmode],[data-accimg]");
   if(!t) return;
   if(t.dataset.close!==undefined && e.target!==t && !e.target.closest("button[data-close]")) return;
   if(t.tagName==="A") e.preventDefault();
@@ -5389,7 +5427,12 @@ document.addEventListener("click", async e=>{
   if(d.dvcat){ S.viewer.cat=d.dvcat; S.viewer.doc=null; S.viewer.page=null; S.viewer.manual=false; render(); return; }
   if(d.dvdoc){ S.viewer.doc=d.dvdoc; S.viewer.page=null; render(); return; }
   if(d.teach){ const [k,a]=d.teach.split("|"); if(a==="DISMISS"){ if(S.kb.seen[k]) S.kb.seen[k].dismissed=true; kbSave(); } else if(kbLearnPhrase(k,a,"suggestion")){ S.kbPending=(S.kbPending||0)+1; toast(`Aprendido: «${k}» = ${ACT_LABEL[a]}`); } render(); return; }
-  if(d.day!==undefined&&t.matches("[data-day]")){ S.day=d.day||null; S.acCard=null; render(); window.scrollTo({top:0}); toast(S.day?`Mostrando ${S.day==="none"?"tarjetas sin día":dayLabel(S.day)}.`:"Mostrando todos los días."); return; }
+  if(d.day!==undefined&&t.matches("[data-day]")){ S.day=d.day||null; S.acCard=null; render(); window.scrollTo({top:0}); toast(S.day?`Mostrando ${dayLabel(S.day)}.`:"Mostrando todos los días."); return; }
+  if(d.daysel){ S.daySel=d.daysel; render(); return; }
+  if(d.dayrm){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Quitar? Toque otra vez"; return; } try{ await removeDay(d.dayrm); render(); }catch(err){ toast(err.message); } return; }
+  if(d.dayshow){ S.day=d.dayshow; S.acCard=null; go("zones"); toast(`Mostrando ${dayLabel(d.dayshow)} en toda la app.`); return; }
+  if(d.dayrep){ t.disabled=true; try{ const rep=await withDay(d.dayrep,()=>makeReport("REMOVAL",false)); audit("DAY_REPORT",rep.name); await reportPreview(rep.name,rep.bytes,false,`${dayLabel(d.dayrep)} · accesos a remover`); }catch(err){ console.error(err); toast("Error: "+err.message); } t.disabled=false; return; }
+  if(d.dayqr){ S.day=d.dayqr; qrDialog(); return; }
   if(d.npshow){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Mostrar otra vez? Toque otra vez"; return; } t.disabled=true;
     try{ const v=S.verifs[d.npshow]; await S.db.doc(`projects/${S.pid}/verifications/${d.npshow}`).delete(); audit("PANEL_NOT_ACCESS_UNDONE",v?.panel||d.npshow,""); toast(`${v?.panel||""} vuelve a mostrarse en este proyecto.`); }catch(err){ toast(err.message); t.disabled=false; } return; }
   if(d.kbrestore){ if(t.dataset.armed!=="1"){ t.dataset.armed="1"; t.textContent="¿Restablecer? Toque otra vez"; return; } t.disabled=true; try{ await kbRestore(d.kbrestore); }catch(err){ toast("No se pudo restablecer: "+err.message); } S.kbPending=(S.kbPending||0)+1; render(); return; }
@@ -5440,6 +5483,9 @@ document.addEventListener("click", async e=>{
     case "theme": setTheme(document.documentElement.dataset.theme==="day"?"night":"day"); break;
     case "pgprev": case "pgnext": { const sel=$("#vpage"); if(!sel||!sel.options.length) break; const vals=[...sel.options].map(o=>+o.value); const i=vals.indexOf(S.viewer.page); const j=Math.max(0,Math.min(vals.length-1,i+(d.act==="pgnext"?1:-1))); if(vals[j]!==S.viewer.page){ S.viewer.page=vals[j]; drawViewer(); } break; }
     case "qrlabels": qrDialog(); break;
+    case "dayadd": try{ const d=await addDay(); render(); toast(`${d.name} creado. Cargue ahí sus inspection cards.`); }catch(err){ toast(err.message); } break;
+    case "dayrepall": { t.disabled=true; try{ const files=[]; for(const r of dayRows().filter(r=>r.rows.length)){ const rep=await withDay(r.day.id,()=>makeReport("REMOVAL",false)); files.push({name:rep.name,bytes:rep.bytes}); audit("DAY_REPORT",rep.name); }
+        if(!files.length){ toast("Ningún día tiene accesos a remover."); } else await offerFile(`${safeName((proj()?.registration||"AC"))}_Accesos_por_dia.zip`,makeZip(files)); }catch(err){ console.error(err); toast("Error: "+err.message); } t.disabled=false; break; }
     case "draft": t.disabled=true; try{ await generateReports(false); }catch(err){ console.error(err); toast("Error al generar: "+err.message); } t.disabled=false; break;
     case "final": { if(!$("#ack")?.checked){ toast("Marque la casilla de confirmación para autorizar el reporte FINAL."); return; } t.disabled=true; try{ await generateReports(true); await S.db.doc(`projects/${S.pid}`).update({lastFinalRun:S.runId}); }catch(err){ toast("Error: "+err.message); } t.disabled=false; break; }
     case "photos": try{ await generatePhotos(); toast(`${S.photos?.length||0} foto(s) generadas.`); }catch(err){ toast("Error al generar fotos: "+err.message); } break;
@@ -5492,9 +5538,10 @@ document.addEventListener("submit", async e=>{
 });
 document.addEventListener("change", async e=>{
   const t=e.target;
-  if(t.dataset.upload){ const files=t.files; await uploadFiles(files,t.dataset.upload); t.value=""; }
-  if(t.id==="card_day"){ S.cardDay=t.value||todayLocal(); }
-  if(t.dataset.cardday){ const v=t.value||null; try{ await S.db.doc(`projects/${S.pid}/documents/${t.dataset.cardday}`).update({day:v,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${t.dataset.cardday} → ${v||"sin día"}`); toast(v?`Tarjeta movida al ${dayLabel(v)}.`:"Tarjeta sin día."); }catch(err){ toast(err.message); } }
+  if(t.dataset.upload){ const files=t.files; await uploadFiles(files,t.dataset.upload,t.dataset.dayid); t.value=""; }
+  if(t.id==="card_dayid"){ S.cardDay=t.value; }
+  if(t.dataset.carddayid){ const v=t.value||null; try{ await S.db.doc(`projects/${S.pid}/documents/${t.dataset.carddayid}`).update({dayId:v,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${t.dataset.carddayid} → ${dayLabel(v)}`); toast(v?`Tarjeta movida a ${dayLabel(v)}.`:"Tarjeta sin día."); }catch(err){ toast(err.message); } }
+  if(t.dataset.dayassign!==undefined&&t.value){ const to=t.value; const L=S.docs.filter(d=>d.category==="CARDS"&&!d.dayId); try{ for(const d of L) await S.db.doc(`projects/${S.pid}/documents/${d.id}`).update({dayId:to,updatedAt:nowIso()}); audit("CARD_DAY_CHANGED",`${L.length} tarjeta(s) → ${dayLabel(to)}`); toast(`${L.length} tarjeta(s) agregadas a ${dayLabel(to)}.`); }catch(err){ toast(err.message); } }
   if(t.id==="ocrworkers"){ const p=proj(); await S.db.doc(`projects/${S.pid}`).update({patterns:{...(p.patterns||{}),ocrWorkers:+t.value}}); toast("Motores OCR: "+(+t.value||"automático")); }
   if(t.dataset.kbimport){ const f=t.files[0]; t.value=""; if(!f) return; try{ const j=JSON.parse(await f.text()); if(!j || !Array.isArray(j.phrases)||!Array.isArray(j.corrections)) throw new Error("No es una base de conocimiento de AeroPanel");
       const before=(S.kb.phrases.length+S.kb.corrections.length+S.kb.exclusions.length); S.kb=kbMerge(S.kb,j); kbSave("knowledge imported: "+f.name); const added=(S.kb.phrases.length+S.kb.corrections.length+S.kb.exclusions.length)-before; S.kbPending=(S.kbPending||0)+Math.max(1,added); toast(`Importado: ${added} regla(s) nueva(s).`); render(); }catch(err){ toast("No se pudo importar: "+err.message,6000); } }
