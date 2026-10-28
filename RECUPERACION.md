@@ -155,3 +155,15 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 
 - **Personas autorizadas**: por cada invitado, **Planning** (proyectos, remoción de accesos, reportes), **QR** (generar etiquetas) y **Materiales** (No / Ver / Editar). Los aplica el servidor (reglas v5). Valores iniciales: Planning sí, QR no, Materiales no. Quien no tiene Planning solo ve Materiales en su inicio.
 - **Materiales**: catálogo global (colección «materials»), no depende del proyecto. Componente, tipo, descripción, P/N del manual, alternos usados, cantidad, ATA, accesos, referencia IPC/AMM, palabras clave y notas. Detecta el tipo por el número de parte (NAS/MS/AN/Hi-Lok…), importa desde Excel (copiar y pegar) o CSV, exporta CSV. Buscador en español e inglés de aviación que aprende palabras nuevas. La hoja de cada acceso muestra sus materiales.
+
+## 16. Materiales v2 (buscador, filtros, ficha, kit por día, almacén)
+
+- **Buscador:** tecla «/», sugerencias, tolera errores («lavatroy» → lavatory), búsqueda por voz en el celular y línea «→ …» con lo que entendió.
+- **Escanear etiqueta:** foto → código de barras o OCR integrado → propone el P/N (usted confirma).
+- **Importar IPC (PDF):** lee la página de la lista de partes (texto u OCR) y propone renglones editables. No se guarda nada hasta que usted elige «Importar seleccionadas». El PDF original no se modifica.
+- **Filtros:** capítulo ATA, zona 100–800, tipo (pictogramas), estado (reemplazo obligatorio, caducidad < 30 días, alterno sin referencia, bajo mínimo).
+- **Alternos:** «✓ Aprobado» solo si usted registra la referencia (IPC / SB). Lo usado en taller sin referencia aparece siempre como «◌ usado · requiere verificación».
+- **Ficha de parte:** lectura del número marcada como orientativa («Verifique en el estándar»), intercambiabilidad, instalación (torque, sellador, herramienta), dónde se usa e historial.
+- **Kit por día:** suma el material de los accesos que se remueven ese día. Incluye hoja de surtido en PDF con QR, CSV para almacén, avance de surtido (guardado cifrado en el proyecto) y «Registrar uso», que anota el historial y descuenta existencia.
+- **Almacén:** existencia, mínimo, ubicación, lote y caducidad, con la pestaña «Alertas».
+- No hace falta cambiar las reglas: siguen siendo las v5.
