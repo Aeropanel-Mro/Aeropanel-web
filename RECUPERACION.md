@@ -231,3 +231,12 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   - CMM ya no muestra quién subió el manual, solo la fecha.
   - Los registros anteriores se limpian solos la primera vez que el propietario abre Materiales y CMM.
   - El historial del proyecto muestra «Propietario» en lugar de su correo.
+
+## 23. Materiales por zona, Excel .xlsx y quién edita
+
+- **Catálogo:** al abrir ya no se muestra todo. Aparecen las zonas (100–800, por ejemplo «800 · Puertas»), los capítulos ATA y las descripciones; al elegir una solo se ve eso. También funciona el buscador. «Ver todo el catálogo» sigue disponible.
+  - La zona se toma del campo zona, de los accesos o, si falta, de palabras de «Dónde se usa» / descripción (puerta/door → 800, tren → 700, motor → 400…).
+- **Excel:** «Importar Excel (.xlsx)» lee la primera hoja (las fechas de caducidad quedan como aaaa-mm-dd). «Exportar» y la solicitud a almacén del kit descargan .xlsx.
+- **Quién edita:**
+  - Usted (propietario) ve en la ficha y el historial el nombre y el correo del invitado que agregó o cambió algo.
+  - Los invitados solo ven nombres y «Propietario»; su correo no aparece en ninguna pantalla de invitados.

@@ -2,7 +2,7 @@
    - Red primero (siempre la versión más nueva), con tiempo límite: si la red tarda o falla, se usa la copia guardada.
    - Solo se guardan respuestas correctas (200): un error temporal de GitHub nunca reemplaza la copia buena.
    - Las versiones viejas de la caché se borran al activar. */
-const C = "aeroplanner-v24", LIBC = "aeroplanner-lib-1";   // components keep their own cache across updates
+const C = "aeroplanner-v25", LIBC = "aeroplanner-lib-1";   // components keep their own cache across updates
 const CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 /* components in lib/ carry a version (?v=) in their address: once downloaded they are served from this device (cache first) */
 const LIB_WARM = ["lib-pdfjs", "lib-pdfjs-worker", "lib-pdflib", "three-src"];
