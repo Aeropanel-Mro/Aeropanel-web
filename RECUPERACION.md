@@ -240,3 +240,14 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - **Quién edita:**
   - Usted (propietario) ve en la ficha y el historial el nombre y el correo del invitado que agregó o cambió algo.
   - Los invitados solo ven nombres y «Propietario»; su correo no aparece en ninguna pantalla de invitados.
+
+## 24. Materiales por Skill y Componente
+
+- **Quitado:** lo de zonas (tarjetas, filtro, campos y lugar sugerido por zona) y los botones «Importar Excel» y «Exportar». La solicitud a almacén del Kit sigue en .xlsx.
+- **Skill** (AV, AYP, APP, SM): se elige al agregar el P/N y su alterno, y también en Escanear, Foto de apuntes e Importar IPC.
+- **Agrupación:** primero por skill y dentro por componente, que se detecta por la descripción: Markings (placard, decal, label…), Luces (light, lamp, lens…), Jumpers (jumper, bonding…), Conectores y cableado, Sellos y empaques, Selladores y consumibles, Abrazaderas y soportes, Paneles y cubiertas, Tornillería y Otros. El campo «Componente (grupo)» permite poner otro nombre.
+- **En cada skill y en cada componente:**
+  - **Copiar:** texto con columnas para pegar en Excel u otro sistema.
+  - **Imprimir:** PDF con vista previa.
+  - **+ Agregar:** abre el formulario con el skill y el componente ya puestos.
+  - **✎:** renombra el componente o pasa todas sus partes a otro skill.
