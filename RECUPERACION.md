@@ -198,3 +198,13 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - **Escaneo:**
   - Con una pieza reconocida se pueden editar su descripción y «Dónde se usa», o agregarla como otra entrada para un lugar de uso distinto.
   - Cada QR o código de barras guardado se recuerda: la próxima vez lleva directo a esa pieza.
+
+## 20. Escaneo = formulario de material · Importar IPC por columnas
+
+- **Al escanear un QR o una etiqueta** se abre siempre el formulario completo del material, ya lleno con lo que se leyó: P/N, descripción, dónde se usa, clasificación, cantidad, ubicación, accesos, lote, caducidad y notas. Todo se puede editar antes de tocar «Agregar como material».
+  - Si el P/N ya existe, ofrece «Sumar a la existente» o «Guardar como material nuevo».
+  - Si no se lee un P/N, se escribe a mano o se toca un renglón leído.
+- **Importar IPC (PDF):** «Buscar partes en todo el PDF» reconoce la tabla por sus encabezados **PART NUMBER** y **NOMENCLATURE**, además de FIG/ITEM y UNITS PER ASSY.
+  - Salta la portada y los dibujos, acepta P/N numéricos (190-73215-401, 2345678-3), quita los puntos de sangría y une los renglones de continuación.
+  - Las páginas escaneadas se leen con OCR, que es más lento.
+  - Antes de importar se revisa todo en una tabla editable; se guarda como referencia la página del IPC de cada parte.
