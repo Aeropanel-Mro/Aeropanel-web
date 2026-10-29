@@ -190,3 +190,11 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - **Si el P/N es nuevo:** muestra «SE GUARDARÁ COMO» (nombre · P/N, componente, ubicación, existencia, lote), que se actualiza mientras usted escribe.
 - **Si no se detecta un P/N:** lo dice, muestra el texto leído de la etiqueta (toque un renglón para usarlo como P/N o nombre) y permite agregarlo a mano.
 - **Permisos:** sumar existencia a una pieza existente requiere «Corregir / editar»; dar de alta una nueva requiere «Agregar».
+
+## 19. «Descripción» y «Dónde se usa», sugerencias y aprendizaje del escaneo
+
+- **Nombres de los campos:** «Tipo» ahora se llama «Descripción» (filtro y columna), y el lugar de uso se llama «Dónde se usa». La clasificación (washer, nut…) se pone sola según la descripción o el P/N, y se puede cambiar. Los datos guardados no cambian.
+- **Sugerencias:** al escribir un P/N, la app propone la descripción y «Dónde se usa» con lo que ya aprendió del mismo P/N o de su familia (NAS1291…, MS21042…). Las listas de sugerencias se abren al tocar el campo.
+- **Escaneo:**
+  - Con una pieza reconocida se pueden editar su descripción y «Dónde se usa», o agregarla como otra entrada para un lugar de uso distinto.
+  - Cada QR o código de barras guardado se recuerda: la próxima vez lleva directo a esa pieza.
