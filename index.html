@@ -204,7 +204,25 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .mon-log>div>span:nth-child(3){grid-column:2}.mon-log>div>span:nth-child(4){grid-column:2;font-size:11.5px}
 .mon-log>div>b{word-break:break-all}
 .btn.danger{color:var(--efis-red,#d64545)}
+.cmm-view{max-width:min(1100px,98vw)!important;width:98vw;height:96dvh;display:flex;flex-direction:column}.cmm-view .sh{flex-wrap:wrap;gap:6px}.cv-body{flex:1;overflow:auto;background:#3a4250;text-align:center;padding:12px}.cv-body canvas{box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:none}.cmm-g .mat-gh{gap:10px}
 @keyframes m2rec{50%{opacity:.4}}
+.pmat{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line);padding-left:8px;margin-top:2px}.pmat b{font-size:12px}.pmat .pchk input:disabled+*{opacity:.5}
+.m2-fix{padding:3px 8px}.m2-hist{display:flex;flex-direction:column;gap:8px}.m2-hist>div{border-left:2px solid var(--line);padding-left:8px}.m2-hist>div.ch{border-color:#3fd4ff}.diff del{color:#ff7a88}.diff ins{color:#5fe39a;text-decoration:none;font-weight:700}
+.m2-notes{max-width:1240px!important;width:min(1240px,96vw)!important}.nt-grid{display:grid;grid-template-columns:minmax(260px,420px) minmax(0,1fr);gap:16px;align-items:start}.nt-photo{position:sticky;top:0}
+.nt-img{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;line-height:0}.nt-img img{width:100%;display:block}.nt-box{position:absolute;border:2px solid #3fd4ff;border-radius:4px}.nt-box b{position:absolute;top:-10px;left:-10px;width:20px;height:20px;border-radius:50%;background:#3fd4ff;color:#000;font:700 11px/20px system-ui;text-align:center}
+.nt-box.wa{border-color:#ffb000}.nt-box.wa b{background:#ffb000}.nt-box.bad{border-color:#ff5c6c;border-style:dashed}.nt-box.bad b{background:#ff5c6c}
+.nt-busy{display:flex;flex-direction:column;gap:6px;margin-top:8px}.nt-rows{display:flex;flex-direction:column;gap:8px;max-height:62vh;overflow:auto;padding-right:4px}
+.nt-row{display:grid;grid-template-columns:44px 150px minmax(180px,1fr) minmax(220px,1.1fr);gap:10px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:10px}.nt-row.wa{border-color:rgba(255,176,0,.55);background:rgba(255,176,0,.04)}.nt-row.bad{border-color:rgba(255,92,108,.55);background:rgba(255,92,108,.04)}.nt-row.off{opacity:.45}
+.nt-n{display:flex;flex-direction:column;align-items:center;gap:6px}.nt-n .num{width:24px;height:24px;border-radius:50%;background:#3fd4ff;color:#000;font:700 12px/24px system-ui;text-align:center}.nt-row.wa .num{background:#ffb000}.nt-row.bad .num{background:#ff5c6c}
+.nt-crop{width:150px;max-height:64px;object-fit:contain;background:#f4efe1;border-radius:6px;border:1px solid var(--line)}.nt-crop.nocrop{display:flex;align-items:center;justify-content:center;height:40px;font-size:11px;color:#444}
+.nt-pn{display:flex;flex-direction:column;gap:5px;align-items:flex-start}.nt-pnin{font-size:16px;font-weight:700;width:100%;letter-spacing:.04em}.nt-chars{display:flex;flex-wrap:wrap;gap:2px;align-items:center}.nt-ch{font:700 14px ui-monospace,monospace;padding:2px 1px}
+.nt-ch.amb{display:inline-flex;gap:1px;border:1px solid rgba(255,176,0,.6);border-radius:5px;padding:1px;background:rgba(255,176,0,.08)}.nt-ch.amb button{font:700 13px ui-monospace,monospace;min-width:22px;padding:2px 3px;border:0;border-radius:3px;background:none;color:#ffc04d;cursor:pointer}.nt-ch.amb button.on{background:#ffb000;color:#000}
+.nt-st{display:flex;gap:4px;flex-wrap:wrap;align-items:center}.nt-f{display:flex;flex-direction:column;gap:6px}.nt-bulk{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px;padding:8px;border:1px dashed var(--line);border-radius:8px}.nt-bulk input,.nt-bulk select{width:auto}
+.pill.g{color:#5fe39a;border:1px solid rgba(43,212,111,.5);background:rgba(43,212,111,.1)}.pill.a{color:#ffc04d;border:1px solid rgba(255,176,0,.5);background:rgba(255,176,0,.1)}.pill.r{color:#ff7a88;border:1px solid rgba(255,92,108,.5);background:rgba(255,92,108,.1)}.pill.c{color:#7fe3ff;border:1px solid rgba(63,212,255,.5);background:rgba(63,212,255,.08)}
+.m2-scan{max-width:640px!important}.sc-view{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3}.sc-view video{width:100%;height:100%;object-fit:cover;display:block}.sc-frame{position:absolute;left:19%;top:12%;width:62%;height:76%;border:3px solid rgba(63,212,255,.9);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.28)}
+.sc-msg{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:13px;color:#fff;text-shadow:0 1px 3px #000}#sc_torch.on{background:#ffd400;color:#000}
+@media (max-width:900px){.nt-grid{grid-template-columns:1fr}.nt-photo{position:static}.nt-row{grid-template-columns:36px 1fr}.nt-row .nt-crop{width:100%;max-height:80px}.nt-row .nt-pn,.nt-row .nt-f{grid-column:1/-1}.nt-rows{max-height:none}.m2-notes{width:100vw;height:100dvh;border-radius:0!important;max-width:none!important}.nt-pnin{font-size:20px;padding:12px}.nt-ch.amb button{min-width:36px;padding:8px 6px;font-size:17px}.nt-f input,.nt-f select{padding:12px;font-size:15px}}
+
 .mat2{display:flex;flex-direction:column;gap:12px}.m2-top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.m2-title h2{margin:0;letter-spacing:.12em;font-size:18px}.m2-title span{font-size:10.5px;letter-spacing:.16em;opacity:.6}
 .m2-search{flex:1 1 340px;position:relative;display:flex;align-items:center;gap:8px;border:1px solid rgba(63,212,255,.55);border-radius:10px;padding:0 10px;background:rgba(63,212,255,.05)}.m2-search input{border:0;background:transparent;flex:1;padding:11px 0;font-size:15px;outline:none;color:inherit}
 .m2-search .kbd{font:600 11px ui-monospace,monospace;border:1px solid var(--line);border-radius:4px;padding:1px 6px;opacity:.6}.m2-mic{background:none;border:0;font-size:17px;cursor:pointer;padding:4px}.m2-mic.rec{animation:m2rec 1s infinite;filter:drop-shadow(0 0 6px #e4007c)}
@@ -1233,7 +1251,7 @@ async function wcGet(k){ try{ const d=await wcDb(); return await new Promise(r=>
 async function wcPut(k,v){ try{ const d=await wcDb(); d.transaction("a","readwrite").objectStore("a").put(v,k); }catch{} }
 function webRules(owner,ownerUid){ owner=String(owner||"").toLowerCase().replace(/'/g,""); ownerUid=String(ownerUid||"-").replace(/'/g,"");
   return `rules_version = '2';
-// AeroPlanner — reglas de seguridad v5 (pegue esto en Firestore → Reglas → Publicar)
+// AeroPlanner — reglas de seguridad v7 (pegue esto en Firestore → Reglas → Publicar)
 service cloud.firestore {
   match /databases/{database}/documents {
     function signed()   { return request.auth != null; }
@@ -1250,6 +1268,9 @@ service cloud.firestore {
     function qrOk()     { return isOwner() || (member() && perm('qr', false) == true); }
     function matRead()  { return isOwner() || (member() && perm('mat', 'none') in ['view', 'edit']); }
     function matEdit()  { return isOwner() || (member() && perm('mat', 'none') == 'edit'); }
+    function cmmRead()  { return isOwner() || (member() && perm('cmm', false) == true); }
+    function cmmUp()    { return isOwner() || (member() && perm('cmm', false) == true && perm('cmmUp', false) == true); }
+    function matFl(k)   { return isOwner() || (matRead() && perm(k, perm('mat', 'none') == 'edit') == true); }
     function creatorOf(pid) { return get(/databases/$(database)/documents/projects/$(pid)).data.get('createdByUid', ''); }
     // personas autorizadas: solo el propietario las agrega, aprueba o quita; cada quien ve su propio permiso
     match /acl/{email} {
@@ -1309,8 +1330,12 @@ service cloud.firestore {
     match /learning/{d} { allow read: if member(); allow write: if editor(); }
     // marca de versión de estas reglas (la página la usa para saber si están al día)
     // catálogo de materiales (global, no depende del proyecto): verlo / editarlo según el permiso de cada persona
-    match /materials/{id} { allow read: if matRead(); allow write: if matEdit(); }
-    match /meta/reglas_v5 { allow get: if signed(); }
+    match /materials/{id} { allow read: if matRead(); allow create: if matFl('matAdd');
+      allow update: if matFl('matFix') || (id == '_syn' && matFl('matAdd')); allow delete: if matFl('matDel'); }
+    // biblioteca CMM (global): ver / subir según el permiso de cada persona; borrar solo el propietario
+    match /cmm/{id} { allow read: if cmmRead(); allow create, update: if cmmUp(); allow delete: if isOwner();
+      match /p/{n} { allow read: if cmmRead(); allow create: if cmmUp(); allow update, delete: if isOwner(); } }
+    match /meta/reglas_v7 { allow get: if signed(); }
   }
 }
 `; }
@@ -1325,14 +1350,14 @@ function aclMail(em,role){ const url=location.origin+location.pathname;
 async function aclLoad(){ const box=document.getElementById("acl_list"); if(!box) return;
   let rq=[]; try{ rq=await fsList("requests"); }catch{}
   const reqBox=document.getElementById("acl_req"); if(reqBox){ const ids=new Set(); reqBox.innerHTML=rq.length?`<div class="banner info" style="margin:8px 0"><b>Cuentas esperando su aprobación</b> (no les llegó el correo de confirmación). Apruebe solo si la persona le confirmó que acaba de crear su cuenta.<div class="tbl-wrap"><table><tbody>${rq.map(r=>`<tr><td>${esc(r.data.email)}</td><td style="white-space:nowrap"><button class="btn sm pri" type="button" data-aclok="${esc(r.id)}" data-em="${esc(r.data.email)}">Aprobar</button> <button class="btn sm ghost" type="button" data-aclno="${esc(r.id)}">Descartar</button></td></tr>`).join("")}</tbody></table></div></div>`:""; }
-  try{ const l=await fsList("acl"); box.innerHTML=l.length?`<div class="tbl-wrap"><table class="acltbl"><thead><tr><th>Correo</th><th>Rol</th><th>Puede usar</th><th></th></tr></thead><tbody>${l.map(a=>{ const p={...PERM_DEF,...(a.data.perms||{})}; if(a.data.perms?.qr===undefined&&WB.qrGuests) p.qr=true; const em=esc(a.id);
-      return `<tr><td>${em}</td><td>${a.data.role==="editor"?"Editor":"Consulta"}</td><td class="perms"><label class="pchk"><input type="checkbox" data-perm="plan" data-em="${em}" ${p.plan!==false?"checked":""}> Planning</label><label class="pchk"><input type="checkbox" data-perm="qr" data-em="${em}" ${p.qr?"checked":""}> QR</label><label class="pchk">Materiales <select data-perm="mat" data-em="${em}"><option value="none" ${p.mat==="none"?"selected":""}>No</option><option value="view" ${p.mat==="view"?"selected":""}>Ver</option><option value="edit" ${p.mat==="edit"?"selected":""}>Editar</option></select></label></td><td style="white-space:nowrap"><a class="btn sm ghost" href="${aclMail(a.id,a.data.role)}">Invitar</a> <button class="btn sm ghost" type="button" data-aclrm="${em}">Quitar</button></td></tr>`; }).join("")}</tbody></table></div>
-      <p class="small muted" style="margin:6px 0 0"><b>Planning</b>: proyectos, remoción de accesos, reportes. <b>QR</b>: puede generar etiquetas. <b>Materiales</b>: no ver / solo ver / ver y agregar.</p>`:"Nadie autorizado todavía."; }
+  try{ const l=await fsList("acl"); box.innerHTML=l.length?`<div class="tbl-wrap"><table class="acltbl"><thead><tr><th>Correo</th><th>Rol</th><th>Puede usar</th><th></th></tr></thead><tbody>${l.map(a=>{ const p={...PERM_DEF,...(a.data.perms||{})}; const mf=k=>p[k]!==undefined?p[k]===true:p.mat==="edit"; if(a.data.perms?.qr===undefined&&WB.qrGuests) p.qr=true; const em=esc(a.id);
+      return `<tr><td>${em}</td><td>${a.data.role==="editor"?"Editor":"Consulta"}</td><td class="perms"><label class="pchk"><input type="checkbox" data-perm="plan" data-em="${em}" ${p.plan!==false?"checked":""}> Planning</label><label class="pchk"><input type="checkbox" data-perm="qr" data-em="${em}" ${p.qr?"checked":""}> QR</label><span class="pmat"><b>Materiales</b>${[["matView","Ver",["view","edit"].includes(p.mat)],["matAdd","Agregar (foto / manual)",mf("matAdd")],["matFix","Corregir / editar",mf("matFix")],["matDel","Borrar",mf("matDel")]].map(([k,l,on])=>`<label class="pchk"><input type="checkbox" data-perm="${k}" data-em="${em}" ${on?"checked":""} ${k!=="matView"&&!["view","edit"].includes(p.mat)?"disabled":""}> ${l}</label>`).join("")}</span><span class="pmat"><b>CMM</b><label class="pchk switch-l"><input type="checkbox" data-perm="cmm" data-em="${em}" ${p.cmm===true?"checked":""}> Acceso</label><label class="pchk"><input type="checkbox" data-perm="cmmUp" data-em="${em}" ${p.cmmUp===true?"checked":""} ${p.cmm===true?"":"disabled"}> Subir manuales</label></span></td><td style="white-space:nowrap"><a class="btn sm ghost" href="${aclMail(a.id,a.data.role)}">Invitar</a> <button class="btn sm ghost" type="button" data-aclrm="${em}">Quitar</button></td></tr>`; }).join("")}</tbody></table></div>
+      <p class="small muted" style="margin:6px 0 0"><b>Planning</b>: proyectos, remoción de accesos, reportes. <b>QR</b>: puede generar etiquetas. <b>Materiales</b>: ver, agregar (foto / manual), corregir y borrar por separado. <b>CMM</b>: acceso a la biblioteca de manuales; «Subir manuales» permite cargar nuevos.</p>`:"Nadie autorizado todavía."; }
   catch(e){ box.textContent=e.message; } }
 /* ---------- access monitoring (owner): who enters, from which device, alerts, blocking ---------- */
 const monRid=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),x=>"abcdefghijkmnpqrstuvwxyz23456789"[x%32]).join("");
 /* ---- per-person permissions (owner sets them in «Personas autorizadas") ---- */
-const PERM_DEF={plan:true,qr:false,mat:"none"};
+const PERM_DEF={plan:true,qr:false,mat:"none",cmm:false,cmmUp:false};
 const myPerms=()=>({...PERM_DEF,...(WB.perms||{})});
 const canPlan=()=>!WB.on||WB.owner||myPerms().plan!==false;
 const matLevel=()=>!WB.on||WB.owner?"edit":(["view","edit"].includes(myPerms().mat)?myPerms().mat:"none");
@@ -1456,7 +1481,7 @@ const matStem=w=>w.length>4&&w.endsWith("es")?w.slice(0,-2):w.length>3&&w.endsWi
 const matWords=s=>matNorm(s).split(" ").filter(Boolean).map(matStem);
 const SYN0=(()=>{ const m=new Map(); for(const g of MAT_SYN0){ const st=g.map(x=>matWords(x).join(" ")); for(const t of st){ const set=m.get(t)||new Set(); st.forEach(o=>set.add(o)); m.set(t,set); } } return m; })();
 function matAlts(tok){ const a=new Set([tok]); for(const x of SYN0.get(tok)||[]) a.add(x); for(const x of MAT.syn.map[tok]||[]) a.add(matWords(x).join(" ")); return [...a].filter(Boolean); }
-const matHay=it=>it._hay||(it._hay=" "+matWords([it.comp,it.cat,MAT_LABEL[it.cat],it.desc,it.pn,it.alt,it.altOk,it.panels,it.ref,it.ata,ATA_CH[ataCh(it)],it.kw,it.notes,it.bin].join(" ")).join(" ")+" ");
+const matHay=it=>it._hay||(it._hay=" "+matWords([it.comp,it.cat,MAT_LABEL[it.cat],it.desc,it.pn,it.alt,it.altOk,it.panels,it.ref,it.ata,ATA_CH[ataCh(it)],it.kw,it.notes,it.bin,histOldPns(it)].join(" ")).join(" ")+" ");
 const ataCh=it=>(String(it.ata||"").match(/\b(2[1-9]|3[0-8]|4[5-9]|5[1-7]|7[1-9]|80)\b/)||[])[1]||"";
 const matZone=it=>{ const z=String(it.zone||"").match(/[1-8]00/)?.[0]||String(it.ata||"").match(/zona\s*([1-8])\d\d/i)?.[1]&&String(it.ata).match(/zona\s*([1-8])\d\d/i)[1]+"00"; if(z) return z; const p=String(it.panels||"").match(/\b([1-8])\d{2}[A-Z]{2,3}\b/); return p?p[1]+"00":""; };
 const lev=(a,b)=>{ if(Math.abs(a.length-b.length)>2) return 9; const d=Array.from({length:b.length+1},(_,i)=>i); for(let i=1;i<=a.length;i++){ let p=d[0]; d[0]=i; for(let j=1;j<=b.length;j++){ const t=d[j]; d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1)); p=t; } } return d[b.length]; };
@@ -1490,12 +1515,282 @@ async function matPut(it){ it.upd=nowIso(); it.by=it.by||WB.email||S.me?.name||"
 async function matDel(id){ if(matWeb()) await fsCommit([fsDelW("materials/"+id)]); else await MAT_DB.del(id); MAT.items.delete(id); MAT.upd++; if(MAT.sel===id) MAT.sel=null; }
 async function matSynSave(){ const d={id:"_syn",map:JSON.stringify(MAT.syn.map),cnt:JSON.stringify(MAT.syn.cnt||{}),upd:nowIso()}; if(matWeb()) await fsCommit([fsW("materials/_syn",d)]); else await MAT_DB.put(d); MAT.items.forEach(it=>delete it._hay); MAT.upd++; }
 async function matTeach(term,comp,auto){ const t=matWords(term).join(" "); if(!t||!comp) return; const L=MAT.syn.map[t]||(MAT.syn.map[t]=[]); if(!L.includes(comp)) L.push(comp); await matSynSave(); toast(`${auto?"Aprendido":"Enseñado"}: «${term}» → ${comp}`,5000); }
-const matCanEdit=()=>matLevel()==="edit";
+/* ---------- permisos finos de Materiales (por persona, los da el propietario) ---------- */
+const matFlag=k=>{ if(!WB.on||WB.owner) return true; const p=myPerms(); if(!["view","edit"].includes(p.mat)) return false; const v=p[k]; return v!==undefined?v===true:p.mat==="edit"; };
+const matCanAdd=()=>matFlag("matAdd"), matCanFix=()=>matFlag("matFix"), matCanDel=()=>matFlag("matDel");
+const matCanEdit=()=>matCanAdd()||matCanFix()||matCanDel();
+const matDenied=(e,what)=>e?.code==="PERMISSION_DENIED"?new Error(`No tiene permiso para ${what} en Materiales${WB.owner?" (publique las reglas v7: tarjeta «Reglas de seguridad del servidor»)":" — pídalo al propietario"}.`):e;
+/* ---------- historial de cambios (nunca se borra el valor anterior) ---------- */
+const MAT_FN={pn:"P/N",comp:"Componente",cat:"Tipo",desc:"Descripción",altOk:"Alternos aprobados",altRef:"Ref. aprobación",alt:"Alternos usados",qty:"Cantidad",unit:"Unidad",ata:"ATA",zone:"Zona",panels:"Accesos",ref:"Referencia",torque:"Torque",sealant:"Sellador",tool:"Herramienta",rep:"Reemplazo",stock:"Existencia",min:"Mínimo",bin:"Ubicación",lot:"Lote",exp:"Caducidad",kw:"Palabras clave",notes:"Notas"};
+const histOf=it=>{ try{ return JSON.parse(it?.hist||"[]"); }catch{ return []; } };
+function histPush(it,e){ const h=histOf(it); h.push({at:nowIso(),by:WB.email||S.me?.name||"",...e}); it.hist=JSON.stringify(h.slice(-60)); }
+function matDiff(a,b){ return Object.keys(MAT_FN).filter(k=>String(a[k]??"")!==String(b[k]??"")).map(k=>[k,String(a[k]??""),String(b[k]??"")]); }
+const histOldPns=it=>histOf(it).flatMap(e=>(e.ch||[]).filter(c=>c[0]==="pn"||c[0]==="alt"||c[0]==="altOk").map(c=>c[1])).join(" ");
+function histHtml(it){ const E2=esc; const h=histOf(it); if(!h.length) return "";
+  const fmt=s=>{ const d=new Date(s); return isNaN(d)?"":`${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+  const last=[...h].reverse().find(e=>e.ch?.length);
+  return `<div class="box"><h5>HISTORIAL DE CAMBIOS</h5><div class="m2-hist">${h.slice(-8).reverse().map(e=>`<div class="${e.ch?.length?"ch":""}"><div class="mut small">${fmt(e.at)} · ${E2(e.by||"—")}</div>${e.ev?`<div class="small">${E2(e.ev)}</div>`:""}${(e.ch||[]).map(([k,o,n])=>`<div class="small diff">${E2(MAT_FN[k]||k)}: <del class="mono">${E2(o||"(vacío)")}</del> → <ins class="mono">${E2(n||"(vacío)")}</ins></div>`).join("")}${e.why?`<div class="small mut">Motivo: ${E2(e.why)}</div>`:""}</div>`).join("")}</div>
+   ${last&&matCanFix()?`<button class="btn sm ghost" data-m2="revert" data-id="${E2(it.id)}" style="margin-top:6px">↶ Volver a la versión anterior</button>`:""}</div>`; }
+/* ---------- lector de QR propio: funciona en cualquier teléfono (también iPhone) ---------- */
+/* QR reader built in (no external library): works on every phone, also where the browser has no barcode reader (iPhone). */
+const QRDEC=(()=>{
+  /* ---- GF(256) + Reed-Solomon (same field as the generator: 0x11D, first root α^0) ---- */
+  const EXP=new Uint8Array(512), LOG=new Uint8Array(256); { let x=1; for(let i=0;i<255;i++){ EXP[i]=x; LOG[x]=i; x<<=1; if(x&256) x^=0x11D; } for(let i=255;i<512;i++) EXP[i]=EXP[i-255]; }
+  const gm=(a,b)=>a&&b?EXP[LOG[a]+LOG[b]]:0, ginv=a=>EXP[255-LOG[a]];
+  const P=c=>{ let i=0; while(i<c.length-1&&c[i]===0) i++; return c.slice(i); };
+  const deg=p=>p.length-1, co=(p,d)=>p[p.length-1-d], isZ=p=>p[0]===0;
+  const evalP=(p,a)=>{ if(a===0) return co(p,0); let r=0; for(const c of p) r=gm(r,a)^c; return r; };
+  const addP=(a,b)=>{ if(isZ(a)) return b; if(isZ(b)) return a; let s=a,l=b; if(s.length>l.length){ s=b; l=a; } const r=l.slice(); const d=l.length-s.length; for(let i=0;i<s.length;i++) r[i+d]^=s[i]; return P(r); };
+  const mulP=(a,b)=>{ if(isZ(a)||isZ(b)) return [0]; const r=new Array(a.length+b.length-1).fill(0); for(let i=0;i<a.length;i++) for(let j=0;j<b.length;j++) r[i+j]^=gm(a[i],b[j]); return P(r); };
+  const mulS=(a,s)=>s===0?[0]:P(a.map(c=>gm(c,s)));
+  const mono=(d,c)=>{ if(c===0) return [0]; const r=new Array(d+1).fill(0); r[0]=c; return r; };
+  const mulM=(a,d,c)=>{ if(c===0) return [0]; const r=a.map(x=>gm(x,c)); for(let i=0;i<d;i++) r.push(0); return P(r); };
+  function rsFix(rec,two){ const syn=new Array(two); let ok=true; for(let i=0;i<two;i++){ const e=evalP(rec,EXP[i]); syn[two-1-i]=e; if(e) ok=false; } if(ok) return true;
+    let a=mono(two,1), b=P(syn); if(deg(a)<deg(b)) [a,b]=[b,a]; let rL=a, r=b, tL=[0], t=[1];
+    while(2*deg(r)>=two){ const rLL=rL, tLL=tL; rL=r; tL=t; if(isZ(rL)) return false; r=rLL; let q=[0]; const dli=ginv(co(rL,deg(rL)));
+      while(deg(r)>=deg(rL)&&!isZ(r)){ const dd=deg(r)-deg(rL), sc=gm(co(r,deg(r)),dli); q=addP(q,mono(dd,sc)); r=addP(r,mulM(rL,dd,sc)); }
+      t=addP(mulP(q,tL),tLL); if(deg(r)>=deg(rL)) return false; }
+    const s0=co(t,0); if(!s0) return false; const iv=ginv(s0); const sig=mulS(t,iv), om=mulS(r,iv);
+    const ne=deg(sig); const locs=[]; if(ne===1) locs.push(co(sig,1)); else for(let i=1;i<256&&locs.length<ne;i++) if(evalP(sig,i)===0) locs.push(ginv(i)); if(locs.length!==ne) return false;
+    for(let i=0;i<ne;i++){ const xi=ginv(locs[i]); let den=1; for(let j=0;j<ne;j++) if(j!==i){ const tm=gm(locs[j],xi); den=gm(den,(tm&1)===0?tm|1:tm&~1); }
+      const mag=gm(evalP(om,xi),ginv(den)); const pos=rec.length-1-LOG[locs[i]]; if(pos<0) return false; rec[pos]^=mag; } return true; }
+  /* ---- symbol structure (identical to the generator) ---- */
+  const ECW=[[-1,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30],[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28],[-1,13,22,18,26,18,24,18,22,20,24,28,26,24,20,30,24,28,28,26,30,28,30,30,30,30,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30],[-1,17,28,22,16,22,28,26,26,24,28,24,28,22,24,24,30,28,28,26,28,30,24,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30]];
+  const NBL=[[-1,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8,8,9,9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24,25],[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49],[-1,1,1,2,2,4,4,6,6,8,8,8,10,12,16,12,17,16,18,21,20,23,23,25,27,29,34,34,35,38,40,43,45,48,51,53,56,59,62,65,68],[-1,1,1,2,4,4,4,5,6,8,8,11,11,16,16,18,16,19,21,25,25,25,34,30,32,35,37,40,42,45,48,51,54,57,60,63,66,70,74,77,81]];
+  const ORDOF={1:0,0:1,3:2,2:3}; // format ECL bits → table row (L,M,Q,H)
+  const rawMods=v=>{ let r=(16*v+128)*v+64; if(v>=2){ const n=Math.floor(v/7)+2; r-=(25*n-10)*n-55; if(v>=7) r-=36; } return r; };
+  const alignPos=v=>{ if(v<2) return []; const n=Math.floor(v/7)+2, size=v*4+17, step=v===32?26:Math.ceil((v*4+4)/(n*2-2))*2; const a=[6]; for(let pos=size-7;a.length<n;pos-=step) a.splice(1,0,pos); return a; };
+  function funcMask(v){ const n=v*4+17; const F=[...Array(n)].map(()=>new Uint8Array(n)); const s=(x,y)=>{ if(x>=0&&y>=0&&x<n&&y<n) F[y][x]=1; };
+    for(let i=0;i<n;i++){ s(6,i); s(i,6); } for(const [cx,cy] of [[3,3],[n-4,3],[3,n-4]]) for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++) s(cx+dx,cy+dy);
+    const al=alignPos(v); for(let i=0;i<al.length;i++) for(let j=0;j<al.length;j++){ if((i===0&&j===0)||(i===0&&j===al.length-1)||(i===al.length-1&&j===0)) continue; for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) s(al[i]+dx,al[j]+dy); }
+    for(let i=0;i<9;i++){ s(8,i); s(i,8); } for(let i=0;i<8;i++){ s(n-1-i,8); s(8,n-1-i); } if(v>=7) for(let i=0;i<18;i++){ s(n-11+i%3,Math.floor(i/3)); s(Math.floor(i/3),n-11+i%3); } return F; }
+  const FMTS=(()=>{ const out=[]; for(let e=0;e<4;e++) for(let m=0;m<8;m++){ const d=e<<3|m; let r=d; for(let i=0;i<10;i++) r=(r<<1)^((r>>>9)*0x537); out.push({b:((d<<10)|r)^0x5412,e,m}); } return out; })();
+  const pop=x=>{ let c=0; while(x){ x&=x-1; c++; } return c; };
+  const MASKF=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+  /* bits (grid[y][x] true = dark) → text */
+  function decodeGrid(G){ const n=G.length, v=(n-17)/4; if(v<1||v>40||v%1) return null;
+    const g=(x,y)=>G[y][x]?1:0; let b1=0, b2=0; for(let i=0;i<=5;i++) b1|=g(8,i)<<i; b1|=g(8,7)<<6; b1|=g(8,8)<<7; b1|=g(7,8)<<8; for(let i=9;i<15;i++) b1|=g(14-i,8)<<i;
+    for(let i=0;i<8;i++) b2|=g(n-1-i,8)<<i; for(let i=8;i<15;i++) b2|=g(8,n-15+i)<<i;
+    let best=null, bd=99; for(const f of FMTS){ for(const b of [b1,b2]){ const d=pop(f.b^b); if(d<bd){ bd=d; best=f; } } } if(bd>3) return null;
+    const F=funcMask(v), mk=MASKF[best.m]; const bits=[]; for(let right=n-1;right>=1;right-=2){ if(right===6) right=5; for(let vert=0;vert<n;vert++) for(let j=0;j<2;j++){ const x=right-j, up=((right+1)&2)===0, y=up?n-1-vert:vert; if(!F[y][x]) bits.push(G[y][x]^mk(x,y)?1:0); } }
+    const raw=Math.floor(rawMods(v)/8); const cw=new Array(raw); for(let i=0;i<raw;i++){ let b=0; for(let j=0;j<8;j++) b=(b<<1)|(bits[i*8+j]||0); cw[i]=b; }
+    const o=ORDOF[best.e], nb=NBL[o][v], el=ECW[o][v], nShort=nb-raw%nb, shortLen=Math.floor(raw/nb); const blocks=[...Array(nb)].map(()=>new Array(shortLen+1).fill(0)); let k=0;
+    for(let i=0;i<shortLen+1;i++) for(let j=0;j<nb;j++){ if(i===shortLen-el&&j<nShort) continue; blocks[j][i]=cw[k++]; }
+    const data=[]; for(let j=0;j<nb;j++){ let blk=blocks[j]; if(j<nShort) blk=blk.slice(0,shortLen-el).concat(blk.slice(shortLen-el+1)); if(!rsFix(blk,el)) return null; data.push(...blk.slice(0,blk.length-el)); }
+    return readData(data,v); }
+  function readData(data,v){ let p=0; const rd=n=>{ let r=0; for(let i=0;i<n;i++){ const by=data[p>>3]; if(by===undefined) return -1; r=(r<<1)|((by>>(7-(p&7)))&1); p++; } return r; }; const vg=v<=9?0:v<=26?1:2; let out=""; const AN="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+    while(p+4<=data.length*8){ const m=rd(4); if(m<=0) break;
+      if(m===1){ let c=rd([10,12,14][vg]); while(c>=3){ out+=String(rd(10)).padStart(3,"0"); c-=3; } if(c===2) out+=String(rd(7)).padStart(2,"0"); else if(c===1) out+=String(rd(4)); }
+      else if(m===2){ let c=rd([9,11,13][vg]); while(c>=2){ const x=rd(11); out+=AN[Math.floor(x/45)]+AN[x%45]; c-=2; } if(c===1) out+=AN[rd(6)]; }
+      else if(m===4){ const c=rd([8,16,16][vg]); const by=[]; for(let i=0;i<c;i++) by.push(rd(8)); try{ out+=new TextDecoder("utf-8",{fatal:true}).decode(new Uint8Array(by)); }catch{ out+=String.fromCharCode(...by); } }
+      else if(m===7){ const a=rd(8); if((a&0x80)===0x80) rd(8); if((a&0xC0)===0xC0) rd(8); }
+      else break; }
+    return out||null; }
+  /* ---- image → binary (local threshold, so shadows and glare in the hangar do not break it) ---- */
+  function binarize(gray,w,h,inv){ const B=8, bw=Math.ceil(w/B), bh=Math.ceil(h/B); const th=new Float32Array(bw*bh);
+    for(let by=0;by<bh;by++) for(let bx=0;bx<bw;bx++){ let mn=255,mx=0,sum=0,c=0; for(let y=by*B;y<Math.min(h,by*B+B);y++) for(let x=bx*B;x<Math.min(w,bx*B+B);x++){ const g=gray[y*w+x]; sum+=g; c++; if(g<mn) mn=g; if(g>mx) mx=g; }
+      let t=sum/c; if(mx-mn<=24){ t=mn/2; if(by>0&&bx>0){ const nb=(th[(by-1)*bw+bx]+2*th[by*bw+bx-1]+th[(by-1)*bw+bx-1])/4; if(mn<nb) t=nb; } } th[by*bw+bx]=t; }
+    const out=new Uint8Array(w*h); for(let by=0;by<bh;by++) for(let bx=0;bx<bw;bx++){ let s=0,c=0; for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++){ const yy=by+dy, xx=bx+dx; if(yy>=0&&xx>=0&&yy<bh&&xx<bw){ s+=th[yy*bw+xx]; c++; } } const t=s/c;
+      for(let y=by*B;y<Math.min(h,by*B+B);y++) for(let x=bx*B;x<Math.min(w,bx*B+B);x++){ const d=gray[y*w+x]<=t?1:0; out[y*w+x]=inv?1-d:d; } }
+    return out; }
+  /* ---- finder patterns ---- */
+  function finders(Bm,w,h){ const at=(x,y)=>Bm[y*w+x]; const C=[]; const ratio=s=>{ const t=s[0]+s[1]+s[2]+s[3]+s[4]; if(t<7) return false; const m=t/7, v=m/1.6; return Math.abs(m-s[0])<v&&Math.abs(m-s[1])<v&&Math.abs(3*m-s[2])<3*v&&Math.abs(m-s[3])<v&&Math.abs(m-s[4])<v; };
+    const cross=(cx,cy,dx,dy,maxC,tot)=>{ const s=[0,0,0,0,0]; let x=cx,y=cy; const ok=(x,y)=>x>=0&&y>=0&&x<w&&y<h;
+      while(ok(x,y)&&at(x,y)){ s[2]++; x-=dx; y-=dy; } if(!ok(x,y)) return NaN; while(ok(x,y)&&!at(x,y)&&s[1]<=maxC){ s[1]++; x-=dx; y-=dy; } if(!ok(x,y)||s[1]>maxC) return NaN; while(ok(x,y)&&at(x,y)&&s[0]<=maxC){ s[0]++; x-=dx; y-=dy; } if(s[0]>maxC) return NaN;
+      x=cx+dx; y=cy+dy; while(ok(x,y)&&at(x,y)){ s[2]++; x+=dx; y+=dy; } if(!ok(x,y)) return NaN; while(ok(x,y)&&!at(x,y)&&s[3]<maxC){ s[3]++; x+=dx; y+=dy; } if(!ok(x,y)||s[3]>=maxC) return NaN; while(ok(x,y)&&at(x,y)&&s[4]<maxC){ s[4]++; x+=dx; y+=dy; } if(s[4]>=maxC) return NaN;
+      const t=s.reduce((a,b)=>a+b,0); if(5*Math.abs(t-tot)>=2*tot||!ratio(s)) return NaN; return (dx?x:y)-(dx?dx:dy)*(s[4]+s[3]+s[2]/2); };
+    const step=Math.max(1,Math.floor(Math.min(w,h)/400));
+    for(let y=0;y<h;y+=step){ const s=[0,0,0,0,0]; let st=0; for(let x=0;x<=w;x++){ const d=x<w?at(x,y):0;
+        if(d){ if(st&1) st++; s[st]++; } else { if(!(st&1)){ if(st===4){ if(ratio(s)){ const tot=s.reduce((a,b)=>a+b,0); let cx=x-s[4]-s[3]-s[2]/2; const cy=cross(Math.round(cx),y,0,1,s[2],tot);
+                if(!isNaN(cy)){ cx=cross(Math.round(cx),Math.round(cy),1,0,s[2],tot); if(!isNaN(cx)){ const ms=tot/7; const e=C.find(c=>Math.abs(c.y-cy)<=ms&&Math.abs(c.x-cx)<=ms&&Math.abs(c.ms-ms)<=Math.max(1,c.ms*0.5)); if(e){ const n=e.n+1; e.x=(e.x*e.n+cx)/n; e.y=(e.y*e.n+cy)/n; e.ms=(e.ms*e.n+ms)/n; e.n=n; } else C.push({x:cx,y:cy,ms,n:1}); } } s[0]=s[2]; s[1]=s[3]; s[2]=s[4]; s[3]=1; s[4]=0; st=3; } else { s[0]=s[2]; s[1]=s[3]; s[2]=s[4]; s[3]=1; s[4]=0; st=3; } } else { st++; s[st]++; } } else s[st]++; } } }
+    return C; }
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  function triples(C){ const L=[...C].sort((a,b)=>b.n-a.n).slice(0,12); const out=[];
+    for(let i=0;i<L.length;i++) for(let j=i+1;j<L.length;j++) for(let k=j+1;k<L.length;k++){ const T=[L[i],L[j],L[k]]; const ms=T.map(t=>t.ms); if(Math.max(...ms)/Math.min(...ms)>1.6) continue;
+      const d=[[dist(T[1],T[2]),0],[dist(T[0],T[2]),1],[dist(T[0],T[1]),2]].sort((a,b)=>a[0]-b[0]); const [a,b,c]=d.map(x=>x[0]); if(a<7*Math.min(...ms)) continue; if((b-a)/b>0.4) continue; const hyp=Math.hypot(a,b); if(Math.abs(c-hyp)/c>0.2) continue;
+      const tl=T[d[2][1]], o=T.filter(t=>t!==tl); let tr=o[0], bl=o[1]; if((tr.x-tl.x)*(bl.y-tl.y)-(tr.y-tl.y)*(bl.x-tl.x)<0) [tr,bl]=[bl,tr];
+      out.push({tl,tr,bl,score:(b-a)/b+Math.abs(c-hyp)/c+(Math.max(...ms)/Math.min(...ms)-1)-0.05*Math.min(6,T[0].n+T[1].n+T[2].n)}); }
+    return out.sort((a,b)=>a.score-b.score).slice(0,4); }
+  /* perspective transform (unit square ↔ quadrilateral) */
+  function sq2q(x0,y0,x1,y1,x2,y2,x3,y3){ const dx3=x0-x1+x2-x3, dy3=y0-y1+y2-y3; if(Math.abs(dx3)<1e-9&&Math.abs(dy3)<1e-9) return [x1-x0,x2-x1,x0,y1-y0,y2-y1,y0,0,0,1];
+    const dx1=x1-x2, dx2=x3-x2, dy1=y1-y2, dy2=y3-y2, den=dx1*dy2-dx2*dy1, a13=(dx3*dy2-dx2*dy3)/den, a23=(dx1*dy3-dx3*dy1)/den; return [x1-x0+a13*x1,x3-x0+a23*x3,x0,y1-y0+a13*y1,y3-y0+a23*y3,y0,a13,a23,1]; }
+  const adj=m=>{ const [a11,a21,a31,a12,a22,a32,a13,a23,a33]=m; return [a22*a33-a23*a32,a23*a31-a21*a33,a21*a32-a22*a31,a13*a32-a12*a33,a11*a33-a13*a31,a12*a31-a11*a32,a12*a23-a13*a22,a13*a21-a11*a23,a11*a22-a12*a21]; };
+  const times=(A,B)=>{ const [a11,a21,a31,a12,a22,a32,a13,a23,a33]=A, [b11,b21,b31,b12,b22,b32,b13,b23,b33]=B; return [a11*b11+a21*b12+a31*b13,a11*b21+a21*b22+a31*b23,a11*b31+a21*b32+a31*b33,a12*b11+a22*b12+a32*b13,a12*b21+a22*b22+a32*b23,a12*b31+a22*b32+a32*b33,a13*b11+a23*b12+a33*b13,a13*b21+a23*b22+a33*b23,a13*b31+a23*b32+a33*b33]; };
+  function q2q(src,dst){ const s=adj(sq2q(...src)), d=sq2q(...dst); return times(d,s); }
+  const tf=(m,x,y)=>{ const [a11,a21,a31,a12,a22,a32,a13,a23,a33]=m; const den=a13*x+a23*y+a33; return [(a11*x+a21*y+a31)/den,(a12*x+a22*y+a32)/den]; };
+  function findAlign(Bm,w,h,est,ux,uy,ms){ const at=(x,y)=>{ x=Math.round(x); y=Math.round(y); return x>=0&&y>=0&&x<w&&y<h?Bm[y*w+x]:0; }; let best=null, bs=-1; const R=Math.ceil(ms*5);
+    for(let dy=-R;dy<=R;dy++) for(let dx=-R;dx<=R;dx++){ const cx=est[0]+dx, cy=est[1]+dy; let sc=0; for(let j=-2;j<=2;j++) for(let i=-2;i<=2;i++){ const want=Math.max(Math.abs(i),Math.abs(j))!==1?1:0; if(at(cx+i*ux[0]+j*uy[0],cy+i*ux[1]+j*uy[1])===want) sc++; }
+      if(sc>bs||(sc===bs&&best&&Math.hypot(dx,dy)<Math.hypot(best[0]-est[0],best[1]-est[1]))){ bs=sc; best=[cx,cy]; } }
+    return bs>=21?best:null; }
+  function sample(Bm,w,h,M,n){ const G=[]; for(let y=0;y<n;y++){ const r=[]; for(let x=0;x<n;x++){ const [px,py]=tf(M,x+0.5,y+0.5); const ix=Math.round(px-0.5), iy=Math.round(py-0.5); r.push(ix>=0&&iy>=0&&ix<w&&iy<h?Bm[iy*w+ix]===1:false); } G.push(r); } return G; }
+  function tryTriple(Bm,w,h,t){ const {tl,tr,bl}=t; let th=Math.atan2(tr.y-tl.y,tr.x-tl.x); th=Math.abs(th)%(Math.PI/2); if(th>Math.PI/4) th=Math.PI/2-th; const ms=(tl.ms+tr.ms+bl.ms)/3*Math.cos(th); let d0=Math.round((dist(tl,tr)+dist(tl,bl))/(2*ms))+7; const r=d0%4; d0+= r===0?1:r===2?-1:r===3?-2:0;
+    for(const n of [d0,d0+4,d0-4,d0+8,d0-8]){ if(n<21||n>177) continue; const v=(n-17)/4; const ux=[(tr.x-tl.x)/(n-7),(tr.y-tl.y)/(n-7)], uy=[(bl.x-tl.x)/(n-7),(bl.y-tl.y)/(n-7)];
+      const br=[tr.x+bl.x-tl.x,tr.y+bl.y-tl.y]; const cands=[];
+      if(v>=2){ const c=1-3/(n-7); const est=[tl.x+c*(br[0]-tl.x),tl.y+c*(br[1]-tl.y)]; const ap=findAlign(Bm,w,h,est,ux,uy,ms); if(ap) cands.push([n-6.5,ap]); }
+      cands.push([n-3.5,br]); const off=[0,-0.5,0.5,-1,1,-1.5,1.5]; for(const oy of off) for(const ox of off) if(ox||oy) cands.push([n-3.5,[br[0]+ox*ux[0]+oy*uy[0],br[1]+ox*ux[1]+oy*uy[1]]]);
+      for(const [mv,pt] of cands){ const M=q2q([3.5,3.5,n-3.5,3.5,mv,mv,3.5,n-3.5],[tl.x,tl.y,tr.x,tr.y,pt[0],pt[1],bl.x,bl.y]); const G=sample(Bm,w,h,M,n); const txt=decodeGrid(G); if(txt) return txt;
+        const GT=G[0].map((_,x)=>G.map(r=>r[x])); const t2=decodeGrid(GT); if(t2) return t2; } }
+    return null; }
+  /* public: ImageData-like {data,width,height} → text or null */
+  function decode(img){ const {width:w,height:h,data}=img; const gray=new Uint8Array(w*h); for(let i=0,j=0;i<w*h;i++,j+=4) gray[i]=(data[j]*77+data[j+1]*150+data[j+2]*29)>>8;
+    const blur=()=>{ const o=new Uint8Array(w*h); for(let y=0;y<h;y++) for(let x=0;x<w;x++){ let s=0,c=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const yy=y+dy, xx=x+dx; if(yy>=0&&xx>=0&&yy<h&&xx<w){ s+=gray[yy*w+xx]; c++; } } o[y*w+x]=s/c; } return o; };
+    for(const g of [gray,null]){ const G=g||blur(); for(const inv of [false,true]){ const Bm=binarize(G,w,h,inv); let C=finders(Bm,w,h).filter(c=>c.ms>=1.8||w<300); const strong=C.filter(c=>c.n>=2); if(strong.length>=3) C=strong; if(C.length<3) continue; for(const t of triples(C)){ const r=tryTriple(Bm,w,h,t); if(r) return r; } } }
+    return null; }
+  return {decode,decodeGrid};
+})();
+/* ---------- imágenes: preparar la foto para leerla mejor ---------- */
+async function fileCanvas(file,maxSide=2600){ const bmp=await createImageBitmap(file,{imageOrientation:"from-image"}).catch(()=>createImageBitmap(file)); const sc=Math.min(1,maxSide/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement("canvas"); cv.width=Math.round(bmp.width*sc); cv.height=Math.round(bmp.height*sc); cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height); bmp.close?.(); return cv; }
+function scaledCanvas(src,maxSide,crop){ const [sx,sy,sw,sh]=crop||[0,0,src.width,src.height]; const sc=Math.min(1,maxSide/Math.max(sw,sh)); const cv=document.createElement("canvas"); cv.width=Math.max(1,Math.round(sw*sc)); cv.height=Math.max(1,Math.round(sh*sc)); const g=cv.getContext("2d",{willReadFrequently:true}); g.imageSmoothingQuality="high"; g.drawImage(src,sx,sy,sw,sh,0,0,cv.width,cv.height); return cv; }
+function rotCanvas(src,deg){ const cv=document.createElement("canvas"); const q=((deg%360)+360)%360; cv.width=q%180?src.height:src.width; cv.height=q%180?src.width:src.height; const g=cv.getContext("2d"); g.translate(cv.width/2,cv.height/2); g.rotate(q*Math.PI/180); g.drawImage(src,-src.width/2,-src.height/2); return cv; }
+/* gray + shadow removal (divide by the local background) + contrast; ink:"red" ignores blue ruled lines of notebooks */
+function cleanCanvas(src,ink){ const w=src.width,h=src.height; const g=src.getContext("2d",{willReadFrequently:true}); const im=g.getImageData(0,0,w,h), d=im.data; const gray=new Float32Array(w*h);
+  for(let i=0,j=0;i<w*h;i++,j+=4) gray[i]=ink==="red"?Math.min(d[j],(d[j]*0.6+d[j+1]*0.4)):(d[j]*0.299+d[j+1]*0.587+d[j+2]*0.114);
+  const sw=Math.max(8,Math.round(w/28)), sh=Math.max(8,Math.round(h/28)); const sm=document.createElement("canvas"); sm.width=sw; sm.height=sh; const sg=sm.getContext("2d",{willReadFrequently:true});
+  const tmp=document.createElement("canvas"); tmp.width=w; tmp.height=h; const tg=tmp.getContext("2d",{willReadFrequently:true}); const gi=tg.createImageData(w,h); for(let i=0,j=0;i<w*h;i++,j+=4){ const v=gray[i]; gi.data[j]=gi.data[j+1]=gi.data[j+2]=v; gi.data[j+3]=255; } tg.putImageData(gi,0,0);
+  // background = local maximum-ish (paper colour): small blur of a dilated thumbnail
+  sg.drawImage(tmp,0,0,sw,sh); const t=sg.getImageData(0,0,sw,sh); const td=t.data, mx=new Uint8ClampedArray(sw*sh); for(let y=0;y<sh;y++) for(let x=0;x<sw;x++){ let m=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const yy=Math.min(sh-1,Math.max(0,y+dy)), xx=Math.min(sw-1,Math.max(0,x+dx)); m=Math.max(m,td[(yy*sw+xx)*4]); } mx[y*sw+x]=m; }
+  for(let i=0;i<sw*sh;i++){ td[i*4]=td[i*4+1]=td[i*4+2]=mx[i]; } sg.putImageData(t,0,0); const bg=document.createElement("canvas"); bg.width=w; bg.height=h; const bgc=bg.getContext("2d",{willReadFrequently:true}); bgc.imageSmoothingEnabled=true; bgc.drawImage(sm,0,0,w,h); const B=bgc.getImageData(0,0,w,h).data;
+  const out=tg.createImageData(w,h); let hist=new Uint32Array(256); const vals=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++){ const v=Math.min(255,255*gray[i]/Math.max(30,B[i*4])); vals[i]=v; hist[vals[i]]++; }
+  let lo=0,acc=0; while(lo<255&&acc+hist[lo]<w*h*0.01){ acc+=hist[lo]; lo++; } const hi=245; for(let i=0,j=0;i<w*h;i++,j+=4){ const v=Math.max(0,Math.min(255,(vals[i]-lo)*255/Math.max(20,hi-lo))); out.data[j]=out.data[j+1]=out.data[j+2]=v; out.data[j+3]=255; }
+  tg.putImageData(out,0,0); return tmp; }
+async function ocrCanvas(cv,{psm=11,rot=0,fast=false}={}){ await ocrReady(); const id=cv.getContext("2d",{willReadFrequently:true}).getImageData(0,0,cv.width,cv.height);
+  const r=await ocrCall({type:"page",w:id.width,h:id.height,rgba:id.data.buffer,psm,figure:false,dpi:300,dual:fast?"never":"auto",hunt:false,huntOrphans:false,knownRot:rot,want:null,clip:false,fast},[id.data.buffer]);
+  return (r.words||[]).filter(w=>String(w.text||"").trim()).map(w=>({text:String(w.text),x:w.x,y:w.y,w:w.w,h:w.h,conf:w.conf??0})); }
+/* codes on a still image: browser reader (Android) + own QR reader (all phones) */
+async function codesIn(cv){ const out=new Set(); try{ if("BarcodeDetector" in window){ const f=await BarcodeDetector.getSupportedFormats?.().catch(()=>null); const bd=f?.length?new BarcodeDetector({formats:f}):new BarcodeDetector(); for(const c of await bd.detect(cv)) if(c.rawValue) out.add(String(c.rawValue)); } }catch{}
+  if(!out.size){ for(const crop of [null,"center"]){ const c=crop?scaledCanvas(cv,1400,[cv.width*0.2,cv.height*0.2,cv.width*0.6,cv.height*0.6]):scaledCanvas(cv,1400); const g=c.getContext("2d",{willReadFrequently:true}); const t=QRDEC.decode(g.getImageData(0,0,c.width,c.height)); if(t){ out.add(t); break; } } }
+  return [...out]; }
+/* ---------- números de parte dentro de un texto ---------- */
+const PN_CONF={"0":["O","D","Q"],"O":["0","D","Q"],"D":["0","O"],"Q":["0","O"],"1":["I","L","7"],"I":["1","L"],"L":["1","I"],"7":["1","T"],"T":["7"],"5":["S"],"S":["5"],"8":["B","3"],"B":["8","3"],"3":["8","B"],"2":["Z"],"Z":["2"],"6":["G"],"G":["6","C"],"C":["G"],"U":["V"],"V":["U"]};
+const isDig=c=>/[0-9]/.test(c), isLet=c=>/[A-Z]/.test(c);
+const pnClean=t=>String(t||"").toUpperCase().replace(/[‐-―]/g,"-").replace(/^(P\/?N|NP|N\/P|PN|PART(NO)?|PNR)[:#.\s]*/,"").replace(/^[^A-Z0-9]+|[^A-Z0-9]+$/g,"").replace(/[^A-Z0-9\-\/.]/g,"");
+const pnLooks=t=>t.length>=4&&t.length<=24&&/\d/.test(t)&&(/[A-Z]/.test(t)||t.length>=6)&&!/^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(t)&&!/^\d+$/.test(t.replace(/-/g,""))||/^\d{6,}$/.test(t);
+function pnCatalogNear(p){ const c=pnCompact(p); if(!c) return null; let best=null,bd=9; for(const it of MAT.items.values()) for(const q of [it.pn,...altList(it.alt),...altList(it.altOk)]){ const k=pnCompact(q); if(!k) continue; if(k===c) return {pn:q,it,d:0}; if(Math.abs(k.length-c.length)<=2){ const d=lev(c,k); if(d<bd){ bd=d; best={pn:q,it,d}; } } } return best&&best.d<=2?best:null; }
+function pnScore(p){ let s=0; if(pnInfo(p)) s+=5; const n=pnCatalogNear(p); if(n) s+=n.d===0?7:3; if(p.length>=6&&p.length<=18) s+=1; if(/^[A-Z]{1,5}\d/.test(p)) s+=1; return s; }
+/* letters that are often confused: marks them, and proposes the version that fits the context (never applied by itself) */
+function pnAmb(p,conf){ const a=[]; let sug=""; const ch=[...p];
+  ch.forEach((c,i)=>{ const opts=PN_CONF[c]; let fix=c; if(!opts){ sug+=c; return; } const L=ch[i-1]||"", R=ch[i+1]||"";
+    const letInDig=isLet(c)&&isDig(L)&&isDig(R), digInPrefix=isDig(c)&&i<4&&ch.slice(0,i).every(isLet)&&i>0&&isLet(R);
+    if(letInDig){ const o=opts.find(isDig); if(o) fix=o; } else if(digInPrefix){ const o=opts.find(isLet); if(o) fix=o; }
+    if((letInDig||digInPrefix)&&(conf<90||fix!==c)) a.push({i,opts:[c,...opts.filter(o=>o!==c)],fix}); sug+=fix; });
+  // a context fix is proposed only when it turns into a part that exists (catalog) or a recognised standard, and the read one does not
+  const good=x=>pnCatalogNear(x)?.d===0||(!!pnInfo(x)); const useSug=sug!==p&&good(sug)&&!(pnCatalogNear(p)?.d===0)&&(!pnInfo(p)||pnCatalogNear(sug)?.d===0);
+  const n=pnCatalogNear(p); const near=n&&n.d>0?n.pn:null; return {amb:a.slice(0,4),sug:useSug?sug:null,near}; }
+/* rows of words (a notebook line, a label line) */
+function wordRows(words){ const W=[...words].sort((a,b)=>(a.y+a.h/2)-(b.y+b.h/2)); const rows=[]; for(const w of W){ const cy=w.y+w.h/2; const r=rows.at(-1); if(r&&Math.abs(cy-r.cy)<=0.6*Math.max(w.h,r.h)){ r.ws.push(w); r.cy=(r.cy*(r.ws.length-1)+cy)/r.ws.length; r.h=Math.max(r.h,w.h); } else rows.push({cy,h:w.h,ws:[w]}); }
+  rows.forEach(r=>r.ws.sort((a,b)=>a.x-b.x)); return rows; }
+function pnFromRow(ws){ const out=[]; for(let i=0;i<ws.length;i++) for(let k=1;k<=3&&i+k<=ws.length;k++){ const part=ws.slice(i,i+k); const gapOk=part.every((w,j)=>!j||(w.x-(part[j-1].x+part[j-1].w))<1.2*Math.max(w.h,part[j-1].h)); if(!gapOk) break;
+    const txt=pnClean(part.map(w=>w.text).join("")); if(!pnLooks(txt)) continue; const conf=Math.min(...part.map(w=>w.conf)); out.push({pn:txt,i,k,conf,score:pnScore(txt)+(k===1?0.5:0)+txt.length/40,box:[Math.min(...part.map(w=>w.x)),Math.min(...part.map(w=>w.y)),Math.max(...part.map(w=>w.x+w.w))-Math.min(...part.map(w=>w.x)),Math.max(...part.map(w=>w.y+w.h))-Math.min(...part.map(w=>w.y))]}); }
+  out.sort((a,b)=>b.score-a.score); const pick=[]; for(const c of out){ if(pick.some(p=>c.i<p.i+p.k&&p.i<c.i+c.k)) continue; if(pick.length&&c.score<4) continue; pick.push(c); if(pick.length>=2) break; }
+  const rest=ws.map(w=>w.text).join(" "); const q=(rest.match(/(?:^|\s)(?:X|CANT\.?|QTY|C\/)\s*(\d{1,4})\b/i)||rest.match(/\b(\d{1,4})\s*(?:PZAS?|PZ|PCS|EA|UDS?)\b/i)||rest.match(/\((\d{1,4})\)/)||[])[1]||"";
+  return pick.map(p=>({...p,qty:q})); }
+/* ---------- FOTO DE APUNTES: varios NP escritos (a mano o impresos) → usted dice de qué son ---------- */
+const NOTE={rows:[],photos:[],pre:null,busy:false,seq:0};
+async function notesOpen(pre){ if(!hasOcr()){ toast("El lector de texto no está incluido en este archivo."); return; } NOTE.rows=[]; NOTE.photos=[]; NOTE.pre=pre||null; notesRender(); setTimeout(()=>document.getElementById("nt_file")?.click(),60); }
+async function notesAdd(file){ NOTE.busy=true; notesRender(); try{ let cv=await fileCanvas(file,2400); NOTE.photos.push({cv,url:cv.toDataURL("image/jpeg",0.82)}); await notesRead(NOTE.photos.length-1); }
+  catch(e){ console.warn(e); toast("No se pudo leer la foto: "+e.message); } NOTE.busy=false; notesRender(); }
+async function notesRead(pi){ const ph=NOTE.photos[pi]; const base=ph.cv; const words=[];
+  // 1) handwriting/notebook: red channel (hides blue ruled lines) cleaned; 2) printed: normal gray
+  for(const [ink,psm] of [["red",11],["lum",6]]){ const c=cleanCanvas(scaledCanvas(base,2000),ink); const sc=base.width/c.width; try{ const ws=await ocrCanvas(c,{psm}); ws.forEach(w=>words.push({...w,x:w.x*sc,y:w.y*sc,w:w.w*sc,h:w.h*sc,pass:ink})); }catch(e){ console.warn("ocr",e); } }
+  const found=[]; for(const pass of ["red","lum"]) for(const r of wordRows(words.filter(w=>w.pass===pass))) for(const c of pnFromRow(r.ws)){ const dup=found.find(f=>{ const [ax,ay,aw,ah]=f.box,[bx,by,bw,bh]=c.box; return !(bx>ax+aw||ax>bx+bw||by>ay+ah||ay>by+bh); }); if(dup){ if(c.score>dup.score) Object.assign(dup,c); continue; } found.push(c); }
+  // codes printed on the sheet too
+  try{ for(const t of await codesIn(base)) for(const p of pnsInCode(t)) found.push({pn:p,conf:99,score:9,box:null,qty:"",code:true}); }catch{}
+  found.sort((a,b)=>(a.box?a.box[1]:1e9)-(b.box?b.box[1]:1e9));
+  for(const f of found){ const crop=f.box?cropUrl(base,f.box):""; const A=pnAmb(f.pn,f.conf); const near=pnCatalogNear(f.pn); const pre=NOTE.pre||{};
+    NOTE.rows.push({id:++NOTE.seq,ph:pi,box:f.box,crop,read:f.pn,pn:f.pn,conf:Math.round(f.conf),amb:A.amb,sug:A.sug,near:A.near,cat:near?.it?.cat||pnInfo(f.pn)?.cat||"",comp:pre.comp||(near&&near.d===0?near.it.comp:"")||"",panels:pre.panels||"",zone:pre.zone||"",qty:f.qty||"",inc:true,code:!!f.code}); }
+  if(!found.length) toast("No encontré números de parte en la foto. Pruebe más cerca, con buena luz, o agréguelos a mano.",7000); }
+function cropUrl(cv,[x,y,w,h]){ const p=Math.max(6,h*0.25); const sx=Math.max(0,x-p), sy=Math.max(0,y-p), sw=Math.min(cv.width-sx,w+2*p), sh=Math.min(cv.height-sy,h+2*p); const c=scaledCanvas(cv,360,[sx,sy,sw,sh]); return c.toDataURL("image/jpeg",0.85); }
+function pnsInCode(t){ t=String(t||""); const out=[]; if(/ACCESO|TORNILLER|^HTTPS?:/i.test(t)) return out; const m=t.match(/\bPNR\s*[:]?\s*([A-Z0-9\-\/.]{4,24})/i)||t.match(/\bP\/?N\s*[:#]?\s*([A-Z0-9\-\/.]{4,24})/i); if(m) out.push(pnClean(m[1]));
+  const first=pnClean(t.split(/\s*\|\s*/)[0]); if(!out.length&&pnLooks(first)&&!/^HTTPS?:/i.test(t)) out.push(first); return [...new Set(out)].filter(Boolean); }
+function notesRowStatus(r){ const p=pnCompact(r.pn); if(!p) return `<span class="pill r">Escriba el NP</span>`; const n=pnCatalogNear(r.pn); const inf=pnInfo(r.pn);
+  return `${n&&n.d===0?`<span class="pill g">✓ ya en catálogo · ${esc(n.it.comp||"")}</span>`:""}${inf?`<span class="pill c">Estándar ${esc(inf.std)} · ${esc(inf.hint)}</span>`:n&&n.d===0?"":`<span class="pill a">Formato no reconocido: revíselo</span>`}`; }
+function notesHtml(){ const E2=esc; const R=NOTE.rows; const comps=[...new Map([...MAT.items.values()].map(i=>[matNorm(i.comp),i.comp])).values()].sort();
+  const ok=R.filter(r=>r.inc&&pnCompact(r.pn)).length, dud=R.filter(r=>r.amb.length||r.sug||r.near).length, bad=R.filter(r=>!pnCompact(r.pn)).length;
+  const photo=NOTE.photos.at(-1); const pi=NOTE.photos.length-1;
+  return `<div class="modal" data-close="1"><div class="sheet m2-notes" role="dialog" aria-modal="true" aria-label="Foto de apuntes"><div class="sh"><span class="eyebrow">Materiales</span><h3>Foto de apuntes</h3><span class="sp"></span>${R.length?`<span class="pill g">${ok} listo(s)</span>${dud?`<span class="pill a">${dud} por revisar</span>`:""}${bad?`<span class="pill r">${bad} sin leer</span>`:""}`:""}<button class="btn ghost sm" data-close="1" aria-label="Cerrar">✕</button></div>
+   <div class="sb"><div class="nt-grid">
+    <div class="nt-photo">${photo?`<div class="nt-img"><img src="${photo.url}" alt="Foto">${R.filter(r=>r.ph===pi&&r.box).map((r,k)=>{ const [x,y,w,h]=r.box, W=photo.cv.width, H=photo.cv.height; return `<i class="nt-box ${!pnCompact(r.pn)?"bad":r.amb.length||r.sug||r.near?"wa":""}" style="left:${x/W*100}%;top:${y/H*100}%;width:${w/W*100}%;height:${h/H*100}%"><b>${R.indexOf(r)+1}</b></i>`; }).join("")}</div>`:`<div class="mat-empty">Tome una foto de sus apuntes: <b>un número de parte por renglón, en MAYÚSCULAS de molde</b>, con buena luz y la hoja derecha.</div>`}
+     ${NOTE.busy?`<div class="nt-busy"><div class="progress"><i style="width:70%"></i></div><span class="small">Leyendo los números…</span></div>`:""}
+     <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px"><label class="btn sm pri">📷 ${NOTE.photos.length?"Otra foto":"Tomar / elegir foto"}<input type="file" accept="image/*" capture="environment" id="nt_file" hidden></label>${photo?`<button class="btn sm" data-nt="rot">↻ Girar y releer</button>`:""}<button class="btn sm" data-nt="addrow">+ Renglón a mano</button></div></div>
+    <div class="nt-list">${R.length?`<div class="nt-rows">${R.map((r,k)=>`<div class="nt-row ${!pnCompact(r.pn)?"bad":r.amb.length||r.sug||r.near?"wa":""} ${r.inc?"":"off"}" data-ntrow="${r.id}">
+      <div class="nt-n"><label><input type="checkbox" data-ntinc="${r.id}" ${r.inc?"checked":""} aria-label="Incluir"></label><b class="num">${k+1}</b></div>
+      ${r.crop?`<img class="nt-crop" src="${r.crop}" alt="Recorte ${k+1}">`:`<span class="nt-crop nocrop">${r.code?"código":"a mano"}</span>`}
+      <div class="nt-pn"><input class="mono nt-pnin" data-ntpn="${r.id}" value="${E2(r.pn)}" placeholder="Escriba el NP como está" aria-label="Número de parte ${k+1}" autocapitalize="characters" spellcheck="false">
+       <div class="nt-dyn">${ntDyn(r)}</div></div>
+      <div class="nt-f"><select data-ntf="cat" data-id="${r.id}" aria-label="¿Qué es?"><option value="">¿Qué es?</option>${MAT_CATS.map(([c,t])=>`<option value="${c}" ${r.cat===c?"selected":""}>${E2(t)}</option>`).join("")}</select>
+       <input data-ntf="comp" data-id="${r.id}" list="nt_comps" value="${E2(r.comp)}" placeholder="Componente (ej. Lavatory FWD)"><div class="row" style="gap:6px"><input data-ntf="panels" data-id="${r.id}" class="mono" value="${E2(r.panels)}" placeholder="Acceso" style="width:96px"><input data-ntf="qty" data-id="${r.id}" value="${E2(r.qty)}" placeholder="Cant." inputmode="numeric" style="width:70px"><button type="button" class="btn sm ghost" data-ntdel="${r.id}" title="Quitar renglón">✕</button></div></div></div>`).join("")}</div>
+      <div class="nt-bulk"><span class="small mut">A los marcados:</span><input id="nt_bcomp" list="nt_comps" placeholder="Componente"><input id="nt_bpan" class="mono" placeholder="Acceso" style="width:90px"><select id="nt_bcat"><option value="">Tipo…</option>${MAT_CATS.map(([c,t])=>`<option value="${c}">${E2(t)}</option>`).join("")}</select><button type="button" class="btn sm" data-nt="bulk">Aplicar</button></div>
+      <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><span class="small mut">Nada se guarda hasta que usted confirme. Si el NP ya existe con el mismo componente, se agrega el acceso en vez de repetirlo.</span><span class="sp"></span><button type="button" class="btn pri" data-nt="save" ${ok?"":"disabled"}>✓ Guardar ${ok} en el catálogo</button></div>`
+      :`<div class="mat-empty small">${NOTE.busy?"Leyendo…":"Aquí aparecerá cada número leído, con su recorte de la foto, para que usted diga de qué es y corrija cualquier letra o número."}</div>`}</div></div>
+    <datalist id="nt_comps">${comps.map(c=>`<option value="${E2(c)}">`).join("")}</datalist></div></div></div>`; }
+function ntDyn(r){ const E2=esc; return `${r.amb.length?`<div class="nt-chars">${[...r.pn].map((c,i)=>{ const a=r.amb.find(x=>x.i===i&&r.pn[i]===c); return a?`<span class="nt-ch amb">${a.opts.map(o=>`<button type="button" class="${o===c?"on":""}" data-ntch="${r.id}" data-i="${i}" data-c="${E2(o)}">${E2(o)}</button>`).join("")}</span>`:`<span class="nt-ch">${E2(c)}</span>`; }).join("")}</div>`:""}
+       ${r.sug&&r.sug!==r.pn?`<button type="button" class="btn sm" data-ntuse="${r.id}" data-v="${E2(r.sug)}">¿${E2(r.sug)}? Usar</button>`:""}${r.near&&pnCompact(r.near)!==pnCompact(r.pn)?`<button type="button" class="btn sm" data-ntuse="${r.id}" data-v="${E2(r.near)}">¿Es ${E2(r.near)} del catálogo? Usar</button>`:""}
+       <div class="nt-st">${notesRowStatus(r)}${r.read!==r.pn&&r.read?`<span class="small mut">leído: <span class="mono">${E2(r.read)}</span></span>`:""}</div>`; }
+function notesRender(){ const m=$("#modal"); const sc=m.querySelector(".nt-list")?.scrollTop||0; const a=document.activeElement; const aid=a?.dataset?.ntpn||null, pos=a?.selectionStart; m.innerHTML=notesHtml(); const l=m.querySelector(".nt-list"); if(l) l.scrollTop=sc; if(aid){ const i=m.querySelector(`[data-ntpn="${aid}"]`); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch{} } } }
+function notesRowFix(r){ const A=pnAmb(r.pn,r.amb.length?r.conf:99); r.amb=r.amb.filter(a=>a.i<r.pn.length&&PN_CONF[r.pn[a.i]]); r.sug=A.sug; r.near=A.near; if(!r.cat) r.cat=pnInfo(r.pn)?.cat||""; }
+async function notesSave(btn){ const L=NOTE.rows.filter(r=>r.inc&&pnCompact(r.pn)); if(!L.length) return; btn.disabled=true; let nNew=0,nUpd=0,nSkip=0; const fromRead=r=>r.read&&r.read!==r.pn?` (leído «${r.read}», corregido)`:"";
+  try{ for(const r of L){ const pn=r.pn.trim().toUpperCase(); const ex=[...MAT.items.values()].find(i=>pnCompact(i.pn)===pnCompact(pn)&&matNorm(i.comp)===matNorm(r.comp||""));
+      if(ex){ if(!matCanFix()){ nSkip++; continue; } const it={...ex}; const pans=[...new Set([...String(it.panels||"").split(/[,;\s]+/),...String(r.panels||"").toUpperCase().split(/[,;\s]+/)].filter(Boolean))].join(", "); if(pans===String(ex.panels||"")&&!r.qty){ nSkip++; continue; }
+        const nw={...it,panels:pans,qty:it.qty||r.qty}; const ch=matDiff(it,nw); Object.assign(it,nw); histPush(it,{ev:"Actualizado desde foto de apuntes"+fromRead(r),ch}); await matPut(it).catch(e=>{ throw matDenied(e,"corregir"); }); nUpd++; }
+      else { if(!matCanAdd()){ nSkip++; continue; } const it={id:matId(),comp:r.comp||"(sin componente)",cat:r.cat||pnInfo(pn)?.cat||"OTHER",desc:pnInfo(pn)?.hint||"",pn,qty:r.qty||"",unit:"pza",panels:String(r.panels||"").toUpperCase(),zone:r.zone||(String(r.panels||"").match(/^([1-8])\d\d/)?.[1]?String(r.panels).match(/^([1-8])/)[1]+"00":""),at:nowIso()};
+        histPush(it,{ev:"Agregado desde foto de apuntes"+fromRead(r)}); await matPut(it).catch(e=>{ throw matDenied(e,"agregar"); }); nNew++; } }
+    closeModal(); toast(`${nNew} nueva(s)${nUpd?` · ${nUpd} actualizada(s)`:""}${nSkip?` · ${nSkip} sin cambios`:""}.`,6000); MAT.tab="cat"; matRender(); }
+  catch(e){ toast(e.message,8000); btn.disabled=false; } }
+document.addEventListener("change",async e=>{ const t=e.target; if(!t.closest?.(".m2-notes")) return;
+  if(t.id==="nt_file"&&t.files?.[0]){ const f=t.files[0]; t.value=""; await notesAdd(f); return; }
+  if(t.dataset.ntinc){ const r=NOTE.rows.find(x=>x.id==+t.dataset.ntinc); if(r){ r.inc=t.checked; t.closest(".nt-row")?.classList.toggle("off",!r.inc); const ok=NOTE.rows.filter(x=>x.inc&&pnCompact(x.pn)).length; const sb=document.querySelector('[data-nt="save"]'); if(sb){ sb.disabled=!ok; sb.textContent=`✓ Guardar ${ok} en el catálogo`; } } return; }
+  if(t.dataset.ntf){ const r=NOTE.rows.find(x=>x.id==+t.dataset.id); if(r){ r[t.dataset.ntf]=t.dataset.ntf==="panels"?t.value.toUpperCase():t.value; } return; }
+  if(t.dataset.ntpn){ const r=NOTE.rows.find(x=>x.id==+t.dataset.ntpn); if(r){ const nv=t.value.toUpperCase().trim(); if(nv===r.pn){ t.value=nv; return; } r.pn=nv; t.value=r.pn; notesRowFix(r); const row=t.closest(".nt-row"); const dy=row?.querySelector(".nt-dyn"); if(dy) dy.innerHTML=ntDyn(r); row?.classList.toggle("bad",!pnCompact(r.pn)); const sel=row?.querySelector('[data-ntf="cat"]'); if(sel&&!sel.value&&r.cat) sel.value=r.cat; const ok=NOTE.rows.filter(x=>x.inc&&pnCompact(x.pn)).length; const sb=document.querySelector('[data-nt="save"]'); if(sb){ sb.disabled=!ok; sb.textContent=`✓ Guardar ${ok} en el catálogo`; } } return; } });
+document.addEventListener("input",e=>{ const t=e.target; if(t.dataset?.ntf&&t.closest?.(".m2-notes")){ const r=NOTE.rows.find(x=>x.id==+t.dataset.id); if(r) r[t.dataset.ntf]=t.dataset.ntf==="panels"?t.value.toUpperCase():t.value; } });
+document.addEventListener("click",async e=>{ const b=e.target.closest?.("[data-nt],[data-ntch],[data-ntuse],[data-ntdel]"); if(!b||!b.closest(".m2-notes")) return; const d=b.dataset;
+  if(d.ntch){ const r=NOTE.rows.find(x=>x.id==+d.ntch); if(r){ const i=+d.i; r.pn=r.pn.slice(0,i)+d.c+r.pn.slice(i+1); const a=r.amb.find(x=>x.i===i); if(a&&!a.opts.includes(d.c)) a.opts.push(d.c); const A=pnAmb(r.pn,99); r.sug=A.sug; r.near=A.near; if(!r.cat) r.cat=pnInfo(r.pn)?.cat||""; notesRender(); } return; }
+  if(d.ntuse){ const r=NOTE.rows.find(x=>x.id==+d.ntuse); if(r){ r.pn=d.v; r.amb=[]; r.sug=null; const n=pnCatalogNear(r.pn); r.near=null; if(n?.d===0){ if(!r.cat) r.cat=n.it.cat||""; if(!r.comp) r.comp=n.it.comp||""; } else if(!r.cat) r.cat=pnInfo(r.pn)?.cat||""; notesRender(); } return; }
+  if(d.ntdel){ NOTE.rows=NOTE.rows.filter(x=>x.id!=+d.ntdel); notesRender(); return; }
+  if(d.nt==="addrow"){ const pre=NOTE.pre||{}; NOTE.rows.push({id:++NOTE.seq,ph:-1,box:null,crop:"",read:"",pn:"",conf:99,amb:[],sug:null,near:null,cat:"",comp:pre.comp||"",panels:pre.panels||"",zone:pre.zone||"",qty:"",inc:true}); notesRender(); setTimeout(()=>{ const ins=document.querySelectorAll(".nt-pnin"); ins[ins.length-1]?.focus(); },30); return; }
+  if(d.nt==="rot"){ const pi=NOTE.photos.length-1; const ph=NOTE.photos[pi]; NOTE.rows=NOTE.rows.filter(r=>r.ph!==pi); ph.cv=rotCanvas(ph.cv,90); ph.url=ph.cv.toDataURL("image/jpeg",0.82); NOTE.busy=true; notesRender(); try{ await notesRead(pi); }catch(err){ toast(err.message); } NOTE.busy=false; notesRender(); return; }
+  if(d.nt==="bulk"){ const c=$("#nt_bcomp").value.trim(), p=$("#nt_bpan").value.trim().toUpperCase(), k=$("#nt_bcat").value; NOTE.rows.filter(r=>r.inc).forEach(r=>{ if(c) r.comp=c; if(p) r.panels=p; if(k) r.cat=k; }); notesRender(); return; }
+  if(d.nt==="save"){ await notesSave(b); return; } });
+/* ---------- ESCANEAR: cámara en vivo (QR / código de barras) + foto para leer el texto de la etiqueta ---------- */
+const SCAN={stream:null,timer:0,busy:false,track:null};
+function scanStop(){ clearInterval(SCAN.timer); SCAN.timer=0; SCAN.stream?.getTracks().forEach(t=>t.stop()); SCAN.stream=null; SCAN.track=null; }
+async function scanOpen(){ const m=$("#modal"); const live=!!navigator.mediaDevices?.getUserMedia&&isSecureContext;
+  m.innerHTML=`<div class="modal" data-close="1"><div class="sheet m2-scan" role="dialog" aria-modal="true" aria-label="Escanear"><div class="sh"><span class="eyebrow">Materiales</span><h3>Escanear</h3><span class="sp"></span><button class="btn ghost sm" data-close="1" aria-label="Cerrar">✕</button></div>
+   <div class="sb">${live?`<div class="sc-view"><video id="sc_v" playsinline muted autoplay></video><i class="sc-frame"></i><span class="sc-msg" id="sc_msg">Apunte al QR o al código de barras…</span></div>`:`<div class="mat-empty small">La cámara en vivo no está disponible en este navegador. Use «Foto de la etiqueta».</div>`}
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">${live?`<button class="btn pri" data-sc="snap">📸 Leer texto de la etiqueta</button><button class="btn" data-sc="torch" id="sc_torch" hidden>🔦 Linterna</button>`:""}<label class="btn">🖼 Foto de la etiqueta<input type="file" accept="image/*" capture="environment" id="mat_scan" hidden></label></div>
+    <p class="small mut" style="margin:8px 0 0">QR y códigos de barras se leen solos en vivo. Para el texto (P/N impreso), acerque la etiqueta, que se vea derecha y sin reflejos, y toque «Leer texto».</p></div></div></div>`;
+  if(!live) return; try{ const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}},audio:false}); SCAN.stream=st; SCAN.track=st.getVideoTracks()[0]; const v=$("#sc_v"); if(!v){ scanStop(); return; } v.srcObject=st; await v.play().catch(()=>{});
+    try{ if(SCAN.track.getCapabilities?.().torch) $("#sc_torch").hidden=false; SCAN.track.applyConstraints?.({advanced:[{focusMode:"continuous"}]})?.catch?.(()=>{}); }catch{}
+    let bd=null; try{ if("BarcodeDetector" in window){ const f=await BarcodeDetector.getSupportedFormats(); bd=new BarcodeDetector(f?.length?{formats:f}:undefined); } }catch{}
+    const cv=document.createElement("canvas"); const g=cv.getContext("2d",{willReadFrequently:true}); let flip=0;
+    SCAN.timer=setInterval(async()=>{ if(SCAN.busy||!v.videoWidth||!document.getElementById("sc_v")) { if(!document.getElementById("sc_v")) scanStop(); return; } SCAN.busy=true;
+      try{ let txt=null; if(bd){ const r=await bd.detect(v); if(r[0]?.rawValue) txt=r[0].rawValue; }
+        if(!txt){ flip^=1; const W=v.videoWidth,H=v.videoHeight; const side=Math.min(W,H)*(flip?0.62:0.95); const sx=(W-side)/2, sy=(H-side)/2; const S2=Math.min(720,side); cv.width=cv.height=Math.round(S2); g.drawImage(v,sx,sy,side,side,0,0,cv.width,cv.height); txt=QRDEC.decode(g.getImageData(0,0,cv.width,cv.height)); }
+        if(txt){ navigator.vibrate?.(60); scanStop(); await scanResult({codes:[txt]}); } }catch(err){ console.warn(err); } SCAN.busy=false; },260);
+  }catch(err){ const msg=$("#sc_msg"); if(msg) msg.textContent=err.name==="NotAllowedError"?"Sin permiso para la cámara: permítalo en el navegador o use «Foto de la etiqueta».":"No se pudo abrir la cámara: use «Foto de la etiqueta»."; } }
+/* label photo: codes + text (two passes, upright or sideways) */
+async function scanImage(src){ const msg=$("#sc_msg"); if(msg) msg.textContent="Leyendo…"; toast("Leyendo etiqueta…",3000);
+  const cv=src instanceof HTMLCanvasElement?src:await fileCanvas(src,2600); const codes=await codesIn(cv).catch(()=>[]); let words=[];
+  if(hasOcr()){ const c=cleanCanvas(scaledCanvas(cv,2200),"lum"); for(const psm of [11,6]){ try{ const ws=await ocrCanvas(c,{psm,rot:null,fast:psm===6}); words.push(...ws); if(ws.some(w=>pnLooks(pnClean(w.text))&&pnScore(pnClean(w.text))>=5)) break; }catch(e){ console.warn(e); } } }
+  const cands=new Map(); const add=(p,s)=>{ p=pnClean(p); if(!pnLooks(p)) return; cands.set(p,Math.max(cands.get(p)||0,s+pnScore(p))); };
+  codes.forEach(t=>pnsInCode(t).forEach(p=>add(p,6))); for(const r of wordRows(words)){ const txt=r.ws.map(w=>w.text).join(" "); const m=txt.toUpperCase().match(/(?:P\/?N|PART\s*(?:NO|NUMBER)|PNR|N\.?\s*P\.?)\s*[:#.]?\s*([A-Z0-9][A-Z0-9\-\/. ]{3,24})/); if(m) add(m[1].replace(/\s+/g,""),4); for(const c of pnFromRow(r.ws)) add(c.pn,0); }
+  await scanResult({codes,cands:[...cands].sort((a,b)=>b[1]-a[1]).map(x=>x[0]),photo:true}); }
+async function scanResult({codes=[],cands=[],photo=false}){ const E2=esc; const acc=codes.map(t=>String(t).toUpperCase().match(/\b([1-8]\d{2}[A-Z]{2,3})\b/)?.[1]).find(Boolean);
+  if(acc&&codes.some(t=>/ACCESO|TORNILLER|#/i.test(t))){ closeModal(); MAT.tab="cat"; MAT.q=acc; matRender(); toast(`Acceso ${acc}: sus materiales.`); return; }
+  if(!cands.length) codes.forEach(t=>pnsInCode(t).forEach(p=>cands.push(p))); cands=[...new Set(cands)];
+  const m=$("#modal"); m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Resultado" style="max-width:600px"><div class="sh"><span class="eyebrow">Escanear</span><h3>${cands.length?"Números de parte encontrados":"No encontré un número de parte"}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
+   <div class="sb" style="display:flex;flex-direction:column;gap:8px">${codes.length?`<div class="small mut">Código leído: <span class="mono">${E2(codes[0].slice(0,120))}</span></div>`:""}
+    ${cands.slice(0,8).map(c=>{ const n=pnCatalogNear(c); return `<div class="row m2-cand"><input class="mono sc-pn" value="${E2(c)}" aria-label="Número de parte" style="width:200px"><span class="small muted">${E2(pnInfo(c)?.hint||"")}${n&&n.d===0?` · ya está en el catálogo (${E2(n.it.comp||"")})`:n?` · ¿${E2(n.pn)}?`:""}</span><span class="sp"></span><button class="btn sm" data-m2scan="find">Buscar</button>${matCanAdd()?`<button class="btn sm pri" data-m2scan="add">Agregar</button>`:""}</div>`; }).join("")||`<p class="small muted">${photo?"Acerque más la etiqueta, con buena luz y sin reflejos, o escriba el número en el buscador.":"El código no contiene un número de parte."}</p>`}
+    <div class="row" style="gap:8px"><button class="btn sm" data-m2="scan">↻ Escanear otra vez</button></div></div></div></div>`; }
+document.addEventListener("click",async e=>{ const b=e.target.closest?.("[data-sc]"); if(!b) return;
+  if(b.dataset.sc==="snap"){ const v=$("#sc_v"); if(!v?.videoWidth) return; const cv=document.createElement("canvas"); cv.width=v.videoWidth; cv.height=v.videoHeight; cv.getContext("2d").drawImage(v,0,0); scanStop(); b.disabled=true; try{ await scanImage(cv); }catch(err){ toast(err.message); } return; }
+  if(b.dataset.sc==="torch"&&SCAN.track){ const on=!b.classList.contains("on"); try{ await SCAN.track.applyConstraints({advanced:[{torch:on}]}); b.classList.toggle("on",on); }catch{} } });
+new MutationObserver(()=>{ if(SCAN.stream&&!document.getElementById("sc_v")) scanStop(); }).observe(document.getElementById("modal")||document.body,{childList:true});
 const matId=()=>"m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const altList=s=>String(s||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
 /* ---------- UI ---------- */
 function matShell(){ return MAT.loaded?matHtml():`<div class="mat2"><div class="matload"><div class="progress"><i style="width:60%"></i></div><span class="small muted">Cargando catálogo de materiales…</span></div></div>`; }
-function matMount(){ const r=document.getElementById("mat_root"); if(!r) return; if(MAT.loaded){ if(!r.querySelector(".m2-top")) r.innerHTML=matHtml(); return; } matLoad().then(()=>{ const x=document.getElementById("mat_root"); if(x) x.innerHTML=matHtml(); }); }
+function matMount(){ const r=document.getElementById("mat_root"); if(!r) return; if(cmmLevel()!=="none"&&!CMM.loaded) cmmLoad().then(()=>{ const sd=document.getElementById("mat_side"); if(sd&&MAT.sel) sd.innerHTML=matSideHtml(); }); if(MAT.loaded){ if(!r.querySelector(".m2-top")) r.innerHTML=matHtml(); return; } matLoad().then(()=>{ const x=document.getElementById("mat_root"); if(x) x.innerHTML=matHtml(); }); }
 function matRender(){ const r=document.getElementById("mat_root"); if(r){ const a=document.activeElement?.id; r.innerHTML=matHtml(); if(a==="mat_q"){ const q=$("#mat_q"); q?.focus(); q?.setSelectionRange(q.value.length,q.value.length); } } }
 function matRefresh(){ for(const [id,fn] of [["mat_res",matListHtml],["mat_rail",matRailHtml],["mat_side",matSideHtml],["mat_meta",matMetaHtml]]){ const e=document.getElementById(id); if(e) e.innerHTML=fn(); } }
 const ALERTN=()=>[...MAT.items.values()].filter(it=>matStates(it).some(s=>s!=="rep")).length;
@@ -1507,8 +1802,8 @@ function matHtml(){ const E2=esc, edit=matCanEdit(); const items=[...MAT.items.v
    <div class="m2-search"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.2"/></svg>
     <input id="mat_q" type="search" autocomplete="off" placeholder="Buscar: baño, caños, galley, 192AL, NAS1149, washer…" value="${E2(MAT.q)}" aria-label="Buscar materiales" aria-autocomplete="list">
     ${sr?`<button class="m2-mic" data-m2="voice" title="Buscar por voz" aria-label="Buscar por voz">🎤</button>`:""}<span class="kbd" title="Atajo">/</span><div id="mat_sugg" class="m2-sugg" hidden></div></div>
-   <div class="m2-acts"><label class="btn sm" title="Foto de la etiqueta / bolsa de la pieza">⌁ Escanear etiqueta<input type="file" accept="image/*" capture="environment" id="mat_scan" hidden></label>
-    ${edit?`<label class="btn sm">Importar IPC (PDF)<input type="file" accept="application/pdf,.pdf" id="mat_ipc" hidden></label><button class="btn sm" data-m2="import">Importar Excel</button><button class="btn sm pri" data-m2="new">+ Agregar parte</button>`:`<span class="pill s-NOT_FOUND">Solo consulta</span>`}
+   <div class="m2-acts"><button class="btn sm" data-m2="scan" title="QR, código de barras o texto de la etiqueta">⌁ Escanear</button>
+    ${matCanAdd()?`<button class="btn sm" data-m2="notes" title="Foto de sus apuntes con varios números de parte">📝 Foto de apuntes</button><label class="btn sm">Importar IPC (PDF)<input type="file" accept="application/pdf,.pdf" id="mat_ipc" hidden></label><button class="btn sm" data-m2="import">Importar Excel</button><button class="btn sm pri" data-m2="new">+ Agregar parte</button>`:edit?"":`<span class="pill s-NOT_FOUND">Solo consulta</span>`}
     <button class="btn sm ghost" data-m2="export" ${items.length?"":"disabled"}>Exportar</button></div></div>
   <div class="m2-tabs" role="tablist"><button role="tab" class="${MAT.tab==="cat"?"on":""}" data-m2tab="cat">Catálogo <b>${items.length}</b></button><button role="tab" class="${MAT.tab==="kit"?"on":""}" data-m2tab="kit">Kit por día</button><button role="tab" class="${MAT.tab==="alerts"?"on":""}" data-m2tab="alerts">Alertas ${nA?`<b class="warn">${nA}</b>`:""}</button></div>
   ${MAT.tab==="kit"?`<div id="mat_kit">${matKitHtml()}</div>`:MAT.tab==="alerts"?matAlertsHtml():`
@@ -1540,8 +1835,8 @@ function matListHtml(){ const E2=esc; const edit=matCanEdit(); const {items}=mat
   const G=[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name)); const many=G.length>8&&!MAT.q&&!Object.values(MAT.f).some(Boolean);
   return G.map(g=>{ const open=!many||MAT.open.has(g.name)||G.length===1; const atas=[...new Set(g.items.map(ataCh).filter(Boolean))], zs=[...new Set(g.items.map(matZone).filter(Boolean))], pans=[...new Set(g.items.flatMap(i=>String(i.panels||"").split(/[,;\s]+/).filter(Boolean)))];
     return `<section class="mat-grp ${open?"open":""}"><button class="mat-gh" data-matgrp="${E2(g.name)}"><b>${E2(g.name)}</b>${atas.map(a=>`<span class="ata">ATA ${E2(String(g.items.find(i=>ataCh(i)===a)?.ata||a).match(/\d\d(-\d\d){0,2}/)?.[0]||a)}</span>`).join("")}${zs.map(z=>`<span class="zone">Zona ${z}</span>`).join("")}<span class="sp"></span>${pans.length?`<span class="small muted">Accesos ${pans.slice(0,4).map(E2).join(" · ")}${pans.length>4?"…":""}</span>`:""}<span class="small muted">${g.items.length} ${open?"▾":"▸"}</span></button>
-     ${open?`<div class="tbl-wrap"><table class="mat-t"><thead><tr><th>Tipo</th><th>P/N manual (IPC)</th><th>Alternos</th><th>Descripción</th><th>Cant.</th><th>Ref.</th></tr></thead><tbody>${g.items.sort((a,b)=>String(a.cat).localeCompare(String(b.cat))||String(a.pn).localeCompare(String(b.pn))).map(it=>`<tr class="${MAT.sel===it.id?"sel":""}" data-matrow="${E2(it.id)}" tabindex="0">
-       <td><span class="mtype c-${E2(it.cat||"OTHER")}">${matIco(it.cat,22)}${E2(MAT_SHORT(it.cat))}</span></td><td class="mono"><b>${E2(it.pn||"—")}</b>${repBadge(it)}${expBadge(it)}${matLow(it)?` <span class="rep red">BAJO MÍN.</span>`:""}</td><td>${matAltCells(it)}</td><td>${E2(it.desc||"")}</td><td class="mono">${E2(it.qty||"")}</td><td class="small muted">${E2(it.ref||"")}</td></tr>`).join("")}</tbody></table></div>`:""}</section>`; }).join(""); }
+     ${open?`<div class="tbl-wrap"><table class="mat-t"><thead><tr><th>Tipo</th><th>P/N manual (IPC)</th><th>Alternos</th><th>Descripción</th><th>Cant.</th><th>Ref.</th>${matCanFix()?"<th></th>":""}</tr></thead><tbody>${g.items.sort((a,b)=>String(a.cat).localeCompare(String(b.cat))||String(a.pn).localeCompare(String(b.pn))).map(it=>`<tr class="${MAT.sel===it.id?"sel":""}" data-matrow="${E2(it.id)}" tabindex="0">
+       <td><span class="mtype c-${E2(it.cat||"OTHER")}">${matIco(it.cat,22)}${E2(MAT_SHORT(it.cat))}</span></td><td class="mono"><b>${E2(it.pn||"—")}</b>${repBadge(it)}${expBadge(it)}${matLow(it)?` <span class="rep red">BAJO MÍN.</span>`:""}</td><td>${matAltCells(it)}</td><td>${E2(it.desc||"")}</td><td class="mono">${E2(it.qty||"")}</td><td class="small muted">${E2(it.ref||"")}</td>${matCanFix()?`<td><button class="btn sm ghost m2-fix" data-matedit="${E2(it.id)}" title="Corregir" aria-label="Corregir ${E2(it.pn||"")}">✎</button></td>`:""}</tr>`).join("")}</tbody></table></div>`:""}</section>`; }).join(""); }
 function zoneMini(zs){ const R={"100":[40,40,150,14],"200":[40,30,150,10],"300":[240,26,50,40],"400":[110,10,40,10],"500":[118,2,40,30],"600":[118,60,40,30],"700":[95,42,30,8],"800":[56,32,12,28]}; const on=new Set(zs);
   return `<svg width="170" height="52" viewBox="0 0 300 92" aria-hidden="true"><path d="M10 46c0-8 10-14 24-14h210l40 10v8l-40 10H34c-14 0-24-6-24-14z" fill="#13253c" stroke="#3a5577"/><path d="M120 32l20-28h14l-8 28zM120 60l20 28h14l-8-28zM250 40l26-22h10l-8 24zM250 52l26 22h10l-8-24z" fill="#13253c" stroke="#3a5577"/>${[...on].map(z=>R[z]?`<rect x="${R[z][0]}" y="${R[z][1]}" width="${R[z][2]}" height="${R[z][3]}" rx="3" fill="rgba(63,212,255,.35)" stroke="#3fd4ff"/>`:"").join("")}</svg>`; }
 function matSideHtml(){ const E2=esc; const it=MAT.items.get(MAT.sel); if(!it) return `<div class="m2-sideempty"><div class="mut" style="font-size:11px;letter-spacing:.14em">FICHA DE PARTE</div><p class="small muted">Toque una parte de la lista para ver su ficha: número decodificado, intercambiabilidad, instalación, dónde se usa e historial.</p></div>`;
@@ -1553,10 +1848,11 @@ function matSideHtml(){ const E2=esc; const it=MAT.items.get(MAT.sel); if(!it) r
    ${dec?`<div class="m2-dec">${dec.map(d=>`<div><b>${E2(d.v)}</b><span>${E2(d.k)}</span></div>`).join("")}</div><div class="small muted">Lectura orientativa del número (${dec.map(d=>E2(d.n)).join(" · ")}). <b>Verifique en el estándar.</b></div>`:""}
    <div class="box"><h5>INTERCAMBIABILIDAD</h5><div class="kv"><span class="ok">✓ Aprobado</span><span class="mono">${altList(it.altOk).map(E2).join(", ")||"—"}${it.altRef?`<br><span class="small muted">${E2(it.altRef)}</span>`:""}</span><span class="wa">◌ Usado</span><span class="mono">${matAltUnref(it).map(E2).join(", ")||"— (sin registro)"}${matAltUnref(it).length?`<br><span class="small wa">Sin referencia aprobada: requiere verificación</span>`:""}</span></div></div>
    <div class="box"><h5>INSTALACIÓN</h5><div class="kv"><span class="mut">Torque</span><span>${E2(it.torque||"—")}</span><span class="mut">Sellador</span><span>${E2(it.sealant||"—")}</span><span class="mut">Herramienta</span><span>${E2(it.tool||"—")}</span><span class="mut">Referencia</span><span>${E2(it.ref||"—")}</span></div></div>
-   <div class="box"><h5>DÓNDE SE USA</h5><div class="row" style="gap:10px;align-items:center">${zoneMini(zs)}<span class="small">${zs.map(z=>`Zona ${z}`).join(" · ")||"Zona sin registrar"}<br><span class="muted">${comps.length} componente(s)${pans.length?` · accesos ${pans.slice(0,5).map(E2).join(", ")}`:""}</span></span></div><div class="small muted" style="margin-top:4px">${comps.map(E2).join(" · ")}</div></div>
+   <div class="box"><h5>DÓNDE SE USA</h5><div class="row" style="gap:10px;align-items:center">${zoneMini(zs)}<span class="small">${zs.map(z=>`Zona ${z}`).join(" · ")||"Zona sin registrar"}<br><span class="muted">${comps.length} componente(s)${pans.length?` · accesos ${pans.slice(0,5).map(E2).join(", ")}`:""}</span></span></div><div class="small muted" style="margin-top:4px">${comps.map(E2).join(" · ")}</div></div>${(()=>{ const L=cmmFor(it.pn); return L.length?`<div class="box"><h5>CMM</h5><div class="small">${L.slice(0,4).map(x=>`<button class="btn sm ghost" data-cmmopen="${E2(x.c.id)}" data-page="${x.pages?.[0]||1}">CMM ${E2(x.c.num||x.c.title||"")} · Rev. ${E2(x.c.rev||"—")}${x.pages?` · pág. ${x.pages.slice(0,3).join(", ")}`:""}</button>`).join(" ")}</div></div>`:""; })()}
    <div class="box"><h5>ALMACÉN</h5><div class="kv"><span class="mut">Existencia</span><span class="${matLow(it)?"wa":""}">${E2(it.stock||"—")} ${it.min?`(mín. ${E2(it.min)})`:""}</span><span class="mut">Ubicación</span><span class="mono">${E2(it.bin||"—")}</span>${it.lot||it.exp?`<span class="mut">Lote / caduca</span><span>${E2(it.lot||"—")} · ${E2(it.exp||"—")}</span>`:""}</div></div>
    <div class="box"><h5>HISTORIAL</h5><div class="small">${uses.length?uses.slice(-5).reverse().map(u=>`Usado en <b>${E2(u.reg||"")} · ${E2(u.day||"")}</b> (${E2(u.q)} ${E2(it.unit||"pza")})`).join("<br>"):`<span class="muted">Sin usos registrados todavía (se registran desde el Kit por día).</span>`}<br><span class="muted">Agregado por ${E2(it.by||"—")} · ${E2(String(it.at||"").slice(0,10))}</span></div></div>
-   ${matCanEdit()?`<div class="row" style="gap:6px"><button class="btn sm pri" data-matedit="${E2(it.id)}">Editar</button><button class="btn sm ghost" data-m2="dup" data-id="${E2(it.id)}">Duplicar</button><button class="btn sm ghost danger" data-matdel="${E2(it.id)}">Borrar</button></div>`:""}</div>`; }
+   ${histHtml(it)}
+   ${matCanEdit()?`<div class="row" style="gap:6px;flex-wrap:wrap">${matCanFix()?`<button class="btn sm pri" data-matedit="${E2(it.id)}">✎ Corregir / editar</button>`:""}${matCanAdd()?`<button class="btn sm ghost" data-m2="dup" data-id="${E2(it.id)}">Duplicar</button>`:""}${matCanDel()?`<button class="btn sm ghost danger" data-matdel="${E2(it.id)}">Borrar</button>`:""}</div>`:""}</div>`; }
 function matAlertsHtml(){ const E2=esc; const L=[...MAT.items.values()]; const sec=(t,arr,why)=>`<section class="mat-grp open"><div class="mat-gh"><b>${t}</b><span class="sp"></span><span class="small muted">${arr.length}</span></div>${arr.length?`<div class="tbl-wrap"><table class="mat-t"><tbody>${arr.map(it=>`<tr data-matrow="${E2(it.id)}" data-m2go="cat"><td><span class="mtype c-${E2(it.cat||"OTHER")}">${E2(MAT_SHORT(it.cat))}</span></td><td class="mono"><b>${E2(it.pn||"")}</b></td><td>${E2(it.comp||"")}</td><td class="small">${why(it)}</td></tr>`).join("")}</tbody></table></div>`:`<p class="small muted" style="padding:0 12px 10px">Sin pendientes.</p>`}</section>`;
   return `<div class="m2-alerts">${sec("▼ Bajo mínimo de existencia",L.filter(matLow),it=>`Existencia ${E2(it.stock)} · mínimo ${E2(it.min)} · ${E2(it.bin||"")}`)}${sec("⏳ Caducados o por caducar (30 días)",L.filter(it=>{ const d=matExp(it); return d!==null&&d<30; }).sort((a,b)=>String(a.exp).localeCompare(String(b.exp))),it=>`${matExp(it)<0?"<b class='bad'>CADUCADO</b>":"Caduca"} ${E2(it.exp)} · lote ${E2(it.lot||"—")}`)}${sec("◌ Alternos usados sin referencia aprobada",L.filter(it=>matAltUnref(it).length),it=>`Usado: <span class="mono">${matAltUnref(it).map(E2).join(", ")}</span> · requiere verificación (IPC / SB / ingeniería)`)}</div>`; }
 /* ---------- kit by day: hardware needed for the accesses removed that day ---------- */
@@ -1576,7 +1872,7 @@ function matKitHtml(){ const E2=esc; if(!proj()||!(typeof daysOf==="function")) 
       <td><div class="m2-bar"><input type="number" min="0" inputmode="numeric" class="m2-got" data-kitgot="${E2(l.it.id)}" value="${g||""}" placeholder="0" aria-label="Surtido ${E2(l.it.pn)}"><span class="bar"><i style="width:${pct}%;background:${pct>=100?"var(--efis-green,#2bd46f)":"var(--efis-amber,#ffb000)"}"></i></span><span class="small ${pct>=100?"ok":"wa"}">${g}/${t??"?"}</span></div></td></tr>`; }).join("")||`<tr><td colspan="6" class="small muted">Ningún acceso de este día tiene materiales registrados todavía.</td></tr>`}</tbody></table></div>
     <div class="m2-kitsum"><div class="mut" style="font-size:11px;letter-spacing:.14em">PIEZAS DEL DÍA</div><div class="tot">${pcs} piezas · ${K.lines.length} P/N</div><div class="small muted">${rep} de reemplazo obligatorio</div>
      ${K.noMat.length?`<div class="small wa" style="margin-top:8px">Sin materiales registrados: ${K.noMat.slice(0,12).map(E2).join(", ")}${K.noMat.length>12?"…":""}</div>`:""}
-     ${K.lines.length&&matCanEdit()?`<button class="btn sm" data-m2="kituse" style="margin-top:10px">Registrar uso en el historial de cada parte</button>`:""}</div></div></div>`; }
+     ${K.lines.length&&matCanFix()?`<button class="btn sm" data-m2="kituse" style="margin-top:10px">Registrar uso en el historial de cada parte</button>`:""}</div></div></div>`; }
 async function kitPdf(){ const K=kitCompute(MAT.kitDay); if(!K) return; const L=await pdfLib(); const doc=await L.PDFDocument.create(); const B=await doc.embedFont(L.StandardFonts.HelveticaBold), F=await doc.embedFont(L.StandardFonts.Helvetica);
   const p=proj()||{}; const lat=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\x20-\x7E]/g,""); const W=612,H=792,M=36; const navy=L.rgb(10/255,12/255,82/255), grey=L.rgb(.45,.47,.5);
   const drawQR=(pg,text,x,y,s)=>{ const q=QRGEN.encode(text,"M"); const n=q.size+8, u=s/n; q.modules.forEach((row,yy)=>{ let xx=0; while(xx<q.size){ if(!row[xx]){ xx++; continue; } let e=xx; while(e<q.size&&row[e]) e++; pg.drawRectangle({x:x+(4+xx)*u,y:y+s-(4+yy+1)*u,width:(e-xx)*u+0.01,height:u+0.01,color:L.rgb(0,0,0)}); xx=e; } }); };
@@ -1615,6 +1911,7 @@ function matForm(it){ const E2=esc; const n=!it||!it.id; it=it||{cat:"",qty:"1",
     <fieldset><legend>Almacén</legend><div class="grid g3">
      <div class="field"><label for="mf_stock">Existencia</label><input id="mf_stock" inputmode="numeric" value="${E2(it.stock||"")}"></div><div class="field"><label for="mf_min">Mínimo</label><input id="mf_min" inputmode="numeric" value="${E2(it.min||"")}"></div><div class="field"><label for="mf_bin">Ubicación (anaquel / bin)</label><input id="mf_bin" class="mono" value="${E2(it.bin||"")}" placeholder="Ej. A-12-3"></div>
      <div class="field"><label for="mf_lot">Lote</label><input id="mf_lot" value="${E2(it.lot||"")}"></div><div class="field"><label for="mf_exp">Caducidad</label><input id="mf_exp" type="date" value="${E2(it.exp||"")}"></div></div></fieldset>
+    ${n?"":`<div class="field"><label for="mf_why">Motivo del cambio (queda en el historial)</label><input id="mf_why" list="mf_whys" placeholder="Ej. error de captura · letra mal leída de la foto · cambio de IPC"><datalist id="mf_whys"><option value="Error de captura"><option value="Letra o número mal leído de la foto"><option value="Cambio de revisión del IPC"><option value="Alterno aprobado por ingeniería"></datalist></div>`}
     <div class="grid g2"><div class="field"><label for="mf_kw">Palabras clave (buscador)</label><input id="mf_kw" value="${E2(it.kw||"")}" placeholder="Ej. baño, lavabo, piso"></div><div class="field"><label for="mf_notes">Notas</label><input id="mf_notes" value="${E2(it.notes||"")}"></div></div>
     <div class="row"><button class="btn pri" type="submit">Guardar</button>${n?`<label class="small row" style="gap:6px"><input type="checkbox" id="mf_more" checked> Agregar otra parte al terminar (mismo componente)</label>`:""}</div></form></div></div>`;
   const pn=$("#mf_pn"); const upd=()=>{ const i=pnInfo(pn.value); $("#mf_hint").textContent=i?`${i.hint} · ${i.std}`:""; if(i&&!$("#mf_cat").value) $("#mf_cat").value=i.cat; if(i&&!$("#mf_desc").value) $("#mf_desc").placeholder=i.hint; $("#mf_repsug").textContent=matRepSuggest($("#mf_cat").value,pn.value)&&!$("#mf_rep").checked?"Sugerido: este tipo suele ser de reemplazo obligatorio en el AMM — confírmelo en su manual.":""; };
@@ -1645,13 +1942,6 @@ function matCatOf(s){ const n=matNorm(s); if(!n) return ""; const M=[["washer","
   const up=String(s||"").toUpperCase(); if(MAT_LABEL[up]) return up; for(const [k,v] of M) if(n.includes(k)) return v; return ""; }
 function matCsv(){ const q=v=>`"${String(v??"").replace(/"/g,'""')}"`; return [MAT_COLS.map(c=>q(c[1])).join(","),...[...MAT.items.values()].sort((a,b)=>String(a.comp).localeCompare(String(b.comp))).map(i=>MAT_COLS.map(([k])=>q(k==="cat"?MAT_SHORT(i.cat):k==="rep"?(i.rep==="1"?"Sí":""):i[k])).join(","))].join("\r\n"); }
 function matDownload(nm,data,type){ if(S.downloads) return offerFile(nm,data); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([data],{type})); a.download=nm; document.body.append(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); }
-/* ---------- scan a label (photo): barcode if the browser reads it, otherwise the built-in OCR ---------- */
-async function matScan(file){ toast("Leyendo etiqueta…",4000); const img=await createImageBitmap(file); const sc=Math.min(1,2200/Math.max(img.width,img.height)); const cv=document.createElement("canvas"); cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc); const g=cv.getContext("2d",{willReadFrequently:true}); g.drawImage(img,0,0,cv.width,cv.height);
-  const found=new Set(); try{ if("BarcodeDetector" in window){ const bd=new BarcodeDetector(); for(const c of await bd.detect(cv)) String(c.rawValue||"").split(/[\s|;,]+/).forEach(t=>found.add(t)); } }catch{}
-  let words=[]; try{ if(typeof hasOcr==="function"&&hasOcr()){ await ocrReady(); const id=g.getImageData(0,0,cv.width,cv.height); const r=await ocrCall({type:"page",w:id.width,h:id.height,rgba:id.data.buffer,psm:11,figure:false,dpi:300,dual:"never",hunt:false,huntOrphans:false,knownRot:null,want:null,clip:false,fast:true},[id.data.buffer]); words=(r.words||[]).map(w=>w.text); } }catch(e){ console.warn("scan ocr",e); }
-  words.forEach(w=>found.add(w)); const cand=[...found].map(t=>t.toUpperCase().replace(/^[^A-Z0-9]+|[^A-Z0-9-]+$/g,"")).filter(t=>/^[A-Z]{1,6}-?\d[A-Z0-9-]{2,}$/.test(t)&&/\d.*\d/.test(t)&&!/^\d{2}-\d{2}-\d{2}$/.test(t)).sort((a,b)=>(pnInfo(b)?1:0)-(pnInfo(a)?1:0));
-  const m=$("#modal"); m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Etiqueta leída" style="max-width:560px"><div class="sh"><span class="eyebrow">Escanear etiqueta</span><h3>${cand.length?"Números de parte encontrados":"No encontré un número de parte"}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
-   <div class="sb" style="display:flex;flex-direction:column;gap:8px">${cand.slice(0,8).map(c=>`<div class="row m2-cand"><b class="mono">${esc(c)}</b><span class="small muted">${esc(pnInfo(c)?.hint||"")}${MAT.items.size&&[...MAT.items.values()].some(i=>pnCompact(i.pn)===pnCompact(c)||altList(i.alt).concat(altList(i.altOk)).some(a=>pnCompact(a)===pnCompact(c)))?" · ya está en el catálogo":""}</span><span class="sp"></span><button class="btn sm" data-m2scan="find" data-pn="${esc(c)}">Buscar</button>${matCanEdit()?`<button class="btn sm pri" data-m2scan="add" data-pn="${esc(c)}">Agregar</button>`:""}</div>`).join("")||`<p class="small muted">Tome la foto de cerca, con buena luz y la etiqueta derecha. También puede escribir el número en el buscador.</p>`}</div></div></div>`; }
 /* ---------- IPC page (PDF) → proposed parts ---------- */
 async function matIpc(file){ const bytes=new Uint8Array(await file.arrayBuffer()); const pdf=await openPdf(bytes); const N=pdf.numPages; const m=$("#modal");
   m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Importar IPC" style="max-width:980px"><div class="sh"><span class="eyebrow">Importar IPC</span><h3>${esc(file.name)}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
@@ -1680,7 +1970,7 @@ function ipcRows(lines,ata,fig){ const out=[]; const isPN=t=>/^[A-Z0-9]{1,8}[A-Z
 /* the hardware of one access, inside its sheet */
 async function matPanelBox(id){ if(matLevel()==="none") return; if(!MAT.loaded) await matLoad(); const L=[...MAT.items.values()].filter(i=>String(i.panels||"").toUpperCase().split(/[,;\s]+/).includes(String(id).toUpperCase()));
   const sb=document.querySelector("#modal .sheet .sb"); if(!sb||document.getElementById("ps_mat")) return;
-  sb.insertAdjacentHTML("beforeend",`<section class="card" id="ps_mat" style="margin-top:12px"><div class="hd"><h3>Materiales de este acceso</h3><span class="sp"></span><span class="pill s-CONFIRMED">${L.length}</span></div><div class="bd">${L.length?`<div class="tbl-wrap"><table class="mat-t"><tbody>${L.map(it=>`<tr><td><span class="mtype c-${esc(it.cat||"OTHER")}">${matIco(it.cat,22)}${esc(MAT_SHORT(it.cat))}</span></td><td>${esc(it.desc||"")}</td><td class="mono"><b>${esc(it.pn||"")}</b>${repBadge(it)}${altList(it.altOk).length?`<div class="small ok">Alt. aprobado: ${esc(it.altOk)}</div>`:""}${matAltUnref(it).length?`<div class="small wa">Usado (verificar): ${esc(matAltUnref(it).join(", "))}</div>`:""}</td><td class="mono">${esc(it.qty||"")} ${esc(it.unit||"")}</td><td class="small muted">${esc(it.torque||"")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="small muted" style="margin:0">Sin materiales registrados para ${esc(id)}.${matCanEdit()?` <button class="btn sm" data-m2="new" data-matpanel="${esc(id)}">+ Agregar</button>`:""}</p>`}</div></section>`); }
+  sb.insertAdjacentHTML("beforeend",`<section class="card" id="ps_mat" style="margin-top:12px"><div class="hd"><h3>Materiales de este acceso</h3><span class="sp"></span><span class="pill s-CONFIRMED">${L.length}</span></div><div class="bd">${L.length?`<div class="tbl-wrap"><table class="mat-t"><tbody>${L.map(it=>`<tr><td><span class="mtype c-${esc(it.cat||"OTHER")}">${matIco(it.cat,22)}${esc(MAT_SHORT(it.cat))}</span></td><td>${esc(it.desc||"")}</td><td class="mono"><b>${esc(it.pn||"")}</b>${repBadge(it)}${altList(it.altOk).length?`<div class="small ok">Alt. aprobado: ${esc(it.altOk)}</div>`:""}${matAltUnref(it).length?`<div class="small wa">Usado (verificar): ${esc(matAltUnref(it).join(", "))}</div>`:""}</td><td class="mono">${esc(it.qty||"")} ${esc(it.unit||"")}</td><td class="small muted">${esc(it.torque||"")}</td></tr>`).join("")}</tbody></table></div>`:`<p class="small muted" style="margin:0">Sin materiales registrados para ${esc(id)}.${matCanAdd()?` <button class="btn sm" data-m2="new" data-matpanel="${esc(id)}">+ Agregar</button> <button class="btn sm" data-m2="notes" data-matpanel="${esc(id)}">📝 NP con foto</button>`:""}</p>`}</div></section>`); }
 function vMaterials(){ setTimeout(matMount,0); return `<div id="mat_root">${matShell()}</div>`; }
 /* ---------- events ---------- */
 let MAT_T=0;
@@ -1695,7 +1985,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="/"&&document.getElementById
     else if(e.key==="Enter"&&MAT.sugg>=0&&bs[MAT.sugg]){ e.preventDefault(); bs[MAT.sugg].click(); } else if(e.key==="Escape"&&box){ box.hidden=true; } }
   if(e.target.matches?.("[data-matrow]")&&e.key==="Enter") e.target.click(); });
 document.addEventListener("change",async e=>{ const t=e.target;
-  if(t.id==="mat_scan"&&t.files?.[0]){ try{ await matScan(t.files[0]); }catch(err){ toast("No se pudo leer la foto: "+err.message); } t.value=""; return; }
+  if(t.id==="mat_scan"&&t.files?.[0]){ scanStop(); try{ await scanImage(t.files[0]); }catch(err){ toast("No se pudo leer la foto: "+err.message); } t.value=""; return; }
   if(t.id==="mat_ipc"&&t.files?.[0]){ try{ await matIpc(t.files[0]); }catch(err){ toast("No se pudo abrir el PDF: "+err.message); } t.value=""; return; }
   if(t.id==="mat_kitday"){ MAT.kitDay=t.value; MAT.kit=null; const e2=document.getElementById("mat_kit"); if(e2) e2.innerHTML=matKitHtml(); return; }
   if(t.dataset?.kitgot){ const v=Math.max(0,parseInt(t.value)||0); MAT.kit=MAT.kit||{day:MAT.kitDay,got:{}}; MAT.kit.got[t.dataset.kitgot]=v; try{ if(S.pid) await S.db.doc(`projects/${S.pid}/kits/${MAT.kitDay}`).set({got:MAT.kit.got,at:nowIso()}); }catch{} const e2=document.getElementById("mat_kit"); if(e2) e2.innerHTML=matKitHtml(); return; } });
@@ -1704,12 +1994,16 @@ document.addEventListener("click",async e=>{ if(!e.target.closest?.("#mat_sugg,#
   if(d.m2tab){ MAT.tab=d.m2tab; matRender(); return; }
   if(d.m2f){ MAT.f[d.m2f]=MAT.f[d.m2f]===d.v?"":d.v; matRefresh(); return; }
   if(d.m2sugg){ MAT.q=d.m2sugg; const q=$("#mat_q"); if(q) q.value=MAT.q; const bx=document.getElementById("mat_sugg"); if(bx) bx.hidden=true; matRefresh(); return; }
-  if(d.m2scan){ closeModal(); if(d.m2scan==="find"){ MAT.tab="cat"; MAT.q=d.pn; matRender(); } else matForm({comp:"",pn:d.pn,cat:pnInfo(d.pn)?.cat||"",qty:"1",unit:"pza"}); return; }
+  if(d.m2scan){ const pn=(b.closest(".m2-cand")?.querySelector(".sc-pn")?.value||d.pn||"").trim().toUpperCase(); closeModal(); if(d.m2scan==="find"){ MAT.tab="cat"; MAT.q=pn; matRender(); } else matForm({comp:"",pn,cat:pnInfo(pn)?.cat||"",qty:"1",unit:"pza"}); return; }
   if(d.matrow){ MAT.sel=d.matrow; if(d.m2go){ MAT.tab="cat"; matRender(); } else { document.querySelectorAll("[data-matrow].sel").forEach(r=>r.classList.remove("sel")); b.classList.add("sel"); const sd=document.getElementById("mat_side"); if(sd) sd.innerHTML=matSideHtml(); }
     if(innerWidth<=900){ const m=$("#modal"); m.innerHTML=`<div class="modal" data-close="1"><div class="sheet m2-sheetcard" role="dialog" aria-modal="true" aria-label="Ficha de parte"><div class="sh"><span class="eyebrow">Materiales</span><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div><div class="sb">${matSideHtml()}</div></div></div>`; } return; }
   if(d.m2==="new"){ matForm(d.matpanel?{comp:`Acceso ${d.matpanel}`,panels:d.matpanel,zone:d.matpanel[0]+"00",cat:"",qty:"1",unit:"pza"}:null); return; }
   if(d.m2==="dup"){ const o={...MAT.items.get(d.id)}; delete o.id; delete o.uses; o.pn=""; matForm(o); return; }
   if(d.m2==="import"){ matImport(); return; }
+  if(d.m2==="scan"){ scanStop(); await scanOpen(); return; }
+  if(d.m2==="notes"){ notesOpen(d.matpanel?{comp:`Acceso ${d.matpanel}`,panels:d.matpanel,zone:d.matpanel[0]+"00"}:null); return; }
+  if(d.m2==="revert"){ const it={...MAT.items.get(d.id)}; const h=histOf(it); const last=[...h].reverse().find(x=>x.ch?.length); if(!last) return; if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="¿Volver? Toque otra vez"; return; }
+    const back=last.ch.map(([k,o,nw])=>[k,nw,o]); back.forEach(([k,,o])=>{ it[k]=o; }); histPush(it,{ch:back,why:"Vuelta a la versión anterior"}); try{ await matPut(it).catch(er=>{ throw matDenied(er,"corregir"); }); toast("Se regresó a la versión anterior."); matRefresh(); }catch(err){ toast(err.message); } return; }
   if(d.m2==="clearf"){ MAT.f={ata:"",zone:"",cat:"",st:""}; matRefresh(); return; }
   if(d.m2==="export"){ await matDownload(`Materiales_AeroPlanner_${todayLocal()}.csv`,new TextEncoder().encode("﻿"+matCsv()),"text/csv"); return; }
   if(d.m2==="voice"){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return; const r=new SR(); r.lang="es-MX"; r.interimResults=false; b.classList.add("rec"); r.onresult=ev=>{ MAT.q=ev.results[0][0].transcript; const q=$("#mat_q"); if(q) q.value=MAT.q; matRefresh(); }; r.onend=()=>b.classList.remove("rec"); r.onerror=()=>{ b.classList.remove("rec"); toast("No se pudo usar el micrófono."); }; r.start(); return; }
@@ -1720,7 +2014,7 @@ document.addEventListener("click",async e=>{ if(!e.target.closest?.("#mat_sugg,#
     try{ for(const l of K.lines){ const q=+got[l.it.id]||l.total||0; if(!q) continue; const it={...l.it}; let u=[]; try{ u=JSON.parse(it.uses||"[]"); }catch{} u=u.filter(x=>!(x.reg===reg&&x.day===day)); u.push({reg,day,q,at:nowIso()}); it.uses=JSON.stringify(u.slice(-50)); if(it.stock!==undefined&&it.stock!==""&&got[l.it.id]) it.stock=String(Math.max(0,+it.stock-(+got[l.it.id]))); await matPut(it); } toast(`Uso registrado en ${K.lines.length} parte(s) · ${day}.`); }catch(err){ toast(err.message); }
     const e2=document.getElementById("mat_kit"); if(e2) e2.innerHTML=matKitHtml(); return; }
   if(d.matedit){ closeModal(); matForm({...MAT.items.get(d.matedit)}); return; }
-  if(d.matdel){ if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="¿Borrar?"; return; } try{ await matDel(d.matdel); closeModal(); toast("Parte borrada."); matRender(); }catch(err){ toast(err.message); } return; }
+  if(d.matdel){ if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="¿Borrar?"; return; } try{ await matDel(d.matdel).catch(er=>{ throw matDenied(er,"borrar"); }); closeModal(); toast("Parte borrada."); matRender(); }catch(err){ toast(err.message); } return; }
   if(d.matsyndel){ delete MAT.syn.map[d.matsyndel]; await matSynSave(); matRender(); return; }
   if(d.matgrp!==undefined){ const g=d.matgrp; MAT.open.has(g)?MAT.open.delete(g):MAT.open.add(g);
     const q=matWords(MAT.q).join(" "); if(q&&!matNorm(g).includes(q)&&matCanEdit()){ const c=MAT.syn.cnt||(MAT.syn.cnt={}); const k=q+"→"+g; c[k]=(c[k]||0)+1; if(c[k]===2&&!(MAT.syn.map[q]||[]).includes(g)) await matTeach(MAT.q,g,true); else matSynSave().catch(()=>{}); }
@@ -1731,9 +2025,128 @@ document.addEventListener("submit",async e=>{ const f=e.target; if(!["mat_form",
   const v=id=>($("#"+id)?.value||"").trim(); const pn=v("mf_pn"); const old=MAT.items.get(f.dataset.id)||{};
   const it={...old,id:f.dataset.id||matId(),comp:v("mf_comp"),cat:$("#mf_cat").value||pnInfo(pn)?.cat||matCatOf(v("mf_desc"))||"OTHER",desc:v("mf_desc")||pnInfo(pn)?.hint||"",pn,altOk:v("mf_altok"),altRef:v("mf_altref"),alt:v("mf_alt"),qty:v("mf_qty"),unit:$("#mf_unit").value,ata:v("mf_ata"),zone:$("#mf_zone").value,panels:v("mf_pan").toUpperCase(),ref:v("mf_ref"),torque:v("mf_torque"),sealant:v("mf_seal"),tool:v("mf_tool"),rep:$("#mf_rep").checked?"1":"",stock:v("mf_stock"),min:v("mf_min"),bin:v("mf_bin"),lot:v("mf_lot"),exp:v("mf_exp"),kw:v("mf_kw"),notes:v("mf_notes"),at:old.at||nowIso()};
   if(!it.pn&&!it.desc){ toast("Escriba al menos el número de parte o la descripción."); return; }
+  if(f.dataset.id){ const ch=matDiff(old,it); if(!ch.length){ closeModal(); return; } histPush(it,{ch,why:v("mf_why")}); } else histPush(it,{ev:"Alta manual"});
   const btn=f.querySelector("button[type=submit]"); btn.disabled=true;
-  try{ await matPut(it); MAT.sel=it.id; toast(`Guardado: ${it.pn||it.desc} · ${it.comp}`); const more=$("#mf_more")?.checked&&!f.dataset.id; if(more){ matForm({comp:it.comp,cat:"",qty:"1",unit:it.unit,ata:it.ata,zone:it.zone,panels:it.panels,ref:it.ref,kw:it.kw}); } else closeModal(); matRender(); }
+  try{ await matPut(it).catch(er=>{ throw matDenied(er,f.dataset.id?"corregir":"agregar"); }); MAT.sel=it.id; toast(`Guardado: ${it.pn||it.desc} · ${it.comp}`); const more=$("#mf_more")?.checked&&!f.dataset.id; if(more){ matForm({comp:it.comp,cat:"",qty:"1",unit:it.unit,ata:it.ata,zone:it.zone,panels:it.panels,ref:it.ref,kw:it.kw}); } else closeModal(); matRender(); }
   catch(err){ toast(err.message); btn.disabled=false; } });
+
+/* ======================= CMM · biblioteca de manuales de componente (Component Maintenance Manual) =======================
+   Global (no depende del proyecto). Web: colección «cmm» del servidor, en piezas; ver / subir según el permiso de cada persona.
+   Archivo: este equipo. El PDF original no se modifica; las revisiones anteriores se conservan (nunca se borran solas). */
+const CMM={list:[],loaded:false,loading:null,err:"",q:"",sel:null,view:null,busy:""};
+const cmmLevel=()=>!WB.on||WB.owner?"up":(myPerms().cmm===true?(myPerms().cmmUp===true?"up":"view"):"none");
+const cmmWeb=()=>WB.on&&!!WB.uid;
+const CMM_DB={ open(){ return new Promise((res,rej)=>{ const r=indexedDB.open("aeropanel-cmm",1); r.onupgradeneeded=()=>{ r.result.createObjectStore("meta"); r.result.createObjectStore("file"); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); },
+  async all(){ try{ const d=await this.open(); return await new Promise(res=>{ const out=[]; const c=d.transaction("meta").objectStore("meta").openCursor(); c.onsuccess=()=>{ const k=c.result; if(k){ out.push(k.value); k.continue(); } else res(out); }; c.onerror=()=>res(out); }); }catch{ return []; } },
+  async get(st,k){ try{ const d=await this.open(); return await new Promise(res=>{ const q=d.transaction(st).objectStore(st).get(k); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch{ return null; } },
+  async put(st,k,v){ const d=await this.open(); await new Promise((res,rej)=>{ const t=d.transaction(st,"readwrite"); t.objectStore(st).put(v,k); t.oncomplete=res; t.onerror=()=>rej(t.error); }); },
+  async del(st,k){ try{ const d=await this.open(); await new Promise(res=>{ const t=d.transaction(st,"readwrite"); t.objectStore(st).delete(k); t.oncomplete=res; t.onerror=res; }); }catch{} } };
+async function cmmLoad(force){ if(CMM.loading&&!force) return CMM.loading; CMM.loading=(async()=>{ CMM.err="";
+  try{ CMM.list=cmmWeb()?(await fsList("cmm")).map(d=>({id:d.id,...d.data})):await CMM_DB.all(); CMM.list.forEach(c=>{ delete c._hay; }); CMM.loaded=true; }
+  catch(e){ CMM.err=e.code==="PERMISSION_DENIED"?(WB.owner?"Para usar CMM publique las reglas nuevas (v7): tarjeta «Reglas de seguridad del servidor» en su inicio.":"El propietario no le dio acceso a CMM (o falta publicar las reglas v7)."):e.message; CMM.loaded=true; }
+  CMM.loading=null; })(); return CMM.loading; }
+/* text of the manual → words + part numbers with their pages (to find a P/N inside the CMMs) */
+async function cmmIndex(bytes,onp){ const pdf=await openPdf(bytes.slice()); const N=pdf.numPages; const lib=await loadPdfjs(); const words=new Set(), pns={}; let textPages=0; let first="";
+  for(let i=1;i<=N;i++){ const pg=await pdf.getPage(i); const ws=pageWords(await pg.getTextContent(),pg.getViewport({scale:1}),lib); if(ws.length>5) textPages++;
+    if(i<=2) first+=" "+ws.map(w=>w.text).join(" ");
+    for(const w of ws){ const t=String(w.text).toUpperCase().replace(/^[^A-Z0-9]+|[^A-Z0-9]+$/g,""); if(t.length<3||t.length>26) continue;
+      if(/\d/.test(t)&&/^[A-Z0-9][A-Z0-9\-\/.]+$/.test(t)&&t.length>=5){ const k=pnCompact(t); const L=pns[k]||(pns[k]=[]); if(L.length<6&&L.at(-1)!==i) L.push(i); }
+      else if(/^[A-ZÁÉÍÓÚÑ]+$/.test(t)) words.add(matNorm(t)); }
+    pg.cleanup?.(); if(onp&&i%10===0) onp(i,N); }
+  let pj=JSON.stringify(pns); if(pj.length>420000){ const keys=Object.keys(pns).sort((a,b)=>pns[b].length-pns[a].length); const o={}; let n=2; for(const k of keys){ const s=JSON.stringify(pns[k]).length+k.length+4; if(n+s>420000) break; o[k]=pns[k]; n+=s; } pj=JSON.stringify(o); }
+  let wj=[...words].join(" "); if(wj.length>300000) wj=wj.slice(0,300000);
+  const ata=(first.match(/\b(2[1-9]|3[0-8]|4[5-9]|5[1-7]|7[1-9]|80)-\d{2}-\d{2}\b/)||[])[0]||"", rev=(first.match(/\bREV(?:ISION)?\.?\s*(?:NO\.?\s*)?(\d{1,3})\b/i)||[])[1]||"";
+  return {pages:N,textPages,pns:pj,words:wj,ata,rev}; }
+async function cmmUpload(file,meta,prog){ const bytes=new Uint8Array(await file.arrayBuffer()); if(!/^%PDF/.test(new TextDecoder().decode(bytes.slice(0,5)))) throw new Error("El archivo no es un PDF.");
+  prog("Leyendo el manual para poder buscar en él…"); const ix=await cmmIndex(bytes,(i,n)=>prog(`Leyendo página ${i} de ${n}…`));
+  const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); const n=Math.max(1,Math.ceil(bytes.length/WB_PIECE));
+  const doc={id,name:file.name,size:String(bytes.length),pieces:String(n),pages:String(ix.pages),scanned:ix.textPages<Math.max(1,ix.pages*0.3)?"1":"",num:meta.num,title:meta.title,ata:meta.ata||(ix.ata!==meta.num?ix.ata:""),pn:meta.pn,rev:meta.rev||ix.rev,revDate:meta.revDate,mfr:meta.mfr,notes:meta.notes,pns:ix.pns,words:ix.words,by:WB.email||S.me?.name||"",at:nowIso()};
+  Object.keys(doc).forEach(k=>{ if(doc[k]===undefined||doc[k]==="") delete doc[k]; });
+  if(cmmWeb()){ let ws=[]; for(let i=0;i<n;i++){ ws.push(fsW(`cmm/${id}/p/${i}`,{d:bytes.slice(i*WB_PIECE,(i+1)*WB_PIECE)})); if(ws.length===6||i===n-1){ prog(`Subiendo ${Math.min(100,Math.round((i+1)/n*100))}%…`); await fsCommit(ws); ws=[]; } }
+    await fsCommit([fsW(`cmm/${id}`,doc)]); wcPut("cmm/"+id,bytes); }
+  else { await CMM_DB.put("file",id,bytes); await CMM_DB.put("meta",id,doc); }
+  CMM.list.push(doc); return doc; }
+async function cmmBytes(c,prog){ if(!cmmWeb()) return await CMM_DB.get("file",c.id); const k="cmm/"+c.id; const hit=await wcGet(k); if(hit) return hit instanceof Uint8Array?hit:new Uint8Array(hit);
+  const n=+c.pieces||1, parts=[]; for(let i=0;i<n;i++){ prog?.(`Descargando ${Math.round(i/n*100)}%…`); const d=await fsGet(`cmm/${c.id}/p/${i}`); if(!d?.data?.d) throw new Error("Falta una parte del archivo en el servidor."); parts.push(d.data.d); }
+  const tot=parts.reduce((a,p)=>a+p.length,0), out=new Uint8Array(tot); let o=0; for(const p of parts){ out.set(p,o); o+=p.length; } wcPut(k,out); return out; }
+const cmmHay=c=>c._hay||(c._hay=" "+matWords([c.num,c.title,c.ata,c.pn,c.mfr,c.rev,c.name,c.notes].join(" ")).join(" ")+" ");
+const cmmPnMap=c=>{ if(c._pm) return c._pm; try{ c._pm=JSON.parse(c.pns||"{}"); }catch{ c._pm={}; } return c._pm; };
+function cmmSearch(q){ const toks=matWords(q); if(!toks.length) return CMM.list.map(c=>({c,hits:[]}));
+  const out=[]; for(const c of CMM.list){ const W=" "+(c.words||"")+" "; const pm=cmmPnMap(c); let hits=[]; let ok=true;
+    for(const t of toks){ const alts=matAlts(t); const inMeta=alts.some(a=>cmmHay(c).includes(" "+a)||cmmHay(c).includes(a)&&a.length>3); const pk=pnCompact(t);
+      const pnHit=/\d/.test(t)&&pk.length>=4?Object.keys(pm).filter(k=>k.startsWith(pk)).slice(0,4):[]; const inText=alts.some(a=>a.length>3&&W.includes(" "+a));
+      if(pnHit.length) pnHit.forEach(k=>hits.push({pn:k,pages:pm[k]})); if(!(inMeta||pnHit.length||inText)){ ok=false; break; } }
+    if(ok) out.push({c,hits}); }
+  return out; }
+/* groups by CMM number: the newest revision is «vigente», older ones are kept below */
+function cmmGroups(rows){ const g=new Map(); for(const r of rows){ const k=matNorm(r.c.num||r.c.title||r.c.name); if(!g.has(k)) g.set(k,[]); g.get(k).push(r); }
+  return [...g.values()].map(L=>L.sort((a,b)=>(parseFloat(b.c.rev)||0)-(parseFloat(a.c.rev)||0)||String(b.c.revDate||b.c.at).localeCompare(String(a.c.revDate||a.c.at)))).sort((a,b)=>String(a[0].c.ata||"zz").localeCompare(String(b[0].c.ata||"zz"))||String(a[0].c.num).localeCompare(String(b[0].c.num))); }
+const fmtMB=n=>(+n/1048576).toFixed(n>1048576*10?0:1)+" MB";
+function cmmHtml(){ const E2=esc, up=cmmLevel()==="up";
+  if(!CMM.loaded) return `<div class="mat2"><div class="matload"><div class="progress"><i style="width:60%"></i></div><span class="small muted">Cargando biblioteca CMM…</span></div></div>`;
+  if(CMM.err) return `<div class="mat2"><div class="m2-top"><div class="m2-title"><h2>CMM</h2></div></div><div class="auth-err">${E2(CMM.err)}</div></div>`;
+  const rows=cmmSearch(CMM.q), G=cmmGroups(rows); const tot=CMM.list.reduce((a,c)=>a+(+c.size||0),0);
+  return `<div class="mat2 cmm"><div class="m2-top"><div class="m2-title"><h2>CMM</h2><span>MANUALES DE COMPONENTE · ${CMM.list.length} archivo(s) · ${fmtMB(tot)}</span></div>
+   <div class="m2-search"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.2"/></svg><input id="cmm_q" type="search" autocomplete="off" placeholder="Buscar: número de CMM, P/N, ATA, componente, palabra del manual…" value="${E2(CMM.q)}" aria-label="Buscar en CMM"></div>
+   <div class="m2-acts">${up?`<label class="btn sm pri" style="cursor:pointer">+ Subir CMM (PDF)<input type="file" id="cmm_file" accept="application/pdf,.pdf" multiple hidden></label>`:`<span class="pill s-NOT_FOUND">Solo consulta</span>`}</div></div>
+   ${CMM.busy?`<div class="banner info" id="cmm_busy">${E2(CMM.busy)}</div>`:""}
+   <div id="cmm_res">${!CMM.list.length?`<div class="mat-empty"><b>La biblioteca está vacía.</b><br>${up?"Suba los CMM en PDF: quedan guardados para todos los proyectos y futuras consultas. También puede buscar un número de parte dentro de los manuales.":"Cuando el propietario suba manuales aparecerán aquí."}</div>`:!G.length?`<div class="mat-empty">No encontré «${E2(CMM.q)}» en los manuales.</div>`:G.map(L=>{ const top=L[0];
+     return `<section class="mat-grp open cmm-g"><div class="mat-gh"><b class="mono">${E2(top.c.num||"(sin número)")}</b><span>${E2(top.c.title||top.c.name)}</span>${top.c.ata?`<span class="ata">ATA ${E2(top.c.ata)}</span>`:""}${top.c.pn?`<span class="small muted mono">P/N ${E2(top.c.pn)}</span>`:""}<span class="sp"></span>${L.length>1?`<span class="small muted">${L.length} revisiones</span>`:""}</div>
+      <div class="tbl-wrap"><table class="mat-t"><tbody>${L.map((r,i)=>`<tr data-cmmopen="${E2(r.c.id)}" tabindex="0"><td style="width:120px">${i===0?`<span class="pill g">VIGENTE</span>`:`<span class="pill s-NOT_FOUND">Rev. anterior</span>`}</td><td class="mono">Rev. ${E2(r.c.rev||"—")}${r.c.revDate?` · ${E2(r.c.revDate)}`:""}</td><td>${E2(r.c.name)}<div class="small muted">${E2(r.c.pages||"?")} pág. · ${fmtMB(r.c.size)}${r.c.scanned?" · escaneado (búsqueda solo por datos)":""}${r.c.mfr?" · "+E2(r.c.mfr):""}</div></td><td class="small">${r.hits.length?r.hits.slice(0,3).map(h=>`<span class="mono"><b>${E2(h.pn)}</b></span> pág. ${h.pages.map(p=>`<button class="btn sm ghost" data-cmmopen="${E2(r.c.id)}" data-page="${p}">${p}</button>`).join(" ")}`).join("<br>"):`<span class="muted">Subido por ${E2(r.c.by||"—")} · ${E2(String(r.c.at||"").slice(0,10))}</span>`}</td><td style="white-space:nowrap"><button class="btn sm" data-cmmopen="${E2(r.c.id)}">Abrir</button>${up?` <button class="btn sm ghost" data-cmmedit="${E2(r.c.id)}">Datos</button>`:""}${WB.owner||!WB.on?` <button class="btn sm ghost danger" data-cmmdel="${E2(r.c.id)}">Borrar</button>`:""}</td></tr>`).join("")}</tbody></table></div></section>`; }).join("")}</div>
+   <p class="small muted">El PDF original se guarda tal cual. Al subir una revisión nueva con el mismo número, la anterior se conserva como «Rev. anterior». Verifique siempre que la revisión sea la vigente antes de trabajar.</p></div>`; }
+function cmmMount(){ const r=document.getElementById("cmm_root"); if(!r) return; if(CMM.loaded){ r.innerHTML=cmmHtml(); return; } r.innerHTML=cmmHtml(); cmmLoad().then(()=>{ const x=document.getElementById("cmm_root"); if(x) x.innerHTML=cmmHtml(); }); }
+function cmmRender(){ const r=document.getElementById("cmm_root"); if(!r) return; const a=document.activeElement?.id; r.innerHTML=cmmHtml(); if(a==="cmm_q"){ const q=$("#cmm_q"); q?.focus(); q?.setSelectionRange(q.value.length,q.value.length); } }
+function vCmm(){ setTimeout(cmmMount,0); return `<div id="cmm_root">${cmmHtml()}</div>`; }
+/* data of the manual before uploading (or to correct later) */
+function cmmMetaForm(files,c){ const E2=esc; const f0=files?.[0]; const guess=s=>{ const n=String(s||"").replace(/\.pdf$/i,""); return {num:(n.match(/(?<!\d)\d{2}-\d{2}-\d{2}(?!\d)/)||[])[0]||"",rev:(n.match(/rev[\s_-]*(\d+)/i)||[])[1]||""}; }; const g=c||guess(f0?.name);
+  const m=$("#modal"); m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Datos del CMM" style="max-width:640px"><div class="sh"><span class="eyebrow">CMM</span><h3>${c?"Datos del manual":files.length>1?`Subir ${files.length} manuales`:"Subir manual"}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
+   <form class="sb" id="cmm_form" data-id="${E2(c?.id||"")}" style="display:flex;flex-direction:column;gap:10px">${files?`<p class="small">${files.map(f=>`<b>${E2(f.name)}</b> · ${fmtMB(f.size)}`).join("<br>")}</p>`:""}
+    ${files&&files.length>1?`<p class="small muted">Los datos de abajo se aplican a todos; el número y la revisión se toman del nombre de cada archivo si los trae. Puede corregirlos después con «Datos».</p>`:""}
+    <div class="grid g2"><div class="field"><label for="cm_num">Número de CMM / ATA del manual</label><input id="cm_num" class="mono" value="${E2(g.num||"")}" placeholder="Ej. 25-21-45" ${files&&files.length>1?"":"required"}></div><div class="field"><label for="cm_rev">Revisión</label><input id="cm_rev" value="${E2(g.rev||"")}" placeholder="Ej. 12"></div>
+     <div class="field" style="grid-column:1/-1"><label for="cm_title">Componente / título</label><input id="cm_title" value="${E2(c?.title||"")}" placeholder="Ej. Lavatory module · Galley insert · Water heater"></div>
+     <div class="field"><label for="cm_pn">P/N del componente</label><input id="cm_pn" class="mono" value="${E2(c?.pn||"")}"></div><div class="field"><label for="cm_mfr">Fabricante</label><input id="cm_mfr" value="${E2(c?.mfr||"")}"></div>
+     <div class="field"><label for="cm_date">Fecha de la revisión</label><input id="cm_date" type="date" value="${E2(c?.revDate||"")}"></div><div class="field"><label for="cm_ata">ATA del avión</label><input id="cm_ata" class="mono" value="${E2(c?.ata||"")}" placeholder="Ej. 38-31-00"></div>
+     <div class="field" style="grid-column:1/-1"><label for="cm_notes">Notas</label><input id="cm_notes" value="${E2(c?.notes||"")}"></div></div>
+    <div class="auth-msg small" id="cm_msg"></div><div class="row"><button class="btn pri" type="submit">${c?"Guardar":"Subir"}</button></div></form></div></div>`;
+  CMM._files=files||null; }
+/* in-app viewer (pages drawn on screen) */
+async function cmmOpen(id,page){ const c=CMM.list.find(x=>x.id===id); if(!c) return; const m=$("#modal"); const dl=cmmLevel()==="up";
+  m.innerHTML=`<div class="modal" data-close="1"><div class="sheet cmm-view" role="dialog" aria-modal="true" aria-label="CMM"><div class="sh"><span class="eyebrow">CMM ${esc(c.num||"")} · Rev. ${esc(c.rev||"—")}</span><h3>${esc(c.title||c.name)}</h3><span class="sp"></span>
+   <button class="btn sm" data-cv="prev" aria-label="Página anterior">◀</button><input id="cv_pg" type="number" min="1" value="${page||1}" style="width:70px"><span class="small muted" id="cv_n">/ ${esc(c.pages||"?")}</span><button class="btn sm" data-cv="next" aria-label="Página siguiente">▶</button>
+   <button class="btn sm" data-cv="zout">−</button><button class="btn sm" data-cv="zin">+</button>${dl?`<button class="btn sm ghost" data-cv="dl">Descargar</button>`:""}<button class="btn ghost sm" data-close="1" aria-label="Cerrar">✕</button></div>
+   <div class="sb cv-body" id="cv_body"><div class="small muted" id="cv_msg">Abriendo…</div><canvas id="cv_c"></canvas></div></div></div>`;
+  try{ const bytes=await cmmBytes(c,t=>{ const e=document.getElementById("cv_msg"); if(e) e.textContent=t; }); const pdf=await openPdf(bytes.slice());
+    CMM.view={c,pdf,bytes,page:Math.min(pdf.numPages,Math.max(1,page||1)),zoom:1}; $("#cv_n").textContent="/ "+pdf.numPages; await cmmDraw(); }
+  catch(e){ const x=document.getElementById("cv_msg"); if(x) x.textContent="No se pudo abrir: "+e.message; } }
+async function cmmDraw(){ const V=CMM.view; const cv=document.getElementById("cv_c"); if(!V||!cv) return; const pg=await V.pdf.getPage(V.page); const box=document.getElementById("cv_body"); const base=pg.getViewport({scale:1});
+  const fit=Math.max(200,(box.clientWidth||900)-24)/base.width; const sc=fit*V.zoom*(devicePixelRatio>1?1.6:1.2); const vp=pg.getViewport({scale:sc}); cv.width=Math.round(vp.width); cv.height=Math.round(vp.height); cv.style.width=Math.round(vp.width/(devicePixelRatio>1?1.6:1.2))+"px";
+  const g=cv.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,cv.width,cv.height); V.task?.cancel?.(); V.task=pg.render({canvasContext:g,viewport:vp}); try{ await V.task.promise; }catch{} const i=document.getElementById("cv_pg"); if(i) i.value=V.page; const msg=document.getElementById("cv_msg"); if(msg) msg.textContent=""; }
+/* CMMs that mention a part number (for the part card in Materiales) */
+function cmmFor(pn){ const k=pnCompact(pn); if(!k||cmmLevel()==="none"||!CMM.loaded) return []; return CMM.list.map(c=>({c,pages:cmmPnMap(c)[k]})).filter(x=>x.pages||pnCompact(x.c.pn)===k); }
+let CMM_T=0;
+document.addEventListener("input",e=>{ if(e.target.id!=="cmm_q") return; CMM.q=e.target.value; clearTimeout(CMM_T); CMM_T=setTimeout(()=>{ const r=document.getElementById("cmm_res"); if(r){ const x=document.createElement("div"); x.innerHTML=cmmHtml(); r.replaceWith(x.querySelector("#cmm_res")); } },150); });
+document.addEventListener("change",e=>{ const t=e.target; if(t.id==="cmm_file"&&t.files?.length){ const fs=[...t.files]; t.value=""; cmmMetaForm(fs); return; }
+  if(t.id==="cv_pg"&&CMM.view){ CMM.view.page=Math.min(CMM.view.pdf.numPages,Math.max(1,+t.value||1)); cmmDraw(); } });
+document.addEventListener("keydown",e=>{ if(!CMM.view||!document.getElementById("cv_c")) return; if(e.target.tagName==="INPUT") return; if(e.key==="ArrowRight"&&CMM.view.page<CMM.view.pdf.numPages){ CMM.view.page++; cmmDraw(); } if(e.key==="ArrowLeft"&&CMM.view.page>1){ CMM.view.page--; cmmDraw(); } });
+document.addEventListener("click",async e=>{ const b=e.target.closest?.("[data-cmmopen],[data-cmmedit],[data-cmmdel],[data-cv],[data-cmmgo]"); if(!b) return; const d=b.dataset;
+  if(d.cmmgo){ closeModal(); location.hash="cmm"; CMM.q=d.cmmgo; setTimeout(()=>cmmRender(),50); return; }
+  if(d.cmmopen&&!d.cv){ e.stopPropagation(); await cmmOpen(d.cmmopen,+d.page||1); return; }
+  if(d.cmmedit){ cmmMetaForm(null,CMM.list.find(x=>x.id===d.cmmedit)); return; }
+  if(d.cmmdel){ if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="¿Borrar de verdad?"; return; } const c=CMM.list.find(x=>x.id===d.cmmdel); b.disabled=true;
+    try{ if(cmmWeb()){ const n=+c.pieces||1; const ws=[fsDelW(`cmm/${c.id}`)]; for(let i=0;i<n;i++) ws.push(fsDelW(`cmm/${c.id}/p/${i}`)); for(let i=0;i<ws.length;i+=20) await fsCommit(ws.slice(i,i+20)); } else { await CMM_DB.del("meta",c.id); await CMM_DB.del("file",c.id); }
+      CMM.list=CMM.list.filter(x=>x!==c); toast("Manual borrado."); cmmRender(); }catch(err){ toast(err.message); b.disabled=false; } return; }
+  if(d.cv&&CMM.view){ const V=CMM.view; if(d.cv==="prev"&&V.page>1) V.page--; else if(d.cv==="next"&&V.page<V.pdf.numPages) V.page++; else if(d.cv==="zin") V.zoom=Math.min(4,V.zoom*1.25); else if(d.cv==="zout") V.zoom=Math.max(0.4,V.zoom/1.25);
+    else if(d.cv==="dl"){ matDownload(V.c.name,V.bytes,"application/pdf"); return; } else return; await cmmDraw(); } });
+document.addEventListener("submit",async e=>{ const f=e.target; if(f.id!=="cmm_form") return; e.preventDefault(); const v=id=>($("#"+id)?.value||"").trim(); const btn=f.querySelector("button[type=submit]"); const msg=$("#cm_msg");
+  const meta={num:v("cm_num"),rev:v("cm_rev"),title:v("cm_title"),pn:v("cm_pn").toUpperCase(),mfr:v("cm_mfr"),revDate:v("cm_date"),ata:v("cm_ata"),notes:v("cm_notes")}; btn.disabled=true;
+  try{ if(f.dataset.id){ const c=CMM.list.find(x=>x.id===f.dataset.id); const upd={...meta,upd:nowIso()}; Object.keys(upd).forEach(k=>{ if(upd[k]==="") upd[k]=""; });
+      if(cmmWeb()) await fsCommit([fsW(`cmm/${c.id}`,upd,{mask:Object.keys(upd)})]); else await CMM_DB.put("meta",c.id,{...c,...upd,_hay:undefined,_pm:undefined});
+      Object.assign(c,upd); delete c._hay; closeModal(); toast("Datos guardados."); cmmRender(); return; }
+    const files=CMM._files||[]; let ok=0; for(const file of files){ const g=files.length>1?{num:(file.name.match(/(?<!\d)\d{2}-\d{2}-\d{2}(?!\d)/)||[])[0]||meta.num,rev:(file.name.match(/rev[\s_-]*(\d+)/i)||[])[1]||meta.rev}:{};
+      if(file.size>80*1048576){ toast(`${file.name}: pesa más de 80 MB; divídalo en partes.`,7000); continue; }
+      await cmmUpload(file,{...meta,...g,title:meta.title||file.name.replace(/\.pdf$/i,"")},t=>{ msg.textContent=`${file.name}: ${t}`; }); ok++; }
+    closeModal(); toast(`${ok} manual(es) guardado(s) en la biblioteca CMM.`); cmmRender(); }
+  catch(err){ msg.textContent=err.code==="PERMISSION_DENIED"?"No tiene permiso para subir CMM"+(WB.owner?" (publique las reglas v7)":" — pídalo al propietario")+".":"Error: "+err.message; btn.disabled=false; } });
 
 if(WB.on){
   document.addEventListener("submit", async ev=>{ if(ev.target?.id!=="f_acl") return; ev.preventDefault(); const f=ev.target, box=f.querySelector(".auth-msg"), btn=f.querySelector("button[type=submit]");
@@ -2075,7 +2488,7 @@ const FM = (() => {
     // rules version: v2 lets the owner read config/escrowPriv (absent → null); old rules deny it
     let rulesOld=false; try{ await fsGet("config/escrowPriv"); }catch(e){ rulesOld=e.code==="PERMISSION_DENIED"; }
     // v3 lets the owner read verify/ (absent → null); v2 and older deny it
-    let rulesV3=false; try{ await fsGet("meta/reglas_v5"); rulesV3=true; }catch(e){ rulesV3=e.code!=="PERMISSION_DENIED"; }
+    let rulesV3=false; try{ await fsGet("meta/reglas_v7"); rulesV3=true; }catch(e){ rulesV3=e.code!=="PERMISSION_DENIED"; }
     if(!rulesOld&&rulesV3) $("#rules_box")?.closest(".auth-card")?.remove();
     const rb=$("#rules_box"); if(rb){ const txt=webRules(WB.cfg.owner||WB.email,WB.cfg.ownerUid||WB.uid);
       rb.innerHTML=`<div class="auth-err" style="margin-bottom:8px"><b>Falta publicar las reglas nuevas (v5).</b> Sin ellas no funcionan la pestaña Materiales ni los permisos por persona (Planning / QR / Materiales) en el servidor${rulesOld?", y sus invitados no pueden crear proyectos":""}. Esta tarjeta desaparece sola cuando las publique.</div>
@@ -2182,7 +2595,7 @@ const FM = (() => {
     const roleTx=WB.owner?"Propietario":WB.role==="editor"?"Editor":"Consulta";
     $("#auth").innerHTML=`<div class="start">${hero()}${msg?`<div class="auth-note" role="status">${E(msg)}</div>`:""}
       <p class="small muted" style="margin:0 0 12px">Sesión: <b>${E(WB.email)}</b> · ${roleTx} · <button class="btn ghost sm" type="button" id="w_out">Cerrar sesión</button></p><div class="start-grid">
-      ${!canPlan()?card(`<div><h2>Planning</h2><p class="small muted">El propietario no le dio acceso a proyectos ni a la remoción de accesos.${matLevel()==="none"?" Tampoco a Materiales: pídale acceso.":""}</p></div>`):""}${matLevel()!=="none"&&!WB.owner&&!canPlan()?`<section class="auth-card matcard" style="grid-column:1/-1"><div id="mat_root">${matShell()}</div></section>`:""}
+      ${!canPlan()?card(`<div><h2>Planning</h2><p class="small muted">El propietario no le dio acceso a proyectos ni a la remoción de accesos.${matLevel()==="none"?" Tampoco a Materiales: pídale acceso.":""}${cmmLevel()==="none"?"":" Abajo tiene la biblioteca CMM."}</p></div>`):""}${matLevel()!=="none"&&!WB.owner&&!canPlan()?`<section class="auth-card matcard" style="grid-column:1/-1"><div id="mat_root">${matShell()}</div></section>`:""}${cmmLevel()!=="none"&&!WB.owner&&!canPlan()?`<section class="auth-card matcard" style="grid-column:1/-1"><div id="cmm_root">${cmmHtml()}</div></section>`:""}
       ${!canPlan()?"":card(`<form id="f_wopen"><h2>Proyectos</h2>${err?`<div class="auth-err">${E(err)}</div>`:list.length?`
         <div class="field"><label for="w_pid">Proyecto</label><select id="w_pid">${list.map(p=>`<option value="${E(p.pid)}">${E(p.registration||"—")} · ${E(p.name||"")}${WB.owner&&p.createdByEmail&&p.createdByEmail!==WB.email?" · creado por "+E(p.createdByEmail):""} · ${E(p.updatedAt?new Date(p.updatedAt).toLocaleString("es-MX",{dateStyle:"short",timeStyle:"short"}):"")}${p.updatedBy?" · "+E(p.updatedBy):""}</option>`).join("")}</select></div>
         <div class="field"><label for="w_pw">Contraseña del proyecto</label><input id="w_pw" type="password" autocomplete="off" required></div>
@@ -2201,6 +2614,7 @@ const FM = (() => {
       </div>${webFoot}</div>`;
     if(WB.owner){ aclLoad(); ownerLoad(list,()=>$("#w_name")?.value.trim()||nm); }
     if(document.getElementById("mat_root")) matMount();
+    if(document.getElementById("cmm_root")) cmmMount();
     // on the home screen too: a closed or blocked session is detected within ~30 s
     if(!WB.owner&&SESS.sid){ const hb=setInterval(async()=>{ if(!$("#f_wopen")&&!$("#f_wnew")&&!$("#mat_root")){ clearInterval(hb); return; } if(!document.hidden&&!(await sessCheck())) clearInterval(hb); },30e3); }
     return new Promise(resolve=>{ W.homeResolve=resolve;
@@ -4284,6 +4698,7 @@ const ICON={
   projects:'<path d="M12 2l2.2 7H22l-6 4.3 2.3 7L12 16l-6.3 4.3L8 13.3 2 9h7.8z" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   documents:'<path d="M6 2h9l5 5v15H6zM14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.8"/>',
   cards:'<rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9h10M7 13h6" stroke="currentColor" stroke-width="1.8"/>',
+  cmm:'<path d="M4 2.5h9l3 3V17.5H4z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 8h6M7 11h6M7 14h4" stroke="currentColor" stroke-width="1.5"/>',
   materials:'<circle cx="8" cy="8" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 5.6v4.8M5.6 8h4.8" stroke="currentColor" stroke-width="1.4"/><path d="M14 13l6 6M12.5 17.5l5-5M15.5 20.5l5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
   days:'<rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 14.5h3v3h-3z" fill="currentColor"/>',
   zones:'<path d="M12 3l1.6 6.5 7.4 3v1.8l-7.4-1.4-.5 4.6 2.5 1.9V21L12 20.3 8.4 21v-1.6l2.5-1.9-.5-4.6L3 14.3v-1.8l7.4-3z" fill="currentColor"/>',
@@ -4297,8 +4712,8 @@ const ICON={
   settings:'<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="1.8"/>',
   more:'<circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/>'
 };
-const NAV_ALL=[["dashboard","Dashboard"],["projects","Projects"],["documents","Documents"],["days","Inspection por día"],["cards","Inspection cards"],["zones","Aircraft zones"],["panels","Access panels"],["figures","Document view"],["verify","Verification"],["learning","Aprendizaje"],["reports","Reports"],["materials","Materiales"],["history","History"],["settings","Users & settings"]];
-const NAV_P=new Proxy([],{get(_,k){ const L=NAV_ALL.filter(([r])=>r!=="materials"||matLevel()!=="none"); const v=L[k]; return typeof v==="function"?v.bind(L):v; }});
+const NAV_ALL=[["dashboard","Dashboard"],["projects","Projects"],["documents","Documents"],["days","Inspection por día"],["cards","Inspection cards"],["zones","Aircraft zones"],["panels","Access panels"],["figures","Document view"],["verify","Verification"],["learning","Aprendizaje"],["reports","Reports"],["materials","Materiales"],["cmm","CMM"],["history","History"],["settings","Users & settings"]];
+const NAV_P=new Proxy([],{get(_,k){ const L=NAV_ALL.filter(([r])=>(r!=="materials"||matLevel()!=="none")&&(r!=="cmm"||cmmLevel()!=="none")); const v=L[k]; return typeof v==="function"?v.bind(L):v; }});
 const ico=(k,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 function go(route,param=null){ S.route=route; S.param=param; closeModal(); render(); window.scrollTo({top:0}); if(route!=="figures") S.viewer.doc=S.viewer.doc; }
 function renderNav(){
@@ -5928,7 +6343,7 @@ function closeModal(){ $("#modal").innerHTML=""; }
 /* ---------------- render ---------------- */
 function render(){
   renderNav();
-  const V={dashboard:vDashboard,projects:()=>proj()||S.projects.length?vProjects():vWelcome(),documents:vDocuments,days:vDays,materials:vMaterials,cards:vCards,zones:vZones,panels:vPanels,figures:vFigures,search:vSearch,verify:vVerify,learning:vLearning,reports:vReports,history:vHistory,settings:vSettings,more:vMore}[S.route]||vDashboard;
+  const V={dashboard:vDashboard,projects:()=>proj()||S.projects.length?vProjects():vWelcome(),documents:vDocuments,days:vDays,materials:vMaterials,cmm:vCmm,cards:vCards,zones:vZones,panels:vPanels,figures:vFigures,search:vSearch,verify:vVerify,learning:vLearning,reports:vReports,history:vHistory,settings:vSettings,more:vMore}[S.route]||vDashboard;
   if(RS_T){ clearTimeout(RS_T); RS_T=0; }
   const y=window.scrollY; const active=document.activeElement?.id;
   $("#view").innerHTML=dayBanner()+V();
@@ -6065,8 +6480,12 @@ document.addEventListener("change", async e=>{
   const t=e.target;
   if(t.dataset.upload){ const files=t.files; await uploadFiles(files,t.dataset.upload,t.dataset.dayid); t.value=""; }
   if(t.dataset?.perm&&t.dataset.em){ const em=t.dataset.em, row=t.closest("tr"); const g=k=>row.querySelector(`[data-perm="${k}"]`);
-    const perms={plan:g("plan").checked,qr:g("qr").checked,mat:g("mat").value}; t.disabled=true;
-    try{ await fsCommit([fsW(`acl/${em}`,{perms},{mask:["perms"]})]); toast(`${em}: ${perms.plan?"Planning ✓":"sin Planning"} · ${perms.qr?"QR ✓":"sin QR"} · Materiales ${({none:"No",view:"Ver",edit:"Editar"})[perms.mat]}`,5000); }catch(err){ toast(err.message); }
+    const view=g("matView").checked; if(t.dataset.perm!=="matView"&&t.checked&&!view){ g("matView").checked=true; }
+    if(t.dataset.perm==="cmmUp"&&t.checked) g("cmm").checked=true; const CM=g("cmm").checked; g("cmmUp").disabled=!CM; if(!CM) g("cmmUp").checked=false;
+    const V2=g("matView").checked; ["matAdd","matFix","matDel"].forEach(k=>{ const c=g(k); c.disabled=!V2; if(!V2) c.checked=false; });
+    const fa=g("matAdd").checked, ff=g("matFix").checked, fd=g("matDel").checked;
+    const perms={plan:g("plan").checked,qr:g("qr").checked,mat:!V2?"none":(fa&&ff&&fd?"edit":"view"),matAdd:fa,matFix:ff,matDel:fd,cmm:CM,cmmUp:CM&&g("cmmUp").checked}; t.disabled=true;
+    try{ await fsCommit([fsW(`acl/${em}`,{perms},{mask:["perms"]})]); const ms=perms.mat==="none"?"No":[`Ver`,fa&&"Agregar",ff&&"Corregir",fd&&"Borrar"].filter(Boolean).join(" + "); toast(`${em}: ${perms.plan?"Planning ✓":"sin Planning"} · ${perms.qr?"QR ✓":"sin QR"} · Materiales: ${ms} · CMM: ${perms.cmm?(perms.cmmUp?"ver y subir":"ver"):"no"}`,5000); }catch(err){ toast(err.message); }
     t.disabled=false; return; }
   if(t.matches?.("[data-qrguests]")){ const on=t.checked; t.disabled=true; try{ await qrFlagSet(on); toast(on?"Etiquetas QR ACTIVADAS para sus invitados.":"Etiquetas QR DESACTIVADAS para sus invitados.",5000); document.querySelectorAll("#qrsw_home").forEach(e=>e.innerHTML=qrSwitchHtml()); if(proj()) render(); }catch(err){ t.checked=!on; toast(err.message); } t.disabled=false; return; }
   if(t.id==="card_dayid"){ S.cardDay=t.value; }

@@ -167,3 +167,19 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - **Kit por día:** suma el material de los accesos que se remueven ese día. Incluye hoja de surtido en PDF con QR, CSV para almacén, avance de surtido (guardado cifrado en el proyecto) y «Registrar uso», que anota el historial y descuenta existencia.
 - **Almacén:** existencia, mínimo, ubicación, lote y caducidad, con la pestaña «Alertas».
 - No hace falta cambiar las reglas: siguen siendo las v5.
+
+## 17. Foto de apuntes, corrección con historial, permisos separados y biblioteca CMM (reglas v7)
+
+- **Publique las reglas v7.** En su inicio, abra la tarjeta «Reglas de seguridad del servidor», cópielas y péguelas en Firebase → Firestore → Reglas → Publicar. Hasta que lo haga, Materiales (permisos nuevos) y CMM le pedirán publicarlas.
+- **Foto de apuntes** (Materiales): lee varios números de parte escritos a mano o impresos, cada uno con el recorte de la foto.
+  - Las letras dudosas (0/O, 1/I, 5/S, 8/B…) se marcan para que usted elija; la app nunca cambia un NP sola.
+  - Usted indica qué es, el componente, el acceso y la cantidad. Si el NP ya existe, se actualiza en lugar de duplicarse.
+- **Escanear:** cámara en vivo con lector de QR propio (sirve en iPhone y Android). Con foto, lee el QR y el texto de etiquetas inclinadas o lejanas.
+- **Corregir:** «✎ Corregir / editar» guarda el valor anterior en el historial (quién, cuándo, motivo). El buscador encuentra la pieza también por su número viejo, y existe «Volver a la versión anterior».
+- **Permisos de Materiales por persona:** Ver · Agregar (foto / manual) · Corregir / editar · Borrar. Los aplica el servidor.
+- **CMM:**
+  - Biblioteca de manuales de componente en PDF, global para todos los proyectos. El archivo original se guarda tal cual, en piezas.
+  - Busca por número, P/N, ATA o palabras, y también un P/N **dentro** de los manuales, con la página donde aparece.
+  - Visor dentro de la app. Las revisiones anteriores se conservan como «Rev. anterior».
+  - Permisos por persona: interruptor «Acceso» y casilla «Subir manuales». Solo el propietario borra.
+  - Límite: 80 MB por archivo. El espacio gratuito de Firebase es de 1 GB en total; vigile el tamaño en Firebase → Uso.
