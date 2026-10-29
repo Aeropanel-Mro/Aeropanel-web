@@ -217,3 +217,17 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   - «SUPERSEDED BY» queda en notas; «SUPPLIER CODE» queda en notas como proveedor.
   - «FOR NHA / FOR DETAILS SEE FIGURE», fechas, usuario, revisión, aplicabilidad (MSN / serie del avión) y textos laterales se omiten.
 - **Importar desde una foto** de la página, por ejemplo de la pantalla: la imagen se amplía, se quita la marca de agua y se lee dos veces. El P/N se corrige con su propio «ORDER TRUE / OPTIONAL P/N» cuando falla una letra. **Revise siempre la tabla antes de importar.**
+
+## 22. Nombre de grupos, lugar sugerido y privacidad del correo
+
+- **✎ en cada grupo** (por ejemplo «IPC 33-43-01 Fig. 41»): cambia el nombre de «Dónde se usa» y, si quiere, la zona y los accesos de todas sus partes. Queda en el historial de cada parte.
+- **Al importar un IPC**, el nombre se toma del ensamble principal (NHA), por ejemplo «Light assy-position, red, wingtip LH (ATA 33-43-01)».
+- **Lugar sugerido · VERIFICAR:**
+  - La zona sale de la descripción (LH/RH wing → 500/600, motor → 400, empenaje → 300…), de las partes del mismo ATA ya registradas y de las tarjetas del avión abierto.
+  - Las palabras genéricas («remove», «access panel») no cuentan.
+  - Nunca se guarda solo: usted toca «Usar zona» o el acceso.
+- **Privacidad:**
+  - En Materiales, el historial y CMM ya no se muestra ni se guarda el correo de quien hizo el cambio. El suyo aparece como «Propietario».
+  - CMM ya no muestra quién subió el manual, solo la fecha.
+  - Los registros anteriores se limpian solos la primera vez que el propietario abre Materiales y CMM.
+  - El historial del proyecto muestra «Propietario» en lugar de su correo.
