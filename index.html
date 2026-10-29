@@ -204,6 +204,7 @@ tr.click{cursor:pointer} tr.click:hover td{background:var(--surface-2)}
 .mon-log>div>span:nth-child(3){grid-column:2}.mon-log>div>span:nth-child(4){grid-column:2;font-size:11.5px}
 .mon-log>div>b{word-break:break-all}
 .btn.danger{color:var(--efis-red,#d64545)}
+.sr-chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.sr-chips .chip{cursor:pointer;font-family:ui-monospace,monospace;font-size:12px}.sr-prev{border:1px solid rgba(63,212,255,.45);background:rgba(63,212,255,.06);border-radius:10px;padding:10px 12px}.sr-prev b{font-size:17px}.sr-stock{margin-top:6px;font-size:14px}.sr label.chip{cursor:pointer}
 .cmm-view{max-width:min(1100px,98vw)!important;width:98vw;height:96dvh;display:flex;flex-direction:column}.cmm-view .sh{flex-wrap:wrap;gap:6px}.cv-body{flex:1;overflow:auto;background:#3a4250;text-align:center;padding:12px}.cv-body canvas{box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:none}.cmm-g .mat-gh{gap:10px}
 @keyframes m2rec{50%{opacity:.4}}
 .pmat{display:flex;flex-direction:column;gap:3px;border-left:2px solid var(--line);padding-left:8px;margin-top:2px}.pmat b{font-size:12px}.pmat .pchk input:disabled+*{opacity:.5}
@@ -1770,18 +1771,71 @@ async function scanOpen(){ const m=$("#modal"); const live=!!navigator.mediaDevi
   }catch(err){ const msg=$("#sc_msg"); if(msg) msg.textContent=err.name==="NotAllowedError"?"Sin permiso para la cámara: permítalo en el navegador o use «Foto de la etiqueta».":"No se pudo abrir la cámara: use «Foto de la etiqueta»."; } }
 /* label photo: codes + text (two passes, upright or sideways) */
 async function scanImage(src){ const msg=$("#sc_msg"); if(msg) msg.textContent="Leyendo…"; toast("Leyendo etiqueta…",3000);
-  const cv=src instanceof HTMLCanvasElement?src:await fileCanvas(src,2600); const codes=await codesIn(cv).catch(()=>[]); let words=[];
-  if(hasOcr()){ const c=cleanCanvas(scaledCanvas(cv,2200),"lum"); for(const psm of [11,6]){ try{ const ws=await ocrCanvas(c,{psm,rot:null,fast:psm===6}); words.push(...ws); if(ws.some(w=>pnLooks(pnClean(w.text))&&pnScore(pnClean(w.text))>=5)) break; }catch(e){ console.warn(e); } } }
+  const cv=src instanceof HTMLCanvasElement?src:await fileCanvas(src,2600); const codes=await codesIn(cv).catch(()=>[]); let words=[]; const passes=[];
+  if(hasOcr()){ const c=cleanCanvas(scaledCanvas(cv,2200),"lum"); for(const psm of [11,6]){ try{ const ws=await ocrCanvas(c,{psm,rot:null,fast:psm===6}); words.push(...ws); passes.push(ws); if(ws.some(w=>pnLooks(pnClean(w.text))&&pnScore(pnClean(w.text))>=5)) break; }catch(e){ console.warn(e); } } }
   const cands=new Map(); const add=(p,s)=>{ p=pnClean(p); if(!pnLooks(p)) return; cands.set(p,Math.max(cands.get(p)||0,s+pnScore(p))); };
   codes.forEach(t=>pnsInCode(t).forEach(p=>add(p,6))); for(const r of wordRows(words)){ const txt=r.ws.map(w=>w.text).join(" "); const m=txt.toUpperCase().match(/(?:P\/?N|PART\s*(?:NO|NUMBER)|PNR|N\.?\s*P\.?)\s*[:#.]?\s*([A-Z0-9][A-Z0-9\-\/. ]{3,24})/); if(m) add(m[1].replace(/\s+/g,""),4); for(const c of pnFromRow(r.ws)) add(c.pn,0); }
-  await scanResult({codes,cands:[...cands].sort((a,b)=>b[1]-a[1]).map(x=>x[0]),photo:true}); }
-async function scanResult({codes=[],cands=[],photo=false}){ const E2=esc; const acc=codes.map(t=>String(t).toUpperCase().match(/\b([1-8]\d{2}[A-Z]{2,3})\b/)?.[1]).find(Boolean);
+  await scanResult({codes,cands:[...cands].sort((a,b)=>b[1]-a[1]).map(x=>x[0]),photo:true,lines:wordRows([...passes].sort((x,y)=>y.reduce((n,w)=>n+w.text.length*(w.conf||50),0)-x.reduce((n,w)=>n+w.text.length*(w.conf||50),0))[0]||[]).map(r=>r.ws.map(w=>w.text).join(" "))}); }
+/* what a label says besides the P/N: quantity, lot, expiry, description */
+function labelInfo(texts){ const T=texts.join("\n").toUpperCase(); const g=re=>(T.match(re)||[])[1]||"";
+  const qty=g(/\b(?:QTY|CANT(?:IDAD)?|Q)\s*[:.=]?\s*(\d{1,5})\b/)||g(/\b(\d{1,5})\s*(?:PCS|PZAS?|EA|UDS?)\b/);
+  const lot=g(/\b(?:LOT|LOTE|BATCH)\s*(?:NO\.?)?\s*[:#.]?\s*([A-Z0-9][A-Z0-9\-]{2,20})/);
+  let exp=""; const e=T.match(/\b(?:EXP(?:IRY|IRA|\.)?|CADUCA(?:IDAD)?|VENCE|SHELF\s*LIFE|USE\s*BY)\s*[:.]?\s*(\d{1,4})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?/);
+  if(e){ let [_,a,b,c]=e; if(a.length===4) exp=`${a}-${b.padStart(2,"0")}-${(c||"01").padStart(2,"0")}`; else if(c) exp=`${c.length===2?"20"+c:c}-${b.padStart(2,"0")}-${a.padStart(2,"0")}`; else exp=`${b.length===4?b:"20"+b}-${a.padStart(2,"0")}-01`; if(!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(exp)) exp=""; }
+  const descL=texts.map(t=>String(t).trim()).find(t=>matCatOf(t)&&!/\d{4,}/.test(t)&&t.length<60)||"";
+  return {qty,lot,exp,desc:descL.replace(/\s+/g," ")}; }
+const SR={};
+async function scanResult({codes=[],cands=[],photo=false,lines=[]}){ const acc=codes.map(t=>String(t).toUpperCase().match(/\b([1-8]\d{2}[A-Z]{2,3})\b/)?.[1]).find(Boolean);
   if(acc&&codes.some(t=>/ACCESO|TORNILLER|#/i.test(t))){ closeModal(); MAT.tab="cat"; MAT.q=acc; matRender(); toast(`Acceso ${acc}: sus materiales.`); return; }
-  if(!cands.length) codes.forEach(t=>pnsInCode(t).forEach(p=>cands.push(p))); cands=[...new Set(cands)];
-  const m=$("#modal"); m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Resultado" style="max-width:600px"><div class="sh"><span class="eyebrow">Escanear</span><h3>${cands.length?"Números de parte encontrados":"No encontré un número de parte"}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
-   <div class="sb" style="display:flex;flex-direction:column;gap:8px">${codes.length?`<div class="small mut">Código leído: <span class="mono">${E2(codes[0].slice(0,120))}</span></div>`:""}
-    ${cands.slice(0,8).map(c=>{ const n=pnCatalogNear(c); return `<div class="row m2-cand"><input class="mono sc-pn" value="${E2(c)}" aria-label="Número de parte" style="width:200px"><span class="small muted">${E2(pnInfo(c)?.hint||"")}${n&&n.d===0?` · ya está en el catálogo (${E2(n.it.comp||"")})`:n?` · ¿${E2(n.pn)}?`:""}</span><span class="sp"></span><button class="btn sm" data-m2scan="find">Buscar</button>${matCanAdd()?`<button class="btn sm pri" data-m2scan="add">Agregar</button>`:""}</div>`; }).join("")||`<p class="small muted">${photo?"Acerque más la etiqueta, con buena luz y sin reflejos, o escriba el número en el buscador.":"El código no contiene un número de parte."}</p>`}
-    <div class="row" style="gap:8px"><button class="btn sm" data-m2="scan">↻ Escanear otra vez</button></div></div></div></div>`; }
+  if(!cands.length) codes.forEach(t=>pnsInCode(t).forEach(p=>cands.push(p))); cands=[...new Set(cands)].filter(c=>!/^(LOTE?|EXP|QTY|CANT|MFG|DATE|FECHA|CAGE|SN|S\/N|SERIAL|BATCH|CADUC|VENCE|PO|ORDER)/.test(c)&&!/^\d{4}-\d{2}-\d{2}$/.test(c)&&!/^(19|20)\d{6}$/.test(c)).slice(0,6);
+  const texts=[...codes.flatMap(t=>String(t).split(/\s*[|;\n]\s*/)),...lines].map(s=>String(s).trim()).filter(Boolean);
+  // a candidate that exists in the catalog goes first
+  cands.sort((a,b)=>(pnCatalogNear(b)?.d===0?1:0)-(pnCatalogNear(a)?.d===0?1:0));
+  Object.assign(SR,{codes,cands,texts,info:labelInfo(texts),pn:cands[0]||""}); srRender(); }
+function srMatch(pn){ const n=pnCatalogNear(pn); return n&&n.d===0?n.it:null; }
+function srName(it){ return `${it.desc||MAT_SHORT(it.cat)||"Material"} · ${it.pn||"(sin P/N)"}`; }
+function srRender(){ const E2=esc; const I=SR.info, pn=SR.pn, ex=pn?srMatch(pn):null, near=pn&&!ex?pnCatalogNear(pn):null; const inf=pnInfo(pn);
+  const canNew=matCanAdd(), canStock=matCanFix(); const m=$("#modal");
+  const head=SR.cands.length?(ex?"Material reconocido":"Número de parte nuevo"):"No detecté un número de parte";
+  m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Resultado del escaneo" style="max-width:640px"><div class="sh"><span class="eyebrow">Escanear · inventario</span><h3>${head}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1" aria-label="Cerrar">✕</button></div>
+   <form class="sb sr" id="sr_form" style="display:flex;flex-direction:column;gap:10px">
+    <details class="sr-raw" ${SR.cands.length?"":"open"}><summary class="small">Lo que se leyó de la etiqueta (${SR.texts.length} renglón/es)</summary><div class="sr-chips">${SR.texts.slice(0,24).map(t=>`<button type="button" class="chip" data-srt="${E2(t)}" title="Toque para usarlo">${E2(t.slice(0,60))}</button>`).join("")||`<span class="small muted">Nada legible. Acerque la etiqueta con buena luz o escriba los datos.</span>`}</div>${SR.texts.length?`<div class="small muted">Toque un renglón para ponerlo como P/N (o como descripción si ya hay P/N).</div>`:""}</details>
+    ${SR.cands.length>1?`<div class="row" style="gap:6px;flex-wrap:wrap"><span class="small">¿Cuál es el P/N?</span>${SR.cands.map(c=>`<label class="chip ${c===pn?"c":""}"><input type="radio" name="sr_c" value="${E2(c)}" ${c===pn?"checked":""} hidden>${E2(c)}${srMatch(c)?" ✓":""}</label>`).join("")}</div>`:""}
+    <div class="field"><label for="sr_pn">Número de parte (P/N)</label><input id="sr_pn" class="mono" value="${E2(pn)}" placeholder="Escriba el P/N de la etiqueta" autocomplete="off" style="font-size:17px">
+     <span class="small ${ex?"ok":"muted"}">${ex?`✓ Ya está en el catálogo`:inf?`${E2(inf.hint)} · estándar ${E2(inf.std)}`:pn?"No está en el catálogo: se dará de alta":""}${near?` · ¿Quiso decir <button type="button" class="btn sm ghost" data-srnear="${E2(near.pn)}">${E2(near.pn)}</button>?`:""}</span></div>
+    ${ex?`<div class="sr-prev"><div class="small mut">SE AGREGARÁ AL INVENTARIO DE</div><b>${E2(srName(ex))}</b><div class="small">${E2(ex.comp||"")} ${ex.bin?` · ubicación <span class="mono">${E2(ex.bin)}</span>`:""}</div>
+      <div class="sr-stock">Existencia <b>${E2(ex.stock||"0")}</b> → <b class="ok" id="sr_after">${(+ex.stock||0)+(+I.qty||0)}</b> ${E2(ex.unit||"pza")}</div></div>
+     <div class="grid g3"><div class="field"><label for="sr_qty">Cantidad que entra</label><input id="sr_qty" inputmode="numeric" value="${E2(I.qty||"")}" placeholder="0"></div><div class="field"><label for="sr_lot">Lote</label><input id="sr_lot" value="${E2(I.lot||ex.lot||"")}"></div><div class="field"><label for="sr_exp">Caducidad</label><input id="sr_exp" type="date" value="${E2(I.exp||ex.exp||"")}"></div><div class="field"><label for="sr_bin">Ubicación</label><input id="sr_bin" class="mono" value="${E2(ex.bin||"")}"></div></div>
+     ${canStock?`<div class="row"><button class="btn pri" type="submit" data-mode="stock">Agregar al inventario</button><button class="btn ghost" type="button" data-srfind="1">Ver en catálogo</button></div>`:`<div class="auth-err small">No tiene permiso para modificar piezas existentes (Corregir / editar). Pídalo al propietario.</div>`}`
+    :`<div class="sr-prev"><div class="small mut">SE GUARDARÁ COMO</div><b id="sr_name">—</b><div class="small" id="sr_where"></div></div>
+     <div class="grid g2"><div class="field"><label for="sr_desc">Nombre / descripción</label><input id="sr_desc" value="${E2(I.desc||inf?.hint||"")}" placeholder="Ej. Washer, flat"></div>
+      <div class="field"><label for="sr_cat">Tipo</label><select id="sr_cat"><option value="">— elegir —</option>${MAT_CATS.map(([k,t])=>`<option value="${k}" ${(inf?.cat||matCatOf(I.desc))===k?"selected":""}>${E2(t)}</option>`).join("")}</select></div>
+      <div class="field"><label for="sr_comp">Componente / dónde se usa</label><input id="sr_comp" list="mat_comps" value="Almacén general" required></div>
+      <div class="field"><label for="sr_bin">Ubicación (anaquel)</label><input id="sr_bin" class="mono" placeholder="Ej. A-12-3"></div>
+      <div class="field"><label for="sr_qty">Cantidad (existencia)</label><input id="sr_qty" inputmode="numeric" value="${E2(I.qty||"")}"></div><div class="field"><label for="sr_lot">Lote</label><input id="sr_lot" value="${E2(I.lot||"")}"></div>
+      <div class="field"><label for="sr_exp">Caducidad</label><input id="sr_exp" type="date" value="${E2(I.exp||"")}"></div></div>
+     ${canNew?`<div class="row"><button class="btn pri" type="submit" data-mode="new">Agregar al inventario</button><span class="small muted">Revise el nombre antes de guardar.</span></div>`:`<div class="auth-err small">No tiene permiso para agregar materiales. Pídalo al propietario.</div>`}`}
+    <div class="row" style="gap:8px"><button class="btn sm" type="button" data-m2="scan">↻ Escanear otra vez</button></div></form></div></div>`;
+  srPreview(); }
+function srPreview(){ const n=$("#sr_name"); if(!n) return; const v=id=>($("#"+id)?.value||"").trim(); const it={pn:v("sr_pn").toUpperCase(),desc:v("sr_desc"),cat:$("#sr_cat")?.value};
+  n.textContent=it.pn||it.desc?srName(it):"Escriba al menos el P/N o el nombre"; $("#sr_where").textContent=`En «${v("sr_comp")||"—"}»${v("sr_bin")?` · ubicación ${v("sr_bin")}`:""}${v("sr_qty")?` · existencia ${v("sr_qty")} pza`:""}${v("sr_lot")?` · lote ${v("sr_lot")}`:""}`; }
+document.addEventListener("input",e=>{ if(!e.target.closest?.("#sr_form")) return; if(e.target.id==="sr_pn"){ clearTimeout(SR.t); SR.t=setTimeout(()=>{ const was=!!srMatch(SR.pn); SR.pn=e.target.value.trim().toUpperCase(); if(was!==!!srMatch(SR.pn)||!was){ const pos=e.target.selectionStart; srRender(); const i=$("#sr_pn"); i.focus(); i.setSelectionRange(pos,pos); } },350); return; }
+  if(e.target.id==="sr_qty"&&$("#sr_after")){ const ex=srMatch(SR.pn); $("#sr_after").textContent=(+ex?.stock||0)+(+e.target.value||0); } srPreview(); });
+document.addEventListener("change",e=>{ if(e.target.name==="sr_c"){ SR.pn=e.target.value; srRender(); } else if(e.target.closest?.("#sr_form")) srPreview(); });
+document.addEventListener("click",e=>{ const b=e.target.closest?.("[data-srt],[data-srnear],[data-srfind]"); if(!b) return;
+  if(b.dataset.srnear){ SR.pn=b.dataset.srnear; srRender(); return; }
+  if(b.dataset.srfind){ closeModal(); MAT.tab="cat"; MAT.q=SR.pn; matRender(); return; }
+  const t=b.dataset.srt; const pnI=$("#sr_pn"); const asPn=pnClean(t.replace(/\s+/g,""));
+  if(!pnI.value.trim()&&pnLooks(asPn)){ SR.pn=asPn; srRender(); } else if($("#sr_desc")){ $("#sr_desc").value=t; srPreview(); } else { SR.pn=asPn||t; srRender(); } });
+document.addEventListener("submit",async e=>{ if(e.target.id!=="sr_form") return; e.preventDefault(); const v=id=>($("#"+id)?.value||"").trim(); const btn=e.submitter||e.target.querySelector("button[type=submit]"); const mode=btn?.dataset.mode||(srMatch(SR.pn)?"stock":"new"); btn.disabled=true;
+  try{ const pn=v("sr_pn").toUpperCase(); const q=parseInt(v("sr_qty"))||0;
+    if(mode==="stock"){ const ex=srMatch(pn); if(!ex) throw new Error("Ese P/N ya no coincide con el catálogo."); const it={...ex}; const old={...ex}; it.stock=String((+it.stock||0)+q); if(v("sr_lot")) it.lot=v("sr_lot"); if(v("sr_exp")) it.exp=v("sr_exp"); if(v("sr_bin")) it.bin=v("sr_bin");
+      histPush(it,{ev:`Entrada al inventario por escaneo: +${q}${v("sr_lot")?` · lote ${v("sr_lot")}`:""}`,ch:matDiff(old,it)}); await matPut(it).catch(er=>{ throw matDenied(er,"modificar piezas"); }); MAT.sel=it.id; closeModal(); toast(`Inventario: ${srName(it)} · existencia ${old.stock||0} → ${it.stock}`,6000); }
+    else { const desc=v("sr_desc"); if(!pn&&!desc) throw new Error("Escriba al menos el P/N o el nombre."); const cat=$("#sr_cat").value||pnInfo(pn)?.cat||matCatOf(desc)||"OTHER";
+      const it={id:matId(),comp:v("sr_comp")||"Almacén general",pn,desc:desc||pnInfo(pn)?.hint||"",cat,qty:"1",unit:"pza",stock:String(q),lot:v("sr_lot"),exp:v("sr_exp"),bin:v("sr_bin"),at:nowIso()};
+      Object.keys(it).forEach(k=>{ if(it[k]==="") delete it[k]; }); histPush(it,{ev:`Alta por escaneo de etiqueta · existencia ${q}`}); await matPut(it).catch(er=>{ throw matDenied(er,"agregar"); }); MAT.sel=it.id; closeModal(); toast(`Agregado al inventario: ${srName(it)} · ${it.comp}`,6000); }
+    MAT.tab="cat"; matRender(); }
+  catch(err){ toast(err.message,6000); btn.disabled=false; } });
 document.addEventListener("click",async e=>{ const b=e.target.closest?.("[data-sc]"); if(!b) return;
   if(b.dataset.sc==="snap"){ const v=$("#sc_v"); if(!v?.videoWidth) return; const cv=document.createElement("canvas"); cv.width=v.videoWidth; cv.height=v.videoHeight; cv.getContext("2d").drawImage(v,0,0); scanStop(); b.disabled=true; try{ await scanImage(cv); }catch(err){ toast(err.message); } return; }
   if(b.dataset.sc==="torch"&&SCAN.track){ const on=!b.classList.contains("on"); try{ await SCAN.track.applyConstraints({advanced:[{torch:on}]}); b.classList.toggle("on",on); }catch{} } });

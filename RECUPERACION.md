@@ -183,3 +183,10 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   - Visor dentro de la app. Las revisiones anteriores se conservan como «Rev. anterior».
   - Permisos por persona: interruptor «Acceso» y casilla «Subir manuales». Solo el propietario borra.
   - Límite: 80 MB por archivo. El espacio gratuito de Firebase es de 1 GB en total; vigile el tamaño en Firebase → Uso.
+
+## 18. Escaneo → inventario
+
+- **Si es un material del catálogo:** al escanear el QR o la etiqueta se ve «SE AGREGARÁ AL INVENTARIO DE: nombre · P/N», con la existencia actual → la nueva. La cantidad, el lote y la caducidad se leen de la etiqueta y se pueden corregir. Nada se guarda hasta tocar «Agregar al inventario», y queda anotado en el historial.
+- **Si el P/N es nuevo:** muestra «SE GUARDARÁ COMO» (nombre · P/N, componente, ubicación, existencia, lote), que se actualiza mientras usted escribe.
+- **Si no se detecta un P/N:** lo dice, muestra el texto leído de la etiqueta (toque un renglón para usarlo como P/N o nombre) y permite agregarlo a mano.
+- **Permisos:** sumar existencia a una pieza existente requiere «Corregir / editar»; dar de alta una nueva requiere «Agregar».
