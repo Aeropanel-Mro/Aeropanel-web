@@ -208,3 +208,12 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   - Salta la portada y los dibujos, acepta P/N numéricos (190-73215-401, 2345678-3), quita los puntos de sangría y une los renglones de continuación.
   - Las páginas escaneadas se leen con OCR, que es más lento.
   - Antes de importar se revisa todo en una tabla editable; se guarda como referencia la página del IPC de cada parte.
+
+## 21. IPC de Embraer (formato real) y foto de la página
+
+- **Formato reconocido:** FIG. · ITEM · PART NUMBER · AIRLINE STOCK NUMBER · NOMENCLATURE 1234567 · USAGE RANGE · UNITS PER ASSY.
+- **Renglones de continuación:**
+  - «OPTIONAL P/N» y «ORDER TRUE P/N» pasan a alternos aprobados, con la referencia IPC Fig./item.
+  - «SUPERSEDED BY» queda en notas; «SUPPLIER CODE» queda en notas como proveedor.
+  - «FOR NHA / FOR DETAILS SEE FIGURE», fechas, usuario, revisión, aplicabilidad (MSN / serie del avión) y textos laterales se omiten.
+- **Importar desde una foto** de la página, por ejemplo de la pantalla: la imagen se amplía, se quita la marca de agua y se lee dos veces. El P/N se corrige con su propio «ORDER TRUE / OPTIONAL P/N» cuando falla una letra. **Revise siempre la tabla antes de importar.**

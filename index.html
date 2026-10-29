@@ -1883,7 +1883,7 @@ function matHtml(){ const E2=esc, edit=matCanEdit(); const items=[...MAT.items.v
     <input id="mat_q" type="search" autocomplete="off" placeholder="Buscar: baño, caños, galley, 192AL, NAS1149, washer…" value="${E2(MAT.q)}" aria-label="Buscar materiales" aria-autocomplete="list">
     ${sr?`<button class="m2-mic" data-m2="voice" title="Buscar por voz" aria-label="Buscar por voz">🎤</button>`:""}<span class="kbd" title="Atajo">/</span><div id="mat_sugg" class="m2-sugg" hidden></div></div>
    <div class="m2-acts"><button class="btn sm" data-m2="scan" title="QR, código de barras o texto de la etiqueta">⌁ Escanear</button>
-    ${matCanAdd()?`<button class="btn sm" data-m2="notes" title="Foto de sus apuntes con varios números de parte">📝 Foto de apuntes</button><label class="btn sm">Importar IPC (PDF)<input type="file" accept="application/pdf,.pdf" id="mat_ipc" hidden></label><button class="btn sm" data-m2="import">Importar Excel</button><button class="btn sm pri" data-m2="new">+ Agregar parte</button>`:edit?"":`<span class="pill s-NOT_FOUND">Solo consulta</span>`}
+    ${matCanAdd()?`<button class="btn sm" data-m2="notes" title="Foto de sus apuntes con varios números de parte">📝 Foto de apuntes</button><label class="btn sm">Importar IPC (PDF o foto)<input type="file" accept="application/pdf,.pdf,image/*" id="mat_ipc" hidden></label><button class="btn sm" data-m2="import">Importar Excel</button><button class="btn sm pri" data-m2="new">+ Agregar parte</button>`:edit?"":`<span class="pill s-NOT_FOUND">Solo consulta</span>`}
     <button class="btn sm ghost" data-m2="export" ${items.length?"":"disabled"}>Exportar</button></div></div>
   <div class="m2-tabs" role="tablist"><button role="tab" class="${MAT.tab==="cat"?"on":""}" data-m2tab="cat">Catálogo <b>${items.length}</b></button><button role="tab" class="${MAT.tab==="kit"?"on":""}" data-m2tab="kit">Kit por día</button><button role="tab" class="${MAT.tab==="alerts"?"on":""}" data-m2tab="alerts">Alertas ${nA?`<b class="warn">${nA}</b>`:""}</button></div>
   ${MAT.tab==="kit"?`<div id="mat_kit">${matKitHtml()}</div>`:MAT.tab==="alerts"?matAlertsHtml():`
@@ -2034,42 +2034,86 @@ async function ipcPageWords(pdf,n,lib,info){ const pg=await pdf.getPage(n); cons
   if(words.length<25&&hasOcr()){ info?.(`Página ${n} escaneada: leyendo con OCR…`); try{ const r=await ocrPage(pg,{psm:6,figure:false,mode:"FAST"}); words=r.words||[]; how="OCR"; }catch(e){ console.warn(e); } }
   return {words:words.filter(w=>String(w.text).trim()),how}; }
 function ipcRowsOf(words){ const W=[...words].sort((a,b)=>(a.top+a.bottom)/2-(b.top+b.bottom)/2); const rows=[];
-  for(const w of W){ const cy=(w.top+w.bottom)/2, h=Math.max(1,w.bottom-w.top); const r=rows.at(-1); if(r&&Math.abs(cy-r.cy)<=0.5*Math.max(h,r.h)){ r.ws.push(w); r.cy=(r.cy*(r.ws.length-1)+cy)/r.ws.length; r.h=Math.max(r.h,h); } else rows.push({cy,h,ws:[w]}); }
-  rows.forEach(r=>{ r.ws.sort((a,b)=>a.x0-b.x0); r.text=r.ws.map(w=>w.text).join(" "); }); return rows; }
+  const fit=r=>{ const n=r.ws.length; if(n<2){ r.k=0; r.b=r.cy; return; } let sx=0,sy=0,sxx=0,sxy=0; for(const w of r.ws){ const x=(w.x0+w.x1)/2, y=(w.top+w.bottom)/2; sx+=x; sy+=y; sxx+=x*x; sxy+=x*y; } const d=n*sxx-sx*sx; r.k=d?Math.max(-0.08,Math.min(0.08,(n*sxy-sx*sy)/d)):0; r.b=(sy-r.k*sx)/n; };
+  for(const w of W){ const cx=(w.x0+w.x1)/2, cy=(w.top+w.bottom)/2, h=Math.max(1,w.bottom-w.top); let best=null,bd=1e9;
+    for(const r of rows.slice(-4)){ let nw=r.ws[0],nd=1e9; for(const x of r.ws){ const dx=Math.abs((x.x0+x.x1)/2-cx); if(dx<nd){ nd=dx; nw=x; } } const y=(nw.top+nw.bottom)/2+r.k*(cx-(nw.x0+nw.x1)/2); const d=Math.abs(cy-y); if(d<bd){ bd=d; best=r; } }
+    if(best&&bd<=0.42*Math.max(h,best.h)){ best.ws.push(w); best.h=Math.max(best.h,h); best.cy=best.ws.reduce((a,x)=>a+(x.top+x.bottom)/2,0)/best.ws.length; fit(best); } else { const r={cy,h,ws:[w],k:0,b:cy}; rows.push(r); } }
+  rows.sort((a,b)=>a.cy-b.cy); rows.forEach(r=>{ r.ws.sort((a,b)=>a.x0-b.x0); r.text=r.ws.map(w=>w.text).join(" "); }); return rows; }
 const ipcU=t=>String(t||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
 /* finds the header and the x where each column starts */
-function ipcHeader(rows){ for(let i=0;i<rows.length;i++){ const near=rows.slice(i,i+3).filter(r=>r.cy-rows[i].cy<=3.2*rows[i].h); const ws=near.flatMap(r=>r.ws);
-    const nom=ws.find(w=>/^(NOMENCLATURE|NOMENCLATURA|DESCRIPTION|DESCRIPCION|DESCRIPCIÓN)$/.test(ipcU(w.text))||ipcU(w.text).startsWith("NOMENCLAT")); if(!nom) continue;
-    let part=ws.find(w=>/^(PARTNUMBER|PARTNO|PN|PARTNUMBERS|NUMERODEPARTE)$/.test(ipcU(w.text)));
-    if(!part){ const p=ws.find(w=>ipcU(w.text)==="PART"); if(p&&ws.some(w=>/^(NUMBER|NO|NUM)$/.test(ipcU(w.text))&&Math.abs(w.x0-p.x0)<80)) part=p; }
+const IPC_KW=new Set(["PART","NUMBER","NO","NUM","PN","PARTNUMBER","PARTNO","NOMENCLATURE","NOMENCLATURA","DESCRIPTION","FIG","ITEM","FIGITEM","UNITS","UNIT","PER","ASSY","QTY","EFFECT","EFF","CODE","AIRLINE","STOCK","1234567","123456","USABLE","ON","SPEC","VENDOR","CAGE","USAGE","RANGE","FIGURE"]);
+function ipcHeader(rows){ for(let i=0;i<rows.length;i++){ const near=rows.slice(i,i+4).filter(r=>r.cy-rows[i].cy<=4.2*rows[i].h); const ws=near.flatMap(r=>r.ws);
+    const nom=ws.find(w=>/^(NOMENCLATURE|NOMENCLATURA|DESCRIPTION|DESCRIPCION)$/.test(ipcU(w.text))||ipcU(w.text).startsWith("NOMENCLAT")); if(!nom) continue;
+    let part=ws.find(w=>/^(PARTNUMBER|PARTNO|PN|NUMERODEPARTE)$/.test(ipcU(w.text)));
+    if(!part){ const p=ws.filter(w=>ipcU(w.text)==="PART").find(p=>ws.some(w=>/^(NUMBER|NO|NUM)$/.test(ipcU(w.text))&&Math.abs(w.x0-p.x0)<9*Math.max(4,p.bottom-p.top))); if(p) part=p; }
     if(!part||part.x0>=nom.x0) continue;
     const ind=ws.filter(w=>/^1(234567?)?$/.test(ipcU(w.text))&&w.x0<nom.x0+5&&w.x0>part.x0+20).sort((x,y)=>x.x0-y.x0)[0]; const nomX=Math.min(nom.x0,ind?ind.x0:nom.x0);
-    const after=ws.filter(w=>w.x0>part.x0+20&&w.x0<nomX-5&&!/^(NUMBER|NO|NUM|PART)$/.test(ipcU(w.text))).sort((a,b)=>a.x0-b.x0); // AIRLINE STOCK NO…
-    const units=ws.filter(w=>/^(UNITS|UNIT|QTY|QUANTITY|CANT|CANTIDAD|UPA|ASSY)$/.test(ipcU(w.text))&&w.x0>nom.x0).sort((a,b)=>a.x0-b.x0)[0];
-    const eff=ws.filter(w=>/^(EFFECT|EFF|EFFECTIVITY|USABLE|CODE)$/.test(ipcU(w.text))&&w.x0>nom.x0).sort((a,b)=>a.x0-b.x0)[0];
-    const nomEnd=Math.min(...[units?.x0,eff?.x0].filter(Number.isFinite),1e9);
-    const KW=new Set(["PART","NUMBER","NO","NUM","PN","PARTNUMBER","PARTNO","NOMENCLATURE","NOMENCLATURA","DESCRIPTION","FIG","ITEM","FIGITEM","UNITS","UNIT","PER","ASSY","QTY","EFFECT","EFF","CODE","AIRLINE","STOCK","1234567","123456","USABLE","ON","SPEC","VENDOR","CAGE"]);
-    const hdr=near.filter(r=>{ const k=r.ws.filter(w=>KW.has(ipcU(w.text))).length; return k>0&&k>=r.ws.length*0.5; }); const lastHdr=hdr.length?hdr.at(-1):near[0];
-    return {at:rows.indexOf(lastHdr),hdrY:lastHdr.cy,pnX:part.x0,pnEnd:after[0]?after[0].x0:nomX,nomX,nomEnd,qtyX:units?units.x0:null,itemX:(()=>{ const ih=ws.filter(w=>/^(FIG|ITEM|FIGITEM)$/.test(ipcU(w.text))&&w.x1<=part.x0+2).sort((x,y)=>y.x1-x.x1)[0]; return ih?(ih.x1+part.x0)/2:part.x0-22; })()}; }
+    const after=ws.filter(w=>w.x0>part.x1+2&&w.x0<nomX-5&&/^(AIRLINE|STOCK|SPEC|VENDOR|CAGE)$/.test(ipcU(w.text))).sort((a,b)=>a.x0-b.x0);
+    const right=ws.filter(w=>/^(UNITS?|QTY|QUANTITY|CANT|UPA|EFFECT|EFF|USABLE|USAGE|RANGE|CODE)/.test(ipcU(w.text))&&w.x0>nom.x1).sort((a,b)=>a.x0-b.x0);
+    const units=ws.filter(w=>/^(UNITS?|QTY|QUANTITY|CANT|UPA)/.test(ipcU(w.text))&&w.x0>nom.x1).sort((a,b)=>a.x0-b.x0)[0];
+    const itemH=ws.filter(w=>/^(ITEM|FIGITEM)$/.test(ipcU(w.text))&&w.x1<=part.x0+2).sort((x,y)=>y.x1-x.x1)[0];
+    const figH=ws.filter(w=>ipcU(w.text)==="FIG"&&w.x1<=(itemH?itemH.x0+2:part.x0)).sort((x,y)=>y.x1-x.x1)[0];
+    const hdr=near.filter(r=>{ const k=r.ws.filter(w=>IPC_KW.has(ipcU(w.text))).length; return k>0&&k>=r.ws.length*0.5; }); const lastHdr=hdr.length?hdr.at(-1):near[0];
+    const h=part.bottom-part.top;
+    return {at:rows.indexOf(lastHdr),pnX:part.x0,pnEnd:after[0]?after[0].x0:nomX,nomX,nomEnd:right[0]?right[0].x0:1e9,qtyX:units?units.x0:null,
+      itemX:itemH?itemH.x1+Math.min(2*h,(part.x0-itemH.x1)*0.35):part.x0-3*h, itemStart:itemH?itemH.x0-2*h:(figH?figH.x1+h:-1e9)}; }
   return null; }
-const ipcIsPN=t=>{ t=String(t||"").toUpperCase(); return t.length>=3&&t.length<=32&&/\d/.test(t)&&/^[A-Z0-9][A-Z0-9\-\/.]*$/.test(t)&&!/^\d{2}-\d{2}-\d{2}$/.test(t)&&!/^(FIG|PAGE|REV)/.test(t)&&!/^\d{1,3}[A-Z]?$/.test(t); };
-function ipcParse(words){ const rows=ipcRowsOf(words); const H=ipcHeader(rows); const all=rows.map(r=>r.text).join(" ");
-  const ata=(all.match(/\b(\d{2}-\d{2}-\d{2})\b/)||[])[1]||"", fig=(all.match(/\bFIG(?:URE)?\.?\s*(\d+[A-Z]?)/i)||[])[1]||"";
+const IPC_DATE=/^(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}(:\d{2})?|(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\d{0,2}\/?\d{0,4})$/;
+const ipcIsPN=t=>{ t=String(t||"").toUpperCase(); return t.length>=3&&t.length<=32&&/\d/.test(t)&&/^[A-Z0-9][A-Z0-9\-\/.]*$/.test(t)&&!/^\d{2}-\d{2}-\d{2}$/.test(t)&&!IPC_DATE.test(t)&&!/^\d{1,2}\/\d{2,4}$/.test(t)&&!/^(FIG|PAGE|REV)/.test(t)&&!/^-?\d{1,3}[A-Z]?$/.test(t); };
+/* continuation lines of the nomenclature: alternates go to «alternos aprobados (IPC)», references and effectivity are left out */
+function ipcCont(row,line){ const L=line.trim(), U=L.toUpperCase(); let m;
+  if((m=U.match(/^(?:OPTIONAL|ORDER\s*TRUE|ALTERNATE|ALT\.?|INTERCHANGEABLE(?:\s*WITH)?|REPLACES|SUPERSEDES|SUPERSEDED\s*BY|REPLACED\s*BY|OR(?=\s))\s*(?:P\s*[\/I1L|]?\s*N|PART\s*(?:NO|NUMBER))?\s*[:;.,]?\s*([A-Z0-9][A-Z0-9\-\/. ]{1,30})$/))){ if(/\d/.test(m[1])){ const pn=m[1].trim().replace(/[.\s]+$/,"").replace(/\s+(HLX|DUPL)$/,"$1").replace(/\s+/g,"");
+    const kind=/^ORDER\s*TRUE/.test(U)?"order":/SUPERSEDED|REPLACED/.test(U)?"newer":/REPLACES|SUPERSEDES/.test(U)?"older":"opt"; (row.alts||(row.alts=[])).push({pn,kind}); return; } }
+  if(/^(OPTIONAL|ORDER\s*TRUE|ALTERNATE|ALT\.?|INTERCHANGEABLE|SUPERSEDED|REPLACED|REPLACES|SUPERSEDES)\b/.test(U)) return;
+  if((m=U.match(/^(?:SUPPLIER|VENDOR|MFR|MANUFACTURER)\s*(?:CODE)?\s*[:.]?\s*([A-Z0-9]{4,6})\b/))){ row.supplier=m[1]; return; }
+  if(/^(FOR\s+(NHA|DETAILS|BREAKDOWN|PARTS)|SEE\s+FIG|REFER\s+TO|USED\s+ON|USE\s+(WITH|ON)|EFFECTIVITY|EFF\b|MSN|S\/N|SERIAL|A\/C|AIRCRAFT|PRE\s|POST\s|SB\s|S\/B|MOD\b|NOTE\b|ATTACHING\s+PARTS|\*)/.test(U)) return;
+  const clean=L.replace(/\b\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}\b/g,"").replace(/\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s*\d{1,2}\/\d{2,4}\b/gi,"").trim(); if(clean&&row.desc.length<160) row.desc=(row.desc+" "+clean).trim(); }
+function ipcParse(words0){ const words=words0.filter(w=>!/rotated/.test(w.method||"")&&!(String(w.text).length>3&&(w.bottom-w.top)>2.2*(w.x1-w.x0)));
+  const k=skewOf(words); const xm=words.length?words.reduce((a,w)=>a+(w.x0+w.x1)/2,0)/words.length:0; const W=k?words.map(w=>{ const d=k*((w.x0+w.x1)/2-xm); return {...w,top:w.top-d,bottom:w.bottom-d}; }):words;
+  const rows=ipcRowsOf(W); const H=ipcHeader(rows); const all=rows.map(r=>r.text).join(" ");
+  const ata=(all.match(/\b(\d{2}-\d{2}-\d{2})\b/)||[])[1]||""; let fig=(all.match(/\bFIG(?:URE)?\.?\s*(\d{1,3}[A-Z]?)\b(?!-)/i)||[])[1]||"";
   if(!H) return {rows:ipcRows(rows.map(r=>r.text)),ata,fig,header:false};
-  const out=[]; const tol=6; let last=null;
-  for(const r of rows.slice(H.at+1)){ const col={item:[],pn:[],nom:[],qty:[],other:[]}; for(const w of r.ws){ const x=w.x0;
-      if(x<H.itemX) col.item.push(w); else if(x<H.pnEnd-tol) col.pn.push(w); else if(x<H.nomX-tol) col.other.push(w); else if(x<H.nomEnd-tol) col.nom.push(w); else col.qty.push(w); }
-    const pn=col.pn.map(w=>w.text).join("").toUpperCase().replace(/[^A-Z0-9\-\/.]/g,""); let nom=col.nom.map(w=>w.text).join(" ").replace(/^[\s.·•]+/,"").replace(/\s*\.{2,}\s*/g," ").trim();
-    const qtyT=col.qty.map(w=>w.text.toUpperCase()); const qty=qtyT.reverse().find(t=>/^(\d{1,4}|AR|RF|REF|NP|A\/R)$/.test(t))||"";
-    if(/^(PAGE|FIGURE|FIG\.?|EFFECTIVITY)\b/i.test(r.text)&&!pn) { last=null; continue; }
-    if(pn&&ipcIsPN(pn)){ const item=col.item.map(w=>w.text).join("").replace(/[^0-9A-Z\-]/gi,""); last={item,pn,desc:nom.slice(0,120),qty,cat:pnInfo(pn)?.cat||matCatOf(nom)||"OTHER"}; out.push(last); }
-    else if(!pn&&nom&&last&&col.item.length===0&&last.desc.length<200){ last.desc=(last.desc+" "+nom).trim(); if(!last.qty&&qty) last.qty=qty; if(last.cat==="OTHER") last.cat=matCatOf(last.desc)||"OTHER"; } }
+  const out=[]; const tol=Math.max(3,(rows[H.at]?.h||8)*0.5); let last=null;
+  for(const r of rows.slice(H.at+1)){ const col={fig:[],item:[],pn:[],nom:[],qty:[],other:[]}; for(const w of r.ws){ const x=w.x0;
+      if(x<H.itemStart) col.fig.push(w); else if(x<H.itemX) col.item.push(w); else if(x<H.pnEnd-tol) col.pn.push(w); else if(x<H.nomX-tol) col.other.push(w); else if(x<H.nomEnd-tol) col.nom.push(w); else col.qty.push(w); }
+    if(/^(PAGE|COPYRIGHT|HARD\s*COPY)\b/i.test(r.text)) { last=null; continue; }
+    if(col.fig.length){ const f=col.fig.map(w=>w.text).join("").replace(/[^0-9A-Z]/gi,""); if(/^\d{1,3}[A-Z]?$/.test(f)) fig=f; }
+    let pn=col.pn.map(w=>w.text).join("").toUpperCase().replace(/[^A-Z0-9\-\/.]/g,"");
+    let item=col.item.map(w=>w.text).join("").replace(/[^0-9A-Z\-]/gi,"");
+    // item printed close to the P/N (or P/N starting under the item header): split by pattern
+    if(!pn&&col.item.length){ const t=col.item.map(w=>w.text); const j=t.findIndex(x=>ipcIsPN(x.toUpperCase())); if(j>=0){ pn=t.slice(j).join("").toUpperCase(); item=t.slice(0,j).join("").replace(/[^0-9A-Z\-]/gi,""); } }
+    if(col.pn.length>1&&/^-?\d{1,3}[A-Z]?$/.test(col.pn[0].text)&&!col.item.length){ item=col.pn[0].text; pn=col.pn.slice(1).map(w=>w.text).join("").toUpperCase(); }
+    const nomT=col.nom.filter(w=>w.conf===undefined||w.conf>=20||/^[A-Z][A-Z,.\-]{3,}$/.test(w.text)).map(w=>w.text).filter(t=>/[A-Z0-9]/i.test(t)&&!/^[|!:;,_~]+$/.test(t)).join(" ").replace(/\s+[|!]\s*$/,"");
+    const qty=col.qty.map(w=>w.text.toUpperCase()).reverse().find(t=>/^(\d{1,4}|AR|RF|REF|NP|A\/R)$/.test(t))||"";
+    if(pn&&ipcIsPN(pn)){ const desc=nomT.replace(/^[\s.·•]+/,"").replace(/\s*\.{2,}\s*/g," ").trim(); const lvl=(nomT.match(/^[\s.·•]*/)||[""])[0].replace(/\s/g,"").length;
+      last={item:item.replace(/^-+(?=\d)/,"-"),pn,desc:desc.slice(0,120),qty,lvl,fig,cat:"OTHER",y:r.cy,h:r.h}; out.push(last); }
+    else if(!pn&&nomT&&last&&!col.item.length) ipcCont(last,nomT.replace(/^[\s.·•]+/,""));
+    else if(!pn&&!nomT) continue; }
+  const core=x=>(pnCompact(x).match(/\d{3,}/g)||[]).join("|"); const sup=(c,L)=>L.filter(a=>pnCompact(a)!==pnCompact(c)&&core(c)&&core(a)===core(c)).length;
+  for(const r of out){ const A=(r.alts||[]).map(a=>a.pn); if(A.length){ const mc=pnCompact(r.pn); const near=A.filter(a=>{ const k=pnCompact(a); return k!==mc&&lev(k,mc)<=1; });
+      if(near.length&&!A.some(a=>pnCompact(a)===mc)){ const best=near.map(a=>({a,s:sup(a,A)+(r.alts.find(x=>x.pn===a)?.kind==="order"?1:0)})).sort((x,y)=>y.s-x.s)[0]; if(best&&best.s>sup(r.pn,A)) r.pn=pnCompact(best.a)===pnCompact(best.a.replace(/-/g,""))&&/-/.test(best.a)&&!/-/.test(r.pn)?pnCompact(best.a):best.a.replace(/^([A-Z]+)-(\d)/,"$1$2"); }
+      // OCR variants of the same alternate (one letter apart): keep the best supported
+      const keep=[]; for(const a of r.alts){ const k=pnCompact(a.pn); const twin=keep.find(b=>lev(pnCompact(b.pn),k)<=1&&pnCompact(b.pn)!==k&&pnCompact(b.pn).length>5); if(twin){ if(sup(a.pn,A)>sup(twin.pn,A)) Object.assign(twin,a); continue; } keep.push({...a}); } r.alts=keep.filter(a=>!(lev(pnCompact(a.pn),pnCompact(r.pn))<=1&&pnCompact(a.pn)!==pnCompact(r.pn)&&a.kind==="order")); } }
+  for(const r of out){ r.cat=pnInfo(r.pn)?.cat||matCatOf(r.desc)||"OTHER"; const ok=[...new Set((r.alts||[]).filter(a=>a.kind==="opt"||a.kind==="order").map(a=>a.pn).filter(a=>pnCompact(a)!==pnCompact(r.pn)))];
+    r.altOk=ok.join(", "); const nw=(r.alts||[]).filter(a=>a.kind==="newer").map(a=>a.pn); r.notes=[nw.length?`Reemplazado por ${nw.join(", ")} (IPC)`:"",r.supplier?`Proveedor ${r.supplier}`:""].filter(Boolean).join(" · "); }
   return {rows:out,ata,fig,header:true}; }
 function ipcRows(lines){ const out=[]; for(const ln of lines){ const T=String(ln).toUpperCase().replace(/[·•]+/g," ").split(/\s+/).filter(Boolean); if(T.length<2) continue; let i=0, item=""; if(/^-?\d{1,3}[A-Z]?$/.test(T[0])&&T.length>2){ item=T[0]; i=1; }
     const pj=T.findIndex((t,k)=>k>=i&&ipcIsPN(t)&&(/[A-Z]/.test(t)||/-/.test(t))); if(pj<0||pj>i+1) continue; const pn=T[pj]; let end=T.length; let qty=""; if(/^(\d{1,3}|AR|RF|REF)$/.test(T[T.length-1])){ qty=T[T.length-1]; end=T.length-1; }
     const desc=T.slice(pj+1,end).join(" ").replace(/^\.+\s*/,"").replace(/\.{2,}/g," ").trim(); if(!desc&&!pnInfo(pn)) continue; out.push({item,pn,desc:desc.slice(0,90),qty,cat:pnInfo(pn)?.cat||matCatOf(desc)||"OTHER"}); }
   return out; }
-async function matIpc(file){ const bytes=new Uint8Array(await file.arrayBuffer()); const pdf=await openPdf(bytes); const N=pdf.numPages; const m=$("#modal"); const IP={rows:[],ata:"",fig:"",pages:[]};
+function ipcPrep(cv){ const f=Math.max(1,Math.min(2.5,4000/Math.max(cv.width,cv.height))); const u=document.createElement("canvas"); u.width=Math.round(cv.width*f); u.height=Math.round(cv.height*f); const ug=u.getContext("2d"); ug.imageSmoothingQuality="high"; ug.drawImage(cv,0,0,u.width,u.height);
+  const c=cleanCanvas(u,"lum"); const g=c.getContext("2d",{willReadFrequently:true}); const im=g.getImageData(0,0,c.width,c.height), d=im.data; const t=170;
+  for(let i=0;i<d.length;i+=4){ const v=d[i]; const o=v>t?255:v<t-60?0:Math.round((v-(t-60))/60*255); d[i]=d[i+1]=d[i+2]=o; } g.putImageData(im,0,0); return c; }
+async function ipcImageWords(file,psm=4,pre){ if(!hasOcr()) throw new Error("El lector de texto no está incluido en este archivo."); const c=pre||ipcPrep(await fileCanvas(file,4000));
+  const ws=await ocrCanvas(c,{psm,rot:null,fast:false}); return ws.map(w=>({text:w.text,x0:w.x,x1:w.x+w.w,top:w.y,bottom:w.y+w.h,conf:w.conf})); }
+/* two readings of the same photo: per row keep the P/N that reads more completely */
+function ipcMerge(A,B){ const better=(a,b)=>{ const ca=pnCompact(a), cb=pnCompact(b); if(!b) return a; if(!a) return b; const good=x=>(pnCatalogNear(x)?.d===0?4:0)+(pnInfo(x)?2:0);
+    if(good(b)>good(a)) return b; if(good(a)>good(b)) return a; if(ca===cb) return (b.match(/[-\/]/g)||[]).length>(a.match(/[-\/]/g)||[]).length?b:a; if(cb.startsWith(ca)&&cb.length<=ca.length+3) return b; return a; };
+  const used=new Set(); for(const r of A){ let bi=-1,bd=1e9; B.forEach((x,i)=>{ if(used.has(i)) return; const d=Math.abs(x.y-r.y); if(d<bd){ bd=d; bi=i; } }); if(bi<0||bd>(r.h||20)*1.2) continue; used.add(bi); const o=B[bi];
+    r.pn=better(r.pn,o.pn); if(!r.qty&&o.qty) r.qty=o.qty; if(!r.item&&o.item) r.item=o.item; if(!r.desc&&o.desc) r.desc=o.desc;
+    const al=new Map(); for(const x of [...String(r.altOk||"").split(/,\s*/),...String(o.altOk||"").split(/,\s*/)].filter(Boolean)){ const k=pnCompact(x); al.set(k,better(al.get(k)||"",x)); } r.altOk=[...al.values()].join(", "); }
+  B.forEach((x,i)=>{ if(!used.has(i)&&!A.some(r=>lev(pnCompact(r.pn),pnCompact(x.pn))<=2)) A.push(x); }); return A.sort((a,b)=>a.y-b.y); }
+async function matIpc(file){ if(/^image\//.test(file.type)||/\.(jpe?g|png|heic|webp)$/i.test(file.name)) return matIpcPhoto(file); const bytes=new Uint8Array(await file.arrayBuffer()); const pdf=await openPdf(bytes); const N=pdf.numPages; const m=$("#modal"); const IP={rows:[],ata:"",fig:"",pages:[]};
   m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Importar IPC" style="max-width:1080px"><div class="sh"><span class="eyebrow">Importar IPC (PDF)</span><h3>${esc(file.name)}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
    <div class="sb" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><button class="btn pri" type="button" id="ipc_all_pg">Buscar partes en todo el PDF (${N} pág.)</button><span class="small muted">o</span><label>Página <input id="ipc_pg" type="number" min="1" max="${N}" value="1" style="width:80px"></label><button class="btn sm" type="button" id="ipc_read">Leer solo esa página</button></div>
     <div class="small muted" id="ipc_info">Reconoce la tabla de partes por sus columnas <b>PART NUMBER</b> y <b>NOMENCLATURE</b> (también FIG/ITEM y UNITS PER ASSY). Nada se guarda hasta que usted revise y confirme.</div>
@@ -2084,14 +2128,21 @@ async function matIpc(file){ const bytes=new Uint8Array(await file.arrayBuffer()
       ipcTable(IP,file); }catch(err){ info("No se pudo leer: "+esc(err.message)); } b.disabled=false; };
   $("#ipc_all_pg").onclick=e=>run(Array.from({length:N},(_,i)=>i+1),e.target);
   $("#ipc_read").onclick=e=>run([Math.max(1,Math.min(N,+$("#ipc_pg").value||1))],e.target); }
+async function matIpcPhoto(file){ const m=$("#modal"); const IP={rows:[],ata:"",fig:"",pages:[1]};
+  m.innerHTML=`<div class="modal" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="Importar IPC" style="max-width:1080px"><div class="sh"><span class="eyebrow">Importar IPC (foto)</span><h3>${esc(file.name)}</h3><span class="sp"></span><button class="btn ghost sm" data-close="1">✕</button></div>
+   <div class="sb" style="display:flex;flex-direction:column;gap:10px"><div class="small muted" id="ipc_info">Leyendo la foto de la lista de partes…</div><div id="ipc_out"></div></div></div></div>`;
+  try{ const pre=ipcPrep(await fileCanvas(file,4000)); const r=ipcParse(await ipcImageWords(file,4,pre)); $("#ipc_info").textContent="Segunda lectura para confirmar los números…"; const r2=ipcParse(await ipcImageWords(file,6,pre));
+    IP.rows=ipcMerge(r.rows,r2.rows).map(x=>({...x,page:1})); IP.ata=r.ata||r2.ata; IP.fig=r.fig||r2.fig;
+    $("#ipc_info").innerHTML=IP.rows.length?`<b>${IP.rows.length} parte(s)</b> leídas de la foto${IP.fig?` · Fig. ${esc(IP.fig)}`:""}. Una foto puede tener errores de lectura: <b>revise cada P/N</b> antes de importar.`:`No encontré la tabla de partes en la foto. Tómela de frente, que se vean completos los encabezados <b>PART NUMBER</b> y <b>NOMENCLATURE</b>, sin reflejos.`;
+    ipcTable(IP,file); }catch(err){ $("#ipc_info").textContent="No se pudo leer la foto: "+err.message; } }
 function ipcTable(IP,file){ const E2=esc; const o=$("#ipc_out"); if(!o) return; if(!IP.rows.length){ o.innerHTML=""; return; } const SG=matSuggestLists("");
   o.innerHTML=`<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:6px;align-items:end"><div class="field" style="margin:0"><label for="ipc_comp">Dónde se usa (para todas)</label><input id="ipc_comp" list="ipc_dl_comp" value="${E2(IP.fig?`IPC ${IP.ata} Fig. ${IP.fig}`:`IPC ${IP.ata||file.name.replace(/\.pdf$/i,"")}`)}" style="width:320px"></div><span class="sp"></span><span class="small muted" id="ipc_n"></span><button class="btn pri" type="button" id="ipc_go">Importar seleccionadas</button></div>
-   <div class="tbl-wrap" style="max-height:56vh"><table class="mat-t"><thead><tr><th><input type="checkbox" id="ipc_ckall" checked aria-label="Todas"></th><th>Pág.</th><th>Item</th><th>Part number</th><th>Nomenclature (descripción)</th><th>Cant.</th><th>Clasificación</th></tr></thead><tbody>${IP.rows.map((r,i)=>`<tr><td><input type="checkbox" class="ipc_ck" data-i="${i}" checked></td><td class="small muted">${r.page}</td><td class="mono">${E2(r.item||"")}</td><td><input class="mono ipc_pn" data-i="${i}" value="${E2(r.pn)}" style="width:170px"></td><td><input class="ipc_desc" data-i="${i}" value="${E2(r.desc)}" style="width:100%;min-width:220px"></td><td><input class="ipc_qty" data-i="${i}" value="${E2(r.qty)}" style="width:60px"></td><td><select class="ipc_cat" data-i="${i}">${MAT_CATS.map(([k,t])=>`<option value="${k}" ${r.cat===k?"selected":""}>${E2(MAT_SHORT(k))}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>${matDl("ipc_dl_comp",SG.comp)}`;
+   <div class="tbl-wrap" style="max-height:56vh"><table class="mat-t"><thead><tr><th><input type="checkbox" id="ipc_ckall" checked aria-label="Todas"></th><th>Pág.</th><th>Item</th><th>Part number</th><th>Nomenclature (descripción)</th><th>Alternos (IPC)</th><th>Cant.</th><th>Clasificación</th></tr></thead><tbody>${IP.rows.map((r,i)=>`<tr><td><input type="checkbox" class="ipc_ck" data-i="${i}" checked></td><td class="small muted">${r.page}</td><td class="mono">${E2(r.item||"")}</td><td><input class="mono ipc_pn" data-i="${i}" value="${E2(r.pn)}" style="width:170px"></td><td><input class="ipc_desc" data-i="${i}" value="${E2(r.desc)}" style="width:100%;min-width:220px">${r.notes?`<div class="small muted">${E2(r.notes)}</div>`:""}</td><td><input class="mono ipc_alt" data-i="${i}" value="${E2(r.altOk||"")}" style="width:170px" placeholder="—"></td><td><input class="ipc_qty" data-i="${i}" value="${E2(r.qty)}" style="width:60px"></td><td><select class="ipc_cat" data-i="${i}">${MAT_CATS.map(([k,t])=>`<option value="${k}" ${r.cat===k?"selected":""}>${E2(MAT_SHORT(k))}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>${matDl("ipc_dl_comp",SG.comp)}`;
   const cnt=()=>{ const n=[...document.querySelectorAll(".ipc_ck")].filter(c=>c.checked).length; $("#ipc_n").textContent=`${n} seleccionada(s)`; $("#ipc_go").disabled=!n; }; cnt();
   $("#ipc_ckall").onchange=e=>{ document.querySelectorAll(".ipc_ck").forEach(c=>c.checked=e.target.checked); cnt(); }; o.querySelectorAll(".ipc_ck").forEach(c=>c.onchange=cnt);
   o.querySelectorAll(".ipc_desc").forEach(inp=>inp.addEventListener("input",()=>{ const c=matCatOf(inp.value); if(c) o.querySelector(`.ipc_cat[data-i="${inp.dataset.i}"]`).value=c; }));
   $("#ipc_go").onclick=async e2=>{ if(!matCanAdd()){ toast("No tiene permiso para agregar materiales."); return; } const sel=[...document.querySelectorAll(".ipc_ck")].filter(c=>c.checked).map(c=>+c.dataset.i); const comp=$("#ipc_comp").value.trim()||"IPC"; const q=(c,i)=>o.querySelector(`.${c}[data-i="${i}"]`).value.trim();
-    const rows=sel.map(i=>{ const r=IP.rows[i], pn=q("ipc_pn",i).toUpperCase(); return {comp,pn,desc:q("ipc_desc",i),qty:q("ipc_qty",i),unit:"pza",cat:o.querySelector(`.ipc_cat[data-i="${i}"]`).value||"OTHER",ata:IP.ata,ref:`IPC ${IP.ata}${r.fig?` Fig. ${r.fig}`:""}${r.item?` item ${r.item}`:""} · pág. ${r.page}`.trim(),hist:JSON.stringify([{at:nowIso(),by:WB.email||S.me?.name||"",ev:`Importado del IPC ${file.name} (pág. ${r.page})`}])}; }).filter(r=>r.pn||r.desc);
+    const rows=sel.map(i=>{ const r=IP.rows[i], pn=q("ipc_pn",i).toUpperCase(); const alt=q("ipc_alt",i); return {comp,pn,desc:q("ipc_desc",i),qty:q("ipc_qty",i),unit:"pza",altOk:alt,altRef:alt?`IPC ${IP.ata}${r.fig?` Fig. ${r.fig}`:""}${r.item?` item ${r.item}`:""}`.trim():"",notes:r.notes||"",cat:o.querySelector(`.ipc_cat[data-i="${i}"]`).value||"OTHER",ata:IP.ata,ref:`IPC ${IP.ata}${r.fig?` Fig. ${r.fig}`:""}${r.item?` item ${r.item}`:""} · pág. ${r.page}`.trim(),hist:JSON.stringify([{at:nowIso(),by:WB.email||S.me?.name||"",ev:`Importado del IPC ${file.name} (pág. ${r.page})`}])}; }).filter(r=>r.pn||r.desc);
     e2.target.disabled=true; await matImportRows(rows,e2.target); }; }
 /* the hardware of one access, inside its sheet */
 async function matPanelBox(id){ if(matLevel()==="none") return; if(!MAT.loaded) await matLoad(); const L=[...MAT.items.values()].filter(i=>String(i.panels||"").toUpperCase().split(/[,;\s]+/).includes(String(id).toUpperCase()));
@@ -6650,7 +6701,7 @@ window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(h 
 window.addEventListener("beforeunload",()=>{ flushAudit(); });
 
 /* ---------------- boot ---------------- */
-if(location.hostname==="localhost") window.__ap={AC3D:typeof AC3D!=="undefined"?AC3D:null,libsInline,apSrc,S,loadExtraction,ocrPage,openPdf,getBytes,traceLeader,renderPageCanvas,cropCanvas,classifyAccess,makeReport,makeAnnotatedFigures,physicalOf,eff,zoneCardAnalysis,accessImage,aircraftSVG,zoneStats,ZONE_NAMES,ST_COLOR,ACT_LABEL};
+if(location.hostname==="localhost") window.__ap={ocrCanvas,cleanCanvas,scaledCanvas,fileCanvas,ocrReady,ipcParse,ipcHeader,ipcRowsOf,pageWords,loadPdfjs,AC3D:typeof AC3D!=="undefined"?AC3D:null,libsInline,apSrc,S,loadExtraction,ocrPage,openPdf,getBytes,traceLeader,renderPageCanvas,cropCanvas,classifyAccess,makeReport,makeAnnotatedFigures,physicalOf,eff,zoneCardAnalysis,accessImage,aircraftSVG,zoneStats,ZONE_NAMES,ST_COLOR,ACT_LABEL};
 render();
 (async()=>{
   await initCaps();
