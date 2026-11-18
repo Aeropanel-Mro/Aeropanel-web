@@ -251,3 +251,15 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   - **Imprimir:** PDF con vista previa.
   - **+ Agregar:** abre el formulario con el skill y el componente ya puestos.
   - **✎:** renombra el componente o pasa todas sus partes a otro skill.
+
+## 25. Recuperar contraseñas fácil (llave recordada, restablecer sin la anterior)
+
+- **Tarjeta «Recuperar contraseñas · llave de propietario»** (inicio del propietario): lista **todos** los proyectos (los suyos y los de sus invitados) con «Abrir», «Ver contraseñas» y **«Restablecer contraseñas»**. Esta última pone una contraseña nueva de administrador (y, si quiere, de invitados) sin conocer la anterior; la anterior deja de servir y los datos no cambian.
+- **«¿Olvidó la contraseña?»** junto a «Abrir» lleva directo a restablecer ese proyecto.
+- **Llave recordada en este equipo** (casilla marcada por defecto): no hay que escribirla otra vez en ese navegador. Se puede «Olvidar en este equipo».
+- **Llave bloqueada, tres opciones a la vista:**
+  1. Tengo mi llave.
+  2. Tengo mi código de recuperación.
+  3. No tengo ni la llave ni el código: crear llave nueva. Los proyectos protegidos con la llave anterior quedan protegidos con la nueva en cuanto se abren una vez con su contraseña (por usted o por el invitado que lo creó).
+- **Con la llave abierta:** «Cambiar llave / código nuevo» sin pedir la anterior. El código se puede copiar, descargar o imprimir.
+- **Límite:** un proyecto cuya contraseña y cuyo respaldo con la llave se perdieron a la vez no se puede abrir (están cifrados a propósito). Por eso cada proyecto queda respaldado con la llave actual cada vez que usted lo abre.
