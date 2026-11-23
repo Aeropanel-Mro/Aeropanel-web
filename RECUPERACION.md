@@ -283,3 +283,12 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
 - Ahora la app no dibuja las anotaciones del PDF y convierte el amarillo de esos recuadros en papel blanco. Esto vale para las imágenes de accesos, el visor de documentos y el OCR.
 - Quedan solo el dibujo, sus rótulos impresos y el resaltado propio de la app.
 - El archivo original no se modifica.
+
+## 28. Resaltado sin tachados ni encimados (motor 2.3.2)
+
+- **Causa de los recuadros amarillos encimados en el visor de documentos:** el resaltado de la app (ámbar = «Requiere verificación») dibujaba un recuadro por cada código. En las etiquetas de dos renglones (562DT / 662DT) los recuadros se encimaban y su borde tachaba el otro código.
+- **Ahora:**
+  - Un solo bloque suave por etiqueta, sin borde sobre las letras, con una línea de color debajo que indica el estado.
+  - En las imágenes de accesos, lo mismo: el borde se usa solo para el contorno punteado del panel.
+  - La franja de códigos con asterisco al pie de la página (índice del visor del manual) ya no se resalta ni se toma como ubicación del acceso.
+  - Los recuadros de enlace del visor que vienen dentro del PDF se limpian, y el código se vuelve a escribir una sola vez con el texto real del PDF.
