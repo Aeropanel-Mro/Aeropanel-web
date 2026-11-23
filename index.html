@@ -1072,7 +1072,7 @@ const AP_DEV=!AP_HOSTED && (location.hostname==="localhost"||location.hostname==
    Processing: pdf.js text layer with coordinates, deterministic rules
    Safety: evidence is kept separate from decisions; AI only proposes.
    ===================================================================== */
-const ENGINE = "2.2.0";
+const ENGINE = "2.3.0";
 const DISCLAIMER = "Herramienta de apoyo documental. No sustituye AMM / IPC / SRM, task cards ni documentación aprobada. La decisión final corresponde al personal autorizado.";
 const ST = {CONF:"CONFIRMED", VER:"REQUIRES_VERIFICATION", DIS:"DISCREPANCY", NF:"NOT_FOUND"};
 const ST_LABEL = {CONFIRMED:"Confirmed", REQUIRES_VERIFICATION:"Requires verification", DISCREPANCY:"Discrepancy", NOT_FOUND:"Not found", VERIFIED:"Verified (human)", REJECTED:"Not required"};
@@ -1080,7 +1080,7 @@ const ST_COLOR = {CONFIRMED:"#2BD46F", VERIFIED:"#2BD46F", REQUIRES_VERIFICATION
 const CATS = {FIGURES:"Aircraft figures", CARDS:"Inspection cards", SUPPORT:"Supporting documents"};
 const MAX_BYTES = 200*1024*1024;
 const DEFAULT_PATTERNS = {
-  panel: "(?<![A-Z0-9/\\-])([1-8][0-9]{2})( ?)([A-Z]{2,3})(?![A-Z0-9])",
+  panel: "(?:(?<![A-Z0-9/\\-])|(?<=[1-8][0-9]{2} ?[A-Z]{2,3} ?[/\\-\u2013] ?)|(?<=(?:DOORS?|PANELS?|ACCESS|HATCH|AND|OR)))([1-8][0-9]{2})( ?)([A-Z]{2,3})(?![A-Z0-9])",
   card: "(?:TASK\\s*CARD|JOB\\s*CARD|WORK\\s*CARD|INSPECTION\\s*CARD|JIC|CARD)\\s*(?:NO\\.?|NUMBER|N[°º]|#)?\\s*[:\\-]?\\s*([0-9][0-9A-Z]*(?:[\\-.][0-9A-Z]+)*)",
   zone: "ZONE\\s*:?\\s*([1-8][0-9]{2})",
   figure: "(?:FIGURE|FIG\\.)\\s*([0-9]{1,4}[A-Z]?)",
@@ -3426,7 +3426,7 @@ async function getBytes(assetId){
 function compile(p){
   const P={...DEFAULT_PATTERNS,...(p||{})};
   // projects saved with the old 2-letter default get the E190 2/3-letter pattern and the extended unit list
-  if(P.panel==="(?<![A-Z0-9/\\-])([1-8][0-9]{2})( ?)([A-Z]{2})(?![A-Z0-9])") P.panel=DEFAULT_PATTERNS.panel;
+  if(P.panel==="(?<![A-Z0-9/\\-])([1-8][0-9]{2})( ?)([A-Z]{2})(?![A-Z0-9])"||P.panel==="(?<![A-Z0-9/\\-])([1-8][0-9]{2})( ?)([A-Z]{2,3})(?![A-Z0-9])") P.panel=DEFAULT_PATTERNS.panel;
   if(P.units==="LB,IN,NM,FT,KG,MM,CM,HR,MN,OZ") P.units=DEFAULT_PATTERNS.units;
   const list=s=>new Set(String(s||"").toUpperCase().split(",").map(x=>x.trim()).filter(Boolean));
   const kb=S.kb||KB_EMPTY(); const on=x=>x.on!==false;
@@ -4051,8 +4051,9 @@ async function extractDocument(doc, ver, onPage){
       if(doc.category==="FIGURES" && !unreadable && !blank){ const all=lines.map(l=>l.text).join(" ").toUpperCase();
         const taskNums=(all.match(/\b\d{2}-\d{2,4}-\d{2,4}(?:-\d{2,4})*\b/g)||[]).length;
         const tableHdr=/\b(TASK\s*CARD|TARJETA|ACCESO)\b/.test(all) && /\bACCESS\b|\bACCESO\b/.test(all);
+        const amm=[/ACCESS\s+IDENTIFI/,/TYPE\s+OF\s+ACCESS/,/NUMBER\s+OF\s+(SCREWS?|FASTENERS?|LATCHES)/,/\bLATCHES?\s*\(L\)|CAMLOCS?/,/BONDING\s+METHOD/,/REMOVAL\s*\/\s*OPENING/,/\bTABLE\s+\d+\b/,/THE\s+SAME\s+LATCHES/,/EQUIPMENT\s*\/?\s*COMPONENTS?/].filter(r=>r.test(all)).length;
         // a sheet full of task numbers / a cross-reference table is not a drawing: it is never used as the access image
-        pg.kind=(taskNums>=4 || (tableHdr && taskNums>=2) || words.length>=260)?"TABLE":"DRAWING"; }
+        pg.kind=(taskNums>=4 || (tableHdr && taskNums>=2) || amm>=2 || words.length>=260)?"TABLE":"DRAWING"; }
       if(garbage) pg.textLayer="garbage";
       if(!unreadable && doc.category==="FIGURES") pg.partials=words.filter(w=>w.method?.startsWith("ocr") && w.partial).map(w=>({raw:w.text.replace(/[^A-Z0-9]/g,""),bbox:[w.x0/vp.width,w.top/vp.height,w.x1/vp.width,w.bottom/vp.height].map(v=>+v.toFixed(4)),conf:w.conf})).filter(p=>/^[A-Z0-9]{0,2}[0-9]{1,2}[A-Z]{2,3}$/.test(p.raw));
       if(isCard){ const hd=lines.filter(l=>l.cy==null||l.cy<vp.height*0.3); pg.card=confident(firstMatch(C.card,hd)||tolerantCard(hd,C),words,C); pg.title=firstMatch(C.title,lines); }
@@ -4103,11 +4104,15 @@ function runRules(figs, cards){
   const C=compile(proj()?.patterns);
   const refs=new Map();
   // tables / cross-reference lists uploaded with the figures are not drawings: they are not figure evidence (zone, image)
-  for(const f of figs) for(const pg of f.pages) for(const c of (pg.kind==="TABLE"?[]:pg.panels)){
+  const TBL_LINE=/(ACCESS\s+IDENTIFI|TYPE\s+OF\s+ACCESS|NUMBER\s+OF\s+SCREW|LATCHES|CAMLOCS?|SEE\s+AMM|AMM\s+TASK|BONDING\s+METHOD|ACCESS\s+DOO?R?\s+\d+\s*[LSC]\b)/i;
+  const isTable=pg=>{ if(pg.kind==="TABLE") return true; const L=(pg.panels||[]).filter(c=>!c.flags.some(x=>x.startsWith("EXCLUDED"))); if(L.length<2) return false; const n=L.filter(c=>TBL_LINE.test(c.line||"")).length; return n>=2&&n>=L.length*0.5; };
+  for(const f of figs) for(const pg of f.pages){ const tbl=isTable(pg); for(const c of pg.panels){
     if(c.flags.some(x=>x.startsWith("EXCLUDED"))) continue;
     if(!refs.has(c.norm)) refs.set(c.norm,[]);
-    refs.get(c.norm).push({docId:f.doc.id,file:f.doc.logicalName,v:f.doc.processedVersion,page:pg.page,rot:pg.rot||0,figure:pg.figure,zone:pg.zone,bbox:c.bbox,method:c.method,conf:c.conf,raw:c.raw,flags:c.flags,kind:pg.kind||"DRAWING"});
-  }
+    refs.get(c.norm).push({docId:f.doc.id,file:f.doc.logicalName,v:f.doc.processedVersion,page:pg.page,rot:pg.rot||0,figure:pg.figure,zone:pg.zone,bbox:c.bbox,method:c.method,conf:c.conf,raw:c.raw,flags:c.flags,kind:tbl?"TABLE":"DRAWING",...(tbl?{zone:null}:{})});
+  } }
+  // drawings first: the image and the figure link always come from a drawing sheet
+  for(const L of refs.values()) L.sort((a,b)=>(a.kind==="TABLE")-(b.kind==="TABLE"));
   // OCR look-alike characters (I/L/1, O/0/D/Q, B/8, S/5, Z/2, G/6) → same skeleton
   const SK=id=>id.replace(/[IL1|]/g,"1").replace(/[O0DQ]/g,"0").replace(/[B8]/g,"8").replace(/[S5]/g,"5").replace(/[Z2]/g,"2").replace(/[G6]/g,"6");
   const skel=new Map(); for(const id of refs.keys()){ const k=SK(id); if(!skel.has(k)) skel.set(k,new Set()); skel.get(k).add(id); }
@@ -4158,7 +4163,7 @@ function runRules(figs, cards){
           if(core.length>=4 && norm.endsWith(core) && (!pg.zone || majorOf(pg.zone)===norm[0]+"00")) pm.push({docId:f.doc.id,file:f.doc.logicalName,v:f.doc.processedVersion,page:pg.page,rot:pg.rot||0,figure:pg.figure,zone:pg.zone,bbox:p.bbox,method:"ocr",conf:p.conf,raw:p.raw,flags:["OCR_PARTIAL"]}); }
         if(pm.length) cand=pm; }
       if(!cand.length){ const alt=[...(skel.get(SK(norm))||[])].filter(id=>id!==norm && (refs.get(id)||[]).every(r=>r.method?.startsWith("ocr"))); if(alt.length===1) cand=(refs.get(alt[0])||[]).map(r=>({...r,flags:[...r.flags,"OCR_SIMILAR:"+alt[0]]})); }
-      const zones=[...new Set(cand.map(r=>r.zone||"?"))].sort();
+      const onlyTable=cand.length>0&&cand.every(r=>r.kind==="TABLE"); const zones=[...new Set((onlyTable?cand:cand.filter(r=>r.kind!=="TABLE")).map(r=>r.zone||"?"))].sort();
       const reasons=impliedWhy?[impliedWhy]:[]; let s;
       if(!cand.length){ s=ST.NF; reasons.push("No exact matching identifier found in the aircraft figures provided."); }
       else{
@@ -4167,6 +4172,7 @@ function runRules(figs, cards){
         if(cardZone && zones.some(z=>z!=="?") && !zones.some(z=>zoneCompat(z,cardZone))){ s=ST.DIS; reasons.push(`Card zone ${cardZone} differs from figure zone ${zones.join(", ")}.`); }
         const pz=norm[0]+"00";
         if(zones.some(z=>z!=="?" && majorOf(z)!==pz)){ s=ST.DIS; reasons.push(`ID prefix suggests major zone ${pz}; figure indicates ${zones.join(", ")} (coherence check only).`); }
+        if(onlyTable && s===ST.CONF){ s=ST.VER; reasons.push("Listed in an AMM access table, but its drawing was not found in the figures: verify its location on the drawing."); }
         if(zones.includes("?") && s===ST.CONF){ s=ST.VER; reasons.push("Figure page has no readable zone."); }
         if(s===ST.CONF){
           if(c.flags.includes("SPACE_NORMALIZED")){ s=ST.VER; reasons.push(`Card text '${c.raw}' is not literally identical to figure ID '${norm}'.`); }
@@ -4571,11 +4577,12 @@ function traceLeader(src,bb){
 function figureMarks(src,items,traceCache){
   const marks=[], boxes={};
   for(const it of items){ const key=it.bb.join(","); let t=traceCache?.get(key); if(t===undefined){ t=traceLeader(src,it.bb); traceCache?.set(key,t); }
-    marks.push({bb:it.bb,focus:it.focus,pad:it.focus?6:4});
-    // only a panel outline found with certainty (closed shape at the end of the leader) is drawn; an uncertain estimate could
-    // point at the wrong panel, so in that case only the callout label is highlighted
-    if(t && t.isolated){ marks.push({seg:[t.start,t.end],focus:it.focus}); marks.push({bb:t.panel,focus:it.focus,pad:it.focus?5:3,label:it.panel}); }
-    boxes[it.panel]={label:it.bb,panel:t&&t.isolated?t.panel:null,isolated:!!t?.isolated}; }
+    // the printed callout label is highlighted (multiply keeps the letters readable); nothing opaque is drawn over the print
+    marks.push({bb:it.bb,focus:it.focus,pad:it.focus?5:3});
+    // panel outline: only when found with certainty AND only for the access being shown (one access per sheet or the clicked one);
+    // drawn as a thin outline, never filled, so a crowded figure stays readable
+    if(t && t.isolated && it.outline){ marks.push({seg:[t.start,t.end],focus:it.focus}); marks.push({bb:t.panel,focus:it.focus,pad:3,outline:true}); }
+    boxes[it.panel]={label:it.bb,panel:t&&t.isolated&&it.outline?t.panel:null,isolated:!!t?.isolated}; }
   return {marks,boxes};
 }
 const unionBox=(...bs)=>{ bs=bs.filter(Boolean); return [Math.min(...bs.map(b=>b[0])),Math.min(...bs.map(b=>b[1])),Math.max(...bs.map(b=>b[2])),Math.max(...bs.map(b=>b[3]))]; };
@@ -4595,13 +4602,13 @@ function cropCanvas(src,region,marks,maxW=1200,caption=null){
   for(const m of marks.filter(m=>m.seg)){ const [[a,b],[c,d]]=m.seg; ctx.globalAlpha=.9; ctx.strokeStyle=HL.fill; ctx.lineCap="round"; ctx.lineWidth=(m.focus?9:6)*u;
     ctx.beginPath(); ctx.moveTo((a*Wp-sx)*k,(b*Hp-sy)*k); ctx.lineTo((c*Wp-sx)*k,(d*Hp-sy)*k); ctx.stroke(); }
   for(const m of marks.filter(m=>m.line)){ const [x,y,w,h]=box(m); ctx.globalAlpha=.35; ctx.fillStyle=HL.fill; ctx.fillRect(x,y,w,h); }
-  for(const m of marks.filter(m=>!m.line&&!m.seg&&!m.ring)){ const [x,y,w,h]=box(m); ctx.globalAlpha=m.focus?.95:.8; ctx.fillStyle=HL.fill; ctx.fillRect(x,y,w,h); }
+  for(const m of marks.filter(m=>!m.line&&!m.seg&&!m.ring&&!m.outline)){ const [x,y,w,h]=box(m); ctx.globalAlpha=m.focus?.9:.75; ctx.fillStyle=HL.fill; ctx.fillRect(x,y,w,h); }
   ctx.restore();
   for(const m of marks.filter(m=>m.ring)){ const [a,b,r,wt=1]=m.ring; const px=(a*Wp-sx)*k, py=(b*Hp-sy)*k, pr=r*Wp*k;
     ctx.save(); ctx.globalCompositeOperation="multiply"; ctx.globalAlpha=.9; ctx.strokeStyle=HL.fill; ctx.lineWidth=9*u*wt; ctx.beginPath(); ctx.arc(px,py,pr,0,Math.PI*2); ctx.stroke(); ctx.restore();
     ctx.lineWidth=1.6*u; ctx.strokeStyle=HL.edge; ctx.beginPath(); ctx.arc(px,py,pr+5*u,0,Math.PI*2); ctx.stroke(); ctx.beginPath(); ctx.arc(px,py,pr-5*u,0,Math.PI*2); ctx.stroke(); }
-  for(const m of marks.filter(m=>!m.line&&!m.seg&&!m.ring)){ const [x,y,w,h]=box(m); if(m.estimated) ctx.setLineDash([7*u,5*u]);
-    ctx.lineWidth=(m.focus?4:2.5)*u; ctx.strokeStyle=HL.stroke; ctx.strokeRect(x,y,w,h);
+  for(const m of marks.filter(m=>!m.line&&!m.seg&&!m.ring)){ const [x,y,w,h]=box(m); if(m.estimated||m.outline) ctx.setLineDash([7*u,5*u]);
+    ctx.lineWidth=(m.outline?2.5:m.focus?3:1.8)*u; ctx.strokeStyle=m.outline?"#E0A800":HL.stroke; ctx.strokeRect(x,y,w,h);
     ctx.lineWidth=1*u; ctx.strokeStyle=HL.edge; ctx.strokeRect(x-(m.focus?2:1.25)*u,y-(m.focus?2:1.25)*u,w+(m.focus?4:2.5)*u,h+(m.focus?4:2.5)*u);
     if(m.label){ ctx.font=`bold ${Math.round((m.focus?15:12)*u)}px Helvetica,Arial,sans-serif`; const tw=ctx.measureText(m.label).width+12*u, th=(m.focus?23:18)*u; let ty=y-th-4*u; if(ty<0) ty=y+h+4*u; const tx=Math.min(Math.max(0,x),iw-tw);
       ctx.fillStyle=HL.fill; ctx.fillRect(tx,ty,tw,th); ctx.lineWidth=1.2*u; ctx.strokeStyle=HL.edge; ctx.strokeRect(tx,ty,tw,th); ctx.fillStyle="#111"; ctx.fillText(m.label,tx+6*u,ty+th-6.5*u); } ctx.setLineDash([]); }
@@ -4661,7 +4668,7 @@ function drawingRegion(src){
 async function accessImageCanvas(x,cache,traces,maxW=1600){
   const ref=refOf(x); if(!ref) return null;
   const src=await renderPageCanvas(cache,ref.docId,ref.page,3.2); if(!src) return null;
-  const fm=figureMarks(src,[{bb:ref.bbox,panel:x.panel,focus:true}],pageTraces(ref.docId,ref.page,3.2)); const fb=fm.boxes[x.panel]||{label:ref.bbox};
+  const fm=figureMarks(src,[{bb:ref.bbox,panel:x.panel,focus:true,outline:true}],pageTraces(ref.docId,ref.page,3.2)); const fb=fm.boxes[x.panel]||{label:ref.bbox};
   const ub=unionBox(ref.bbox,fb.panel||null); const ar=src.width/src.height;
   const cx=(ub[0]+ub[2])/2, cy=(ub[1]+ub[3])/2, rr=Math.max((ub[2]-ub[0])/2,(ub[3]-ub[1])/2/ar)+0.035, rm=rr+0.012;
   const region=unionBox(drawingRegion(src),[Math.max(0,cx-rm),Math.max(0,cy-rm*ar),Math.min(1,cx+rm),Math.min(1,cy+rm*ar)]);
@@ -4682,10 +4689,9 @@ function sheetGroups(list){ const m=new Map(); const none=[];
   return {groups,none}; }
 async function sheetImageCanvas(g,cache,traces,maxW=1700,focus=null){
   const src=await renderPageCanvas(cache,g.ref.docId,g.ref.page,3.2); if(!src) return null; const ar=src.width/src.height;
-  const fm=figureMarks(src,g.items.map(it=>({bb:it.ref.bbox,panel:it.x.panel,focus:!focus||it.x.panel===focus})),pageTraces(g.ref.docId,g.ref.page,3.2));
+  const fm=figureMarks(src,g.items.map(it=>({bb:it.ref.bbox,panel:it.x.panel,focus:!focus||it.x.panel===focus,outline:focus?it.x.panel===focus:g.items.length===1})),pageTraces(g.ref.docId,g.ref.page,3.2));
   // several accesses on one sheet: the callout labels are already highlighted, so the extra ID tag on each panel outline is
   // dropped (it would cover the drawing); only the clicked access keeps it
-  if(g.items.length>2) for(const m of fm.marks) if(m.label && m.label!==focus) delete m.label;
   const boxes=g.items.map(it=>{ const fb=fm.boxes[it.x.panel]; return unionBox(it.ref.bbox,fb?.panel||null); });
   let region=drawingRegion(src); const rings=[];
   for(let i=0;i<boxes.length;i++){ const ub=boxes[i], on=focus?g.items[i].x.panel===focus:g.items.length<=2; const cx=(ub[0]+ub[2])/2, cy=(ub[1]+ub[3])/2, rr=Math.max((ub[2]-ub[0])/2,(ub[3]-ub[1])/2/ar)+(focus?0.035:0.02), rm=rr+0.012;
@@ -6357,7 +6363,7 @@ async function drawViewer(){
   } else {
     const stat=new Map(); for(const r of S.rel) for(const f of r.refs) if(f.docId===d.id&&f.page===V.page){ stat.set(f.raw,worst([stat.get(f.raw),eff(r)].filter(Boolean))); }
     const rects=(pg?.panels||[]).filter(c=>!c.flags.some(f=>f.startsWith("EXCLUDED"))&&stat.has(c.raw)).map(c=>{ const s=stat.get(c.raw); const col=s?ST_COLOR[s]:"#7A889B";
-      return `<rect class="hl" data-panel="${esc(c.norm)}" ${R(c.bbox)} fill="${s?col:"none"}" fill-opacity="${s?0.42:0}" stroke="${col}" stroke-width="2.5" vector-effect="non-scaling-stroke"><title>${esc(c.raw)} — ${esc(s?ST_LABEL[s]:"Identified, not requested")}${c.method==="ai"?" (AI proposal)":""}</title></rect>`; });
+      return `<rect class="hl" data-panel="${esc(c.norm)}" ${R(c.bbox)} fill="${s?col:"none"}" fill-opacity="${s?0.3:0}" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"><title>${esc(c.raw)} — ${esc(s?ST_LABEL[s]:"Identified, not requested")}${c.method==="ai"?" (AI proposal)":""}</title></rect>`; });
     const man=S.annots.filter(a=>a.docId===d.id&&a.page===V.page).map(a=>{ const [x0,y0,x1,y1]=a.bbox.map(v=>v*1000); return `<rect class="hl" data-panel="${esc(a.panel)}" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="#FFD400" fill-opacity=".3" stroke="#B89A00" stroke-width="2.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"><title>${esc(a.panel)} — manual mark by ${esc(nameOf(a.by))}</title></rect>`; });
     html=rects.join("")+man.join("");
     const phys=physicalOf(S.rel);

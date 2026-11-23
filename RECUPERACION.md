@@ -263,3 +263,16 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   3. No tengo ni la llave ni el código: crear llave nueva. Los proyectos protegidos con la llave anterior quedan protegidos con la nueva en cuanto se abren una vez con su contraseña (por usted o por el invitado que lo creó).
 - **Con la llave abierta:** «Cambiar llave / código nuevo» sin pedir la anterior. El código se puede copiar, descargar o imprimir.
 - **Límite:** un proyecto cuya contraseña y cuyo respaldo con la llave se perdieron a la vez no se puede abrir (están cifrados a propósito). Por eso cada proyecto queda respaldado con la llave actual cada vez que usted lo abre.
+
+## 26. Imágenes de figuras limpias, tablas fuera y códigos pegados (motor 2.3.0)
+
+- **Imágenes de accesos:**
+  - Solo se resalta el rótulo impreso, y se sigue leyendo.
+  - Ya no se dibuja la etiqueta amarilla opaca que tapaba el código, ni el relleno amarillo del contorno de cada panel.
+  - El contorno, en línea punteada, aparece solo en la hoja de un acceso (o en el acceso elegido).
+  - Las figuras con muchos accesos ya no se amontonan.
+- **Tablas del AMM** («Table 102 … ACCESS DOORS AND PANELS», TYPE OF ACCESS, LATCHES/CAMLOCS, BONDING METHOD…):
+  - Se reconocen como tabla y nunca se usan como imagen.
+  - Siguen contando como prueba de que el acceso existe; si un acceso solo aparece en una tabla, queda «Requiere verificación».
+- **Códigos pegados:** se reconocen «422AR/424AR», «423AL-424AR», «DOOR422AR».
+- Al pulsar «Analizar», los documentos se vuelven a leer con estas reglas (el OCR se reutiliza).
