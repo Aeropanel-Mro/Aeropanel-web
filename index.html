@@ -1072,7 +1072,7 @@ const AP_DEV=!AP_HOSTED && (location.hostname==="localhost"||location.hostname==
    Processing: pdf.js text layer with coordinates, deterministic rules
    Safety: evidence is kept separate from decisions; AI only proposes.
    ===================================================================== */
-const ENGINE = "2.3.0";
+const ENGINE = "2.3.1";
 const DISCLAIMER = "Herramienta de apoyo documental. No sustituye AMM / IPC / SRM, task cards ni documentación aprobada. La decisión final corresponde al personal autorizado.";
 const ST = {CONF:"CONFIRMED", VER:"REQUIRES_VERIFICATION", DIS:"DISCREPANCY", NF:"NOT_FOUND"};
 const ST_LABEL = {CONFIRMED:"Confirmed", REQUIRES_VERIFICATION:"Requires verification", DISCREPANCY:"Discrepancy", NOT_FOUND:"Not found", VERIFIED:"Verified (human)", REJECTED:"Not required"};
@@ -3718,7 +3718,7 @@ async function ocrPage(page,{psm=11,debug=false,figure=false,mode="BALANCED",kno
   await rAcquire(Math.max(2,OCR.pool.length+1)); try{
   const base=page.getViewport({scale:1}); const dpi=dpiOverride||(figure?SM.dpiFig:SM.dpiCard); const scale=Math.min(dpi/72, (figure?5600:4400)/Math.max(base.width,base.height)); const vp=page.getViewport({scale});
   const cv=document.createElement("canvas"); cv.width=Math.round(vp.width); cv.height=Math.round(vp.height); const ctx=cv.getContext("2d",{willReadFrequently:true});
-  ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height); await page.render({canvasContext:ctx,canvas:cv,viewport:vp}).promise;
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height); await page.render({canvasContext:ctx,canvas:cv,viewport:vp,annotationMode:NO_ANNOT}).promise; deYellow(cv);
   const img=ctx.getImageData(0,0,cv.width,cv.height); cv.width=cv.height=1;
   const rp=ocrCall({type:"page",w:img.width,h:img.height,rgba:img.data.buffer,psm,debug,figure,dpi:Math.round(scale*72),dual:SM.dual,hunt:SM.hunt,huntOrphans:SM.orphans,knownRot,want:figure&&mode!=="FULL"?want:null,clip,fast},[img.data.buffer]);
   const r=await rp;
@@ -4435,7 +4435,7 @@ async function aiReadPage(doc, pageNo){
   const pdf=await openPdf(await getBytes(ver.assetId)); const page=await pdf.getPage(pageNo);
   const vp=page.getViewport({scale:Math.min(2.5,1800/page.getViewport({scale:1}).width)});
   const cv=document.createElement("canvas"); cv.width=vp.width; cv.height=vp.height;
-  await page.render({canvasContext:cv.getContext("2d"),canvas:cv,viewport:vp}).promise;
+  await page.render({canvasContext:cv.getContext("2d"),canvas:cv,viewport:vp,annotationMode:NO_ANNOT}).promise; deYellow(cv);
   const blob=await new Promise(r=>cv.toBlob(r,"image/png")); await pdf.destroy();
   toast("Leyendo página con IA… (propuesta, requiere verificación)",6000);
   const prompt=`The image is page ${pageNo} of an aircraft maintenance document (${doc.category==="CARDS"?"an inspection task card":"an access panel location figure"}).
@@ -4490,6 +4490,13 @@ const PAGE_LRU={m:new Map(),px:0,max:40e6,
   set(k,v){ if(this.m.has(k)){ const o=this.m.get(k); this.px-=o?o.width*o.height:0; this.m.delete(k); } this.m.set(k,v); this.px+=v?v.width*v.height:0;
     while(this.px>this.max&&this.m.size>1){ const [k0,v0]=this.m.entries().next().value; this.m.delete(k0); this.px-=v0?v0.width*v0.height:0; } return this; }};
 const TRACE_PG=new Map(); const pageTraces=(docId,pageNo,scale)=>{ const d=S.docs.find(x=>x.id===docId); const k=docId+"@"+(d?.processedVersion||0)+"#"+pageNo+"#"+scale; if(!TRACE_PG.has(k)) TRACE_PG.set(k,new Map()); return TRACE_PG.get(k); };
+/* Figures printed from an online manual viewer carry its link hot-spots (yellow boxes, sometimes with the ID drawn again a bit
+   off): they are left out (PDF annotations are not drawn) and yellow fills are turned back to paper, so only the drawing and
+   its own printed labels remain. Black / grey line-art and text are not touched. */
+function deYellow(cv){ try{ const g=cv.getContext("2d",{willReadFrequently:true}); const im=g.getImageData(0,0,cv.width,cv.height), d=im.data; let n=0;
+  for(let i=0;i<d.length;i+=4){ const r=d[i],gg=d[i+1],b=d[i+2]; if(r>150&&gg>120&&b<Math.min(r,gg)-55&&Math.abs(r-gg)<90){ d[i]=d[i+1]=d[i+2]=255; n++; } }
+  if(n) g.putImageData(im,0,0); return n; }catch{ return 0; } }
+const NO_ANNOT=0; // pdf.js AnnotationMode.DISABLE
 async function renderPageCanvas(cache,docId,pageNo,scale=2.4){
   const dv=S.docs.find(x=>x.id===docId)?.processedVersion||0; cache=PAGE_LRU;
   const k=docId+"@"+dv+"#"+pageNo+"#"+scale; if(cache.has(k)) return cache.get(k);
@@ -4497,7 +4504,7 @@ async function renderPageCanvas(cache,docId,pageNo,scale=2.4){
   const rot=await pageRot(docId,pageNo);
   let cv=null; try{ const pdf=await openPdf(await getBytes(ver.assetId)); try{ const pg=await pdf.getPage(pageNo); const vp=pg.getViewport({scale,rotation:(pg.rotate+rot)%360});
     cv=document.createElement("canvas"); cv.width=Math.round(vp.width); cv.height=Math.round(vp.height); const ctx=cv.getContext("2d"); ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height);
-    await pg.render({canvasContext:ctx,canvas:cv,viewport:vp}).promise; } finally{ await pdf.destroy(); } }catch(e){ console.warn("render",e); cv=null; }
+    await pg.render({canvasContext:ctx,canvas:cv,viewport:vp,annotationMode:NO_ANNOT}).promise; deYellow(cv); } finally{ await pdf.destroy(); } }catch(e){ console.warn("render",e); cv=null; }
   cache.set(k,cv); return cv;
 }
 /* ---------------- leader-line tracing: callout label → physical panel (estimate) ----------------
@@ -6336,7 +6343,7 @@ async function drawViewer(){
     const rot=(page.rotate+(pages.find(p=>p.page===V.page)?.rot||0))%360;
     const base=page.getViewport({scale:1,rotation:rot}); const scale=Math.min(3,Math.max(1.2,($("#viewer").clientWidth*devicePixelRatio)/base.width)); const vp=page.getViewport({scale,rotation:rot});
     cv.width=vp.width; cv.height=vp.height; $("#viewer").style.aspectRatio=`${vp.width}/${vp.height}`;
-    await page.render({canvasContext:cv.getContext("2d"),canvas:cv,viewport:vp}).promise; await pdf.destroy();
+    await page.render({canvasContext:cv.getContext("2d"),canvas:cv,viewport:vp,annotationMode:NO_ANNOT}).promise; if(d.category==="FIGURES") deYellow(cv); await pdf.destroy();
   }catch(e){ $("#viewer").innerHTML=`<div class="empty">No se pudo mostrar el documento: ${esc(e.message)}</div>`; return; }
   if(tok!==viewerToken) return;
   const pg=pages.find(p=>p.page===V.page); const svg=$("#vsvg"); if(!svg) return;

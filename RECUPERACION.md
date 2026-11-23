@@ -276,3 +276,10 @@ Herramienta de apoyo documental. No sustituye AMM / IPC / SRM.
   - Siguen contando como prueba de que el acceso existe; si un acceso solo aparece en una tabla, queda «Requiere verificación».
 - **Códigos pegados:** se reconocen «422AR/424AR», «423AL-424AR», «DOOR422AR».
 - Al pulsar «Analizar», los documentos se vuelven a leer con estas reglas (el OCR se reutiliza).
+
+## 27. Recuadros amarillos del visor del manual (motor 2.3.1)
+
+- Las figuras guardadas o impresas desde el visor en línea del manual traen sus marcas de enlace: recuadros amarillos, a veces con el código repetido y corrido.
+- Ahora la app no dibuja las anotaciones del PDF y convierte el amarillo de esos recuadros en papel blanco. Esto vale para las imágenes de accesos, el visor de documentos y el OCR.
+- Quedan solo el dibujo, sus rótulos impresos y el resaltado propio de la app.
+- El archivo original no se modifica.
